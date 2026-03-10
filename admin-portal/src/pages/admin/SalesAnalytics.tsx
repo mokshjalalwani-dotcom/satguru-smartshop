@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, IndianRupee, Activity, Users, ShoppingCart, Package, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { TrendingUp, IndianRupee, Activity, Users, Package, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { ResponsiveContainer, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Area } from "recharts";
 import { aiService, type HistoryData } from "../../services/ai";
 

@@ -1,0 +1,28 @@
+services:
+  # 1. AI Intelligence Service (Python/FastAPI)
+  - type: web
+    name: satguru-ai-service
+    env: python
+    region: singapore
+    plan: free
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt && python generate_data.py && python train.py
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
+  # 2. Main Shop Portal (Node.js/Express + React Frontend)
+  - type: web
+    name: satguru-shop-portal
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: satguru-ai-service
+          property: url

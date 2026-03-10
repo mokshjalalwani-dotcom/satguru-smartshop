@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Package, Clock, Star, Zap, TrendingDown, ShieldAlert, UserCheck } from "lucide-react";
+import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown, ShieldAlert, UserCheck } from "lucide-react";
 import KPICard from "../ui/KPICard";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";

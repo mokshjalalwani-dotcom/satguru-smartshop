@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.PROD ? "/api/ai" : "http://localhost:5000/api/ai";
+const API_BASE_URL = "/api/ai";
+
+const instance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+});
 
 export interface Prediction {
   date: string;
@@ -63,47 +68,47 @@ export interface HistoryData {
 
 export const aiService = {
   getPrediction: async (): Promise<{ predictions: Prediction[] }> => {
-    const response = await axios.get(`${API_BASE_URL}/predict`);
+    const response = await instance.get("/predict");
     return response.data;
   },
 
   getDemand: async (): Promise<{ demand: Demand }> => {
-    const response = await axios.get(`${API_BASE_URL}/demand`);
+    const response = await instance.get("/demand");
     return response.data;
   },
 
   getAnomalies: async (): Promise<{ anomalies: Anomaly[] }> => {
-    const response = await axios.get(`${API_BASE_URL}/anomalies`);
+    const response = await instance.get("/anomalies");
     return response.data;
   },
 
   trainModel: async (): Promise<{ message?: string; error?: string }> => {
-    const response = await axios.post(`${API_BASE_URL}/train`);
+    const response = await instance.post("/train");
     return response.data;
   },
 
   getStats: async (days: number = 7): Promise<AIStats> => {
-    const response = await axios.get(`${API_BASE_URL}/stats`, { params: { days } });
+    const response = await instance.get("/stats", { params: { days } });
     return response.data;
   },
 
   getInsights: async (): Promise<AIInsights> => {
-    const response = await axios.get(`${API_BASE_URL}/insights`);
+    const response = await instance.get("/insights");
     return response.data;
   },
 
   getTransactions: async (limit: number = 10): Promise<Transaction[]> => {
-    const response = await axios.get(`${API_BASE_URL}/transactions`, { params: { limit } });
+    const response = await instance.get("/transactions", { params: { limit } });
     return response.data;
   },
 
   getHistory: async (days: number = 7): Promise<HistoryData[]> => {
-    const response = await axios.get(`${API_BASE_URL}/history`, { params: { days } });
+    const response = await instance.get("/history", { params: { days } });
     return response.data;
   },
   
   getProductStats: async (days: number = 7): Promise<ProductStat[]> => {
-    const response = await axios.get(`${API_BASE_URL}/product-stats`, { params: { days } });
+    const response = await instance.get("/product-stats", { params: { days } });
     return response.data;
   }
 };
