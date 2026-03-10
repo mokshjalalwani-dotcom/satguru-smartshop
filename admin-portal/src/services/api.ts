@@ -1,4 +1,5 @@
-// src/services/api.ts
+// src/services/api.ts\
+// admin-portal/src/services/api.ts
 
 // ----------------- Interfaces -----------------
 export interface KPIs {
@@ -104,7 +105,7 @@ const api = {
   },
 
   // Create a new sale
-  createSale: async (sale: NewSale): Promise<CreateSaleResponse> => {
+  createSale: async (_sale: NewSale): Promise<CreateSaleResponse> => {
     // Mock implementation
     return new Promise((resolve) => {
       setTimeout(() => {

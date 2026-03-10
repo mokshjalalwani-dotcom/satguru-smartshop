@@ -3,7 +3,8 @@ import { TrendingUp, IndianRupee, Activity, Users, ShoppingCart, Package, ArrowU
 import { ResponsiveContainer, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Area } from "recharts";
 import { aiService, type HistoryData } from "../../services/ai";
 
-const formatINR = (amount: number) => "₹" + amount.toLocaleString('en-IN');
+
+const formatINR = (amount?: number) => amount !== undefined ? `₹${amount.toLocaleString('en-IN')}` : '₹0';
 
 const SalesAnalytics: React.FC = () => {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('week');
@@ -12,31 +13,35 @@ const SalesAnalytics: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    const days = period === 'week' ? 7 : period === 'month' ? 30 : 180;
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [history, statsData] = await Promise.all([
-          aiService.getHistory(days),
-          aiService.getStats(days)
-        ]);
-        setChartData(history);
-        setStats(statsData);
-      } catch (error) {
-        console.error("SalesAnalytics fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [period]);
+  const days = period === 'week' ? 7 : period === 'month' ? 30 : 180;
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [history, statsData] = await Promise.all([
+        aiService.getHistory(days),
+        aiService.getStats(days)
+      ]);
+
+      console.log("history:", history);
+      console.log("statsData:", statsData);  // 👈 check keys here
+
+      setChartData(history);
+      setStats(statsData);
+    } catch (error) {
+      console.error("SalesAnalytics fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, [period]);
 
   const kpis = [
-    { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "—", icon: <IndianRupee size={20} />, accent: "from-emerald-500 to-cyan-500", textAccent: "text-emerald-400", change: "+12.5%", up: true },
-    { title: "Units Sold", value: stats ? stats.orders.toLocaleString() : "—", icon: <ShoppingCart size={20} />, accent: "from-cyan-500 to-blue-500", textAccent: "text-cyan-400", change: "+8.2%", up: true },
-    { title: "Avg Order Value", value: stats ? formatINR(stats.aov) : "—", icon: <Package size={20} />, accent: "from-indigo-500 to-purple-500", textAccent: "text-indigo-400", change: "+3.1%", up: true },
-    { title: "Active Customers", value: stats ? stats.active_customers.toLocaleString() : "—", icon: <Users size={20} />, accent: "from-purple-500 to-pink-500", textAccent: "text-purple-400", change: "-2.4%", up: false },
-  ];
+  { title: "Total Revenue", value: stats ? formatINR(stats.totalRevenue) : "—", icon: <IndianRupee size={20} />, accent: "from-emerald-500 to-cyan-500", textAccent: "text-emerald-400", change: "+12.5%", up: true },
+  { title: "Units Sold", value: stats ? stats.totalOrders.toLocaleString() : "—", icon: <ShoppingCart size={20} />, accent: "from-cyan-500 to-blue-500", textAccent: "text-cyan-400", change: "+8.2%", up: true },
+  { title: "Avg Order Value", value: stats ? formatINR(stats.avgOrderValue) : "—", icon: <Package size={20} />, accent: "from-indigo-500 to-purple-500", textAccent: "text-indigo-400", change: "+3.1%", up: true },
+  { title: "Active Customers", value: stats ? stats.activeCustomers.toLocaleString() : "—", icon: <Users size={20} />, accent: "from-purple-500 to-pink-500", textAccent: "text-purple-400", change: "-2.4%", up: false },
+];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
@@ -120,7 +125,8 @@ const SalesAnalytics: React.FC = () => {
                     contentStyle={{ backgroundColor: '#161b22', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
                     itemStyle={{ color: '#10b981' }}
                     labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
-                    formatter={(value: number) => [formatINR(value), 'Revenue']}
+                    formatter={(value?: number) => [formatINR(value), 'Revenue']}
+            
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#salesGradient)" />
                 </AreaChart>

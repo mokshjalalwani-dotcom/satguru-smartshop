@@ -27,10 +27,10 @@ const fallbackData: InventoryItem[] = [
 const formatINR = (amount: number) => "₹" + amount.toLocaleString('en-IN');
 
 const InventoryIntelligence: React.FC = () => {
-  const [data, setData] = useState<InventoryItem[]>(fallbackData);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [data, _setData] = useState<InventoryItem[]>(fallbackData);
+  const [searchTerm, _setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [_stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -141,7 +141,7 @@ const InventoryIntelligence: React.FC = () => {
               type="text" 
               placeholder="Search products..." 
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => _setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-1.5 bg-background border border-white/10 rounded-lg text-sm focus:outline-none focus:border-indigo-500/50"
             />
           </div>

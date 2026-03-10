@@ -12,7 +12,7 @@ import {
   Tooltip, 
   Area 
 } from "recharts";
-import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights, type Prediction, type Anomaly } from "../services/ai";
+import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights} from "../services/ai";
 
 type TransactionRow = Transaction & { id: string };
 
@@ -23,28 +23,43 @@ const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [duration, setDuration] = useState<7 | 30 | 180>(7);
   const [loading, setLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchDashboardData = async () => {
       try {
-        const [statsData, insightsData, transData] = await Promise.all([
+        setLoading(true);
+        setErrorStatus(null);
+        
+        // Fetch individually to prevent one failure from breaking everything
+        const [statsData, insightsData, transData, historyData] = await Promise.allSettled([
           aiService.getStats(duration),
           aiService.getInsights(),
-          aiService.getTransactions(10)
+          aiService.getTransactions(10),
+          aiService.getHistory(duration)
         ]);
-        setStats(statsData);
-        setInsights(insightsData);
-        setTransactions(transData.map((t, i) => ({ ...t, id: i.toString() })));
-        
-        const historyData = await aiService.getHistory(duration);
-        setHistory(historyData);
+
+        if (!isMounted) return;
+
+        if (statsData.status === 'fulfilled') setStats(statsData.value);
+        if (insightsData.status === 'fulfilled') setInsights(insightsData.value);
+        if (transData.status === 'fulfilled') {
+          setTransactions(transData.value.map((t, i) => ({ ...t, id: i.toString() })));
+        }
+        if (historyData.status === 'fulfilled') setHistory(historyData.value);
+
+        if (statsData.status === 'rejected' || historyData.status === 'rejected') {
+           setErrorStatus("Backend AI Service might be offline.");
+        }
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchDashboardData();
+    return () => { isMounted = false; };
   }, [duration]);
 
   if (loading) return <LoadingSkeleton />;
@@ -75,7 +90,7 @@ const Dashboard: React.FC = () => {
         </span>
       )
     },
-    { header: "Time", accessor: "date", render: (val) => String(val).split(' ')[1] || "N/A" }
+    { header: "Time", accessor: "date", render: (val) => String(val).replace('T', ' ').split(' ')[1] || "N/A" }
   ];
 
   return (
@@ -83,8 +98,13 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent flex items-center gap-3">
             Strategic Analytics
+            {errorStatus && (
+              <span className="text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20">
+                {errorStatus}
+              </span>
+            )}
           </h1>
           <p className="text-xtext-secondary text-sm mt-1">Smart Retail Decision Support System powered by AI.</p>
         </div>
