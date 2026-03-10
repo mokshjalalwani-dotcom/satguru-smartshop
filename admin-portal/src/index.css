@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================= */
+/* 🔥 GLOBAL BASE THEME */
+/* ============================= */
+
+html,
+body,
+#root {
+  height: 100%;
+  background-color: #0b0f19;
+  /* Deep futuristic navy */
+  color: #e6edf3;
+}
+
+/* Smooth rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================= */
+/* ✨ NEON & HOVER UTILITIES */
+/* ============================= */
+
+.neon-glow {
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.15),
+    0 0 3px rgba(99, 102, 241, 0.08); /* Tiger, sharper glow */
+}
+
+/* Subtle, crisp neon hovers for a professional feel */
+.hover-neon-indigo:hover {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2), /* Redued spread, clear glow */
+    0 0 30px rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.5); /* Slightly brighter border */
+}
+
+.hover-neon-cyan:hover {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2),
+    0 0 30px rgba(34, 211, 238, 0.1);
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.hover-neon-pink:hover {
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.2),
+    0 0 30px rgba(236, 72, 153, 0.1);
+  border-color: rgba(236, 72, 153, 0.5);
+}
+
+/* New: Interactive minimalist cards */
+.interactive-card {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease-out, border-color 0.2s;
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 12px rgba(255, 255, 255, 0.03); /* Extremely soft ambient uplift */
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Minimalist Focus Ring */
+.input-neon-focus:focus {
+  outline: none;
+  border-color: #6366f1; /* Indigo base */
+  box-shadow: 0 0 0 1px #6366f1, 0 0 12px rgba(99, 102, 241, 0.15); /* Tight ring with subtle glow */
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-card, .glass-morphism {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@keyframes neonPulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: blur(12px);
+  }
+
+  50% {
+    opacity: 0.8;
+    filter: blur(16px);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neonPulse 3s ease-in-out infinite;
+}
+
+/* Text selection */
+::selection {
+  background: rgba(99, 102, 241, 0.4);
+  color: white;
+}
+
+/* ============================= */
+/* ✨ PAGE TRANSITIONS */
+/* ============================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================= */
+/* 🧊 SKELETON SHIMMER */
+/* ============================= */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      #0f172a 25%,
+      #1e293b 50%,
+      #0f172a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================= */
+/* 🖱 PREMIUM SCROLLBAR */
+/* ============================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
