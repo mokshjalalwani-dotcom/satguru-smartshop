@@ -70,10 +70,10 @@ const Dashboard: React.FC = () => {
 
   const kpis = [
     { title: `Revenue (${periodText})`, value: stats ? formatINR(stats.revenue) : "₹0", icon: <IndianRupee size={20} />, accent: "text-emerald-400" },
+    { title: `Net Profit (${periodText})`, value: stats ? formatINR(stats.profit) : "₹0", icon: <TrendingUp size={20} />, accent: "text-amber-400" },
     { title: `Orders (${periodText})`, value: stats?.orders.toLocaleString('en-IN') || "0", icon: <ShoppingBag size={20} />, accent: "text-cyan-400" },
     { title: "Avg Order Value", value: stats ? formatINR(Math.round(stats.aov)) : "₹0", icon: <Star size={20} />, accent: "text-purple-400" },
     { title: "Active Customers", value: stats?.active_customers.toLocaleString('en-IN') || "0", icon: <Users size={20} />, accent: "text-blue-400" },
-    { title: "Low Stock Items", value: stats?.low_stock_count.toString() || "0", icon: <Package size={20} />, accent: "text-rose-400" },
   ];
 
   const transactionColumns: Column<TransactionRow>[] = [

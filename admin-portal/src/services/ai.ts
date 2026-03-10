@@ -27,6 +27,15 @@ export interface AIStats {
   aov: number;
   active_customers: number;
   low_stock_count: number;
+  profit: number;
+}
+
+export interface ProductStat {
+  name: string;
+  sales: number;
+  revenue: number;
+  profit: number;
+  trend: string;
 }
 
 export interface AIInsights {
@@ -90,6 +99,11 @@ export const aiService = {
 
   getHistory: async (days: number = 7): Promise<HistoryData[]> => {
     const response = await axios.get(`${API_BASE_URL}/history`, { params: { days } });
+    return response.data;
+  },
+  
+  getProductStats: async (days: number = 7): Promise<ProductStat[]> => {
+    const response = await axios.get(`${API_BASE_URL}/product-stats`, { params: { days } });
     return response.data;
   }
 };

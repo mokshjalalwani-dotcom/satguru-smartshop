@@ -84,4 +84,14 @@ router.get('/history', async (req, res) => {
   }
 });
 
+// GET /api/ai/product-stats
+router.get('/product-stats', async (req, res) => {
+  try {
+    const response = await axios.get(`${AI_SERVICE_URL}/product-stats`, { params: req.query });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+  }
+});
+
 module.exports = router;

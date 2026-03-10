@@ -175,7 +175,16 @@ def get_stats(days: int = 7):
     df = load_data()
     inv_df = load_inventory()
     if df.empty:
-        return {"revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, "low_stock_count": 0}
+        return {"revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, "low_stock_count": 0, "profit": 0}
+    
+    # Define profit margins per product
+    MARGINS = {
+        "Smartphone X": 0.15,
+        "Laptop Pro": 0.12,
+        "Wireless Buds": 0.45,
+        "Smart Watch": 0.35,
+        "Tablet G1": 0.20
+    }
     
     last_date = df['date'].max()
     
@@ -190,6 +199,12 @@ def get_stats(days: int = 7):
     aov = revenue / orders if orders > 0 else 0
     active_customers = filtered_df['customer_id'].nunique()
     
+    # Calculate Profit
+    profit = 0
+    for product, margin in MARGINS.items():
+        prod_rev = filtered_df[filtered_df['product'] == product]['price'].sum()
+        profit += prod_rev * margin
+    
     # Low Stock
     low_stock_count = 0
     if not inv_df.empty:
@@ -200,8 +215,49 @@ def get_stats(days: int = 7):
         "orders": orders,
         "aov": round(aov, 2),
         "active_customers": active_customers,
-        "low_stock_count": low_stock_count
+        "low_stock_count": low_stock_count,
+        "profit": round(profit, 2)
     }
+
+@app.get("/product-stats")
+def get_product_stats(days: int = 7):
+    df = load_data()
+    if df.empty: return []
+    
+    MARGINS = {
+        "Smartphone X": 0.15,
+        "Laptop Pro": 0.12,
+        "Wireless Buds": 0.45,
+        "Smart Watch": 0.35,
+        "Tablet G1": 0.20
+    }
+    
+    last_date = df['date'].max()
+    start_date = last_date - timedelta(days=days)
+    filtered = df[df['date'] >= start_date]
+    
+    stats = []
+    for product in MARGINS.keys():
+        prod_df = filtered[filtered['product'] == product]
+        rev = prod_df['price'].sum()
+        units = len(prod_df)
+        profit = rev * MARGINS[product]
+        
+        # Calculate trend (compare to previous period)
+        prev_start = start_date - timedelta(days=days)
+        prev_df = df[(df['date'] >= prev_start) & (df['date'] < start_date) & (df['product'] == product)]
+        prev_rev = prev_df['price'].sum()
+        trend = ((rev - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
+        
+        stats.append({
+            "name": product,
+            "sales": units,
+            "revenue": round(rev, 2),
+            "profit": round(profit, 2),
+            "trend": f"{'+' if trend >= 0 else ''}{round(trend, 1)}%"
+        })
+    
+    return sorted(stats, key=lambda x: x['revenue'], reverse=True)
 
 @app.get("/transactions")
 def get_transactions(limit: int = 10):

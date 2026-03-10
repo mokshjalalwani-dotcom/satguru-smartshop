@@ -9,17 +9,19 @@ const formatINR = (amount?: number) => amount !== undefined ? `₹${amount.toLoc
 const SalesAnalytics: React.FC = () => {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [chartData, setChartData] = useState<HistoryData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [productStats, setProductStats] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   const days = period === 'week' ? 7 : period === 'month' ? 30 : 180;
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [history, statsData] = await Promise.all([
+      const [history, statsData, pStats] = await Promise.all([
         aiService.getHistory(days),
-        aiService.getStats(days)
+        aiService.getStats(days),
+        aiService.getProductStats(days)
       ]);
 
       console.log("history:", history);
@@ -27,6 +29,7 @@ const SalesAnalytics: React.FC = () => {
 
       setChartData(history);
       setStats(statsData);
+      setProductStats(pStats);
     } catch (error) {
       console.error("SalesAnalytics fetch error:", error);
     } finally {
@@ -38,7 +41,7 @@ const SalesAnalytics: React.FC = () => {
 
   const kpis = [
   { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "—", icon: <IndianRupee size={20} />, accent: "from-emerald-500 to-cyan-500", textAccent: "text-emerald-400", change: "+12.5%", up: true },
-  { title: "Units Sold", value: stats ? (stats.orders ?? 0).toLocaleString() : "—", icon: <ShoppingCart size={20} />, accent: "from-cyan-500 to-blue-500", textAccent: "text-cyan-400", change: "+8.2%", up: true },
+  { title: "Net Profit", value: stats ? formatINR(stats.profit) : "—", icon: <TrendingUp size={20} />, accent: "from-amber-500 to-orange-500", textAccent: "text-amber-400", change: "+15.2%", up: true },
   { title: "Avg Order Value", value: stats ? formatINR(stats.aov) : "—", icon: <Package size={20} />, accent: "from-indigo-500 to-purple-500", textAccent: "text-indigo-400", change: "+3.1%", up: true },
   { title: "Active Customers", value: stats ? (stats.active_customers ?? 0).toLocaleString() : "—", icon: <Users size={20} />, accent: "from-purple-500 to-pink-500", textAccent: "text-purple-400", change: "-2.4%", up: false },
 ];
@@ -140,28 +143,25 @@ const SalesAnalytics: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-tr-full pointer-events-none" />
           <h2 className="text-xl font-bold mb-6 relative z-10">Top Selling Items</h2>
           <div className="space-y-3 relative z-10">
-            {[ 
-              { name: "Premium Smart Watch", sales: 45, rev: "₹11,24,955", trend: "+12%" }, 
-              { name: "Wireless Earbuds G2", sales: 32, rev: "₹1,59,968", trend: "+45%" }, 
-              { name: "4K Action Camera", sales: 12, rev: "₹3,95,988", trend: "+8%" }, 
-              { name: "USB-C Fast Charger", sales: 28, rev: "₹41,972", trend: "-3%" } 
-            ].map((p, i) => (
+            {productStats.length > 0 ? productStats.map((p, i) => (
               <div key={i} className="flex items-center justify-between p-3.5 rounded-2xl bg-background border border-white/5 hover:border-white/10 transition-all group cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/5 to-white/10 flex items-center justify-center font-black text-white text-sm border border-white/10">
                     {i+1}
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-white">{p.name}</h4>
-                    <p className="text-[10px] text-xtext-secondary mt-0.5">{p.sales} units sold</p>
+                  <div className="max-w-[120px]">
+                    <h4 className="font-bold text-xs text-white truncate">{p.name}</h4>
+                    <p className="text-[10px] text-xtext-secondary mt-0.5">{p.sales} units</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-emerald-400 text-sm">{p.rev}</div>
-                  <div className={`text-[10px] font-bold ${p.trend.startsWith('+') ? 'text-emerald-400/60' : 'text-rose-400/60'}`}>{p.trend}</div>
+                  <div className="font-bold text-emerald-400 text-xs">{formatINR(p.revenue)}</div>
+                  <div className="text-[10px] text-amber-400/80 font-medium">Profit: {formatINR(p.profit)}</div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-10 text-xtext-secondary">No data available</div>
+            )}
           </div>
         </div>
       </div>
