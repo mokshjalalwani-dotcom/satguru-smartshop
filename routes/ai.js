@@ -4,18 +4,20 @@ const router = express.Router();
 
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
-// Render Internal/External URL handling
+// Render Networking Resiliency
 if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
-  // If it's a raw hostname like 'satguru-ai-service', default to port 10000 (Render's internal port)
   if (!AI_SERVICE_URL.includes('.')) {
+    // Internal Render hostname: usually needs port 10000
     AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
   } else {
-    // If it's something like 'my-service.render.com'
     AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
   }
 }
 
-console.log(`[AI-ADAPTER] Verified Target: ${AI_SERVICE_URL}`);
+// Fallback logic for common Render DNS issues on Free plans
+const originalBase = AI_SERVICE_URL;
+
+console.log(`[AI-ADAPTER] Primary Target: ${AI_SERVICE_URL}`);
 
 console.log(`AI Route using AI_SERVICE_URL: ${AI_SERVICE_URL}`);
 
@@ -111,12 +113,17 @@ router.post('/train', async (req, res) => {
 
 // GET /api/ai/stats
 router.get('/stats', async (req, res) => {
+  const target = getUrl('/stats');
   try {
-    const response = await instance.get(getUrl('/stats'), { params: req.query });
+    const response = await instance.get(target, { params: req.query });
     res.json(response.data);
   } catch (error) {
-    console.error(`AI Stats Fetch Failed from ${getUrl('/stats')}:`, error.message);
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+    console.error(`[AI-STATS-ERROR] Target: ${target}, Error: ${error.message}`);
+    res.status(500).json({ 
+        error: 'AI Service unavailable', 
+        details: `${error.message} (Target: ${target})`,
+        code: error.code 
+    });
   }
 });
 
