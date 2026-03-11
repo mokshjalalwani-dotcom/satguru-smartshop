@@ -15,9 +15,34 @@ const instance = axios.create({
 
 // Helper to get sanitized URL
 const getUrl = (path) => {
-  const base = AI_SERVICE_URL.endsWith('/') ? AI_SERVICE_URL.slice(0, -1) : AI_SERVICE_URL;
-  return `${base}${path.startsWith('/') ? path : '/' + path}`;
+  let base = AI_SERVICE_URL;
+  if (base.endsWith('/')) base = base.slice(0, -1);
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${cleanPath}`;
 };
+
+// GET /api/ai/health - Diagnostics endpoint
+router.get('/health', async (req, res) => {
+  const target = getUrl('/stats');
+  try {
+    const start = Date.now();
+    await instance.get(target, { params: { days: 1 } });
+    res.json({ 
+      status: 'ok', 
+      message: 'Connection to AI Service successful',
+      target: target,
+      latency: `${Date.now() - start}ms`
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to connect to AI Service',
+      target: target,
+      error: error.message,
+      code: error.code
+    });
+  }
+});
 
 // GET /api/ai/predict
 router.get('/predict', async (req, res) => {

@@ -9,13 +9,29 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Add CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.on_event("startup")
+def startup_event():
+    # Ensure data directory exists
+    os.makedirs("data", exist_ok=True)
+    os.makedirs("models", exist_ok=True)
+    
+    # Auto-generate data if it doesn't exist
+    if not os.path.exists(DATA_PATH):
+        print("Data missing. Generating enriched dataset...")
+        from generate_data import generate_enriched_dataset
+        generate_enriched_dataset()
+        
+    # Auto-train model if it doesn't exist
+    if not os.path.exists(MODEL_PATH):
+        print("Model missing. Training initial model...")
+        from train import train_model
+        train_model()
+    
+    # Clear cache to ensure fresh data load
+    global _CACHED_DF, _CACHED_INV
+    _CACHED_DF = None
+    _CACHED_INV = None
+    print("AI Service ready with data and models.")
 
 MODEL_PATH = "models/model.pkl"
 ENCODER_PATH = "models/label_encoder.pkl"
