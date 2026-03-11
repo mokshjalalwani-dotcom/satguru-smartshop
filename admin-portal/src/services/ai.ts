@@ -31,8 +31,11 @@ export interface InventoryItem {
   product: string;
   stock: number;
   threshold: number;
+  predictedDemand: number;
   status: "Healthy" | "Low Stock" | "Critical";
   reorderSuggestion: string;
+  trend: string;
+  price: number;
   lead_time: number;
 }
 
@@ -43,6 +46,10 @@ export interface AIStats {
   active_customers: number;
   low_stock_count: number;
   profit: number;
+  revenue_change: string;
+  profit_change: string;
+  orders_change: string;
+  customers_change: string;
 }
 
 export interface ProductStat {

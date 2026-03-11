@@ -40,10 +40,42 @@ const SalesAnalytics: React.FC = () => {
 }, [period]);
 
   const kpis = [
-  { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "—", icon: <IndianRupee size={20} />, accent: "from-emerald-500 to-cyan-500", textAccent: "text-emerald-400", change: "+12.5%", up: true },
-  { title: "Net Profit", value: stats ? formatINR(stats.profit) : "—", icon: <TrendingUp size={20} />, accent: "from-amber-500 to-orange-500", textAccent: "text-amber-400", change: "+15.2%", up: true },
-  { title: "Avg Order Value", value: stats ? formatINR(stats.aov) : "—", icon: <Package size={20} />, accent: "from-indigo-500 to-purple-500", textAccent: "text-indigo-400", change: "+3.1%", up: true },
-  { title: "Active Customers", value: stats ? (stats.active_customers ?? 0).toLocaleString() : "—", icon: <Users size={20} />, accent: "from-purple-500 to-pink-500", textAccent: "text-purple-400", change: "-2.4%", up: false },
+  { 
+    title: "Total Revenue", 
+    value: stats ? formatINR(stats.revenue) : "—", 
+    icon: <IndianRupee size={20} />, 
+    accent: "from-emerald-500 to-cyan-500", 
+    textAccent: "text-emerald-400", 
+    change: stats?.revenue_change || "+0.0%", 
+    up: !stats?.revenue_change?.startsWith('-') 
+  },
+  { 
+    title: "Net Profit", 
+    value: stats ? formatINR(stats.profit) : "—", 
+    icon: <TrendingUp size={20} />, 
+    accent: "from-amber-500 to-orange-500", 
+    textAccent: "text-amber-400", 
+    change: stats?.profit_change || "+0.0%", 
+    up: !stats?.profit_change?.startsWith('-') 
+  },
+  { 
+    title: "Avg Order Value", 
+    value: stats ? formatINR(stats.aov) : "—", 
+    icon: <Package size={20} />, 
+    accent: "from-indigo-500 to-purple-500", 
+    textAccent: "text-indigo-400", 
+    change: stats?.orders_change || "+0.0%", 
+    up: !stats?.orders_change?.startsWith('-') 
+  },
+  { 
+    title: "Active Customers", 
+    value: stats ? (stats.active_customers ?? 0).toLocaleString() : "—", 
+    icon: <Users size={20} />, 
+    accent: "from-purple-500 to-pink-500", 
+    textAccent: "text-purple-400", 
+    change: stats?.customers_change || "+0.0%", 
+    up: !stats?.customers_change?.startsWith('-') 
+  },
 ];
 
   return (

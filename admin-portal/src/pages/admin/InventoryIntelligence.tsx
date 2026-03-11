@@ -1,28 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Brain, Package, AlertTriangle, ArrowRight, Zap, Search, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
-import { aiService } from "../../services/ai";
+import { aiService, type InventoryItem } from "../../services/ai";
 
-// This interface matches the shape your backend should return.
-// When you connect to a real inventory API, update the service layer.
-interface InventoryItem {
-  id: string;
-  product: string;
-  stock: number;
-  predictedDemand: number;
-  status: "Healthy" | "Low Stock" | "Critical";
-  reorderSuggestion: string;
-  trend: string;
-  price: number;
-}
-
-const fallbackData: InventoryItem[] = [
-  { id: "P-101", product: "Premium Smart Watch", stock: 45, predictedDemand: 20, status: "Healthy", reorderSuggestion: "Not Needed", trend: "+5%", price: 24999 },
-  { id: "P-102", product: "Wireless Earbuds G2", stock: 12, predictedDemand: 50, status: "Low Stock", reorderSuggestion: "Order 40 units", trend: "+45%", price: 4999 },
-  { id: "P-103", product: "4K Action Camera", stock: 2, predictedDemand: 15, status: "Critical", reorderSuggestion: "Order 20 units", trend: "+10%", price: 32999 },
-  { id: "P-104", product: "USB-C Fast Charger", stock: 200, predictedDemand: 180, status: "Healthy", reorderSuggestion: "Not Needed", trend: "-2%", price: 1499 },
-  { id: "P-105", product: "LED Ceiling Fan 5-Star", stock: 8, predictedDemand: 25, status: "Low Stock", reorderSuggestion: "Order 20 units", trend: "+30%", price: 3999 },
-  { id: "P-106", product: "Inverter AC 1.5 Ton", stock: 35, predictedDemand: 12, status: "Healthy", reorderSuggestion: "Not Needed", trend: "+8%", price: 42999 },
-];
+import LoadingSkeleton from "../../ui/LoadingSkeleton";
 
 const formatINR = (amount: number) => "₹" + amount.toLocaleString('en-IN');
 
@@ -50,6 +30,20 @@ const InventoryIntelligence: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-20 bg-white/5 rounded-2xl w-1/3" />
+        <div className="grid grid-cols-3 gap-6">
+          <div className="h-32 bg-white/5 rounded-3xl" />
+          <div className="h-32 bg-white/5 rounded-3xl" />
+          <div className="h-32 bg-white/5 rounded-3xl" />
+        </div>
+        <div className="h-96 bg-white/5 rounded-3xl" />
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch(status) {
