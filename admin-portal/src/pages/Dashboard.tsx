@@ -52,11 +52,16 @@ const Dashboard: React.FC = () => {
         if (historyData.status === 'fulfilled') setHistory(historyData.value);
         if (predictData.status === 'fulfilled') setPredictions(predictData.value.predictions);
 
-        if (statsData.status === 'rejected' || historyData.status === 'rejected') {
-           setErrorStatus("Backend AI Service might be offline.");
+        if (statsData.status === 'rejected') {
+           const err = statsData.reason as any;
+           setErrorStatus(`Stats Failed: ${err.response?.data?.details || err.message}`);
+        } else if (historyData.status === 'rejected') {
+           const err = historyData.reason as any;
+           setErrorStatus(`History Failed: ${err.message}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Dashboard Fetch Error:", error);
+        setErrorStatus(`Global Error: ${error.message}`);
       } finally {
         if (isMounted) setLoading(false);
       }
