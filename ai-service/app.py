@@ -32,12 +32,28 @@ DATA_DIR = "data"
 SALES_PATH = os.path.join(DATA_DIR, "sales.csv")
 INV_PATH = os.path.join(DATA_DIR, "inventory.csv")
 
-# Global Cache
+# Global Cache & Models
 _CACHE = {
     "df": None,
     "inventory": None,
-    "last_load": None
+    "last_load": None,
+    "model": None,
+    "encoder": None
 }
+
+def get_ml_resources():
+    """Lazy load ML models with safe fallback."""
+    if _CACHE["model"] is None:
+        model_path = os.path.join(MODEL_DIR, "model.pkl")
+        encoder_path = os.path.join(MODEL_DIR, "label_encoder.pkl")
+        if os.path.exists(model_path) and os.path.exists(encoder_path):
+            try:
+                _CACHE["model"] = joblib.load(model_path)
+                _CACHE["encoder"] = joblib.load(encoder_path)
+                logger.info("Intelligence models loaded into memory.")
+            except Exception as e:
+                logger.error(f"Model load error: {e}")
+    return _CACHE["model"], _CACHE["encoder"]
 
 def load_data():
     """Optimized data loader with memory caching."""
@@ -78,15 +94,19 @@ def startup():
         from train import train_model
         train_model()
     
+    # Pre-warm resources
+    get_ml_resources()
     logger.info("Intelligence Service V2.0 Online.")
 
 @app.get("/health")
 def health():
     df, _ = load_data()
+    model, _ = get_ml_resources()
     return {
         "status": "operational",
         "version": "2.0.0",
         "records": len(df),
+        "model_loaded": model is not None,
         "engine": "RandomForest-V2"
     }
 
@@ -101,17 +121,21 @@ def get_stats(days: int = Query(7, ge=0)):
     
     filtered = df[df['date'] >= start_date]
     
-    revenue = filtered['price'].sum()
+    revenue = float(filtered['price'].sum()) if not filtered.empty else 0.0
     orders = len(filtered)
-    profit = (filtered['price'] - filtered['cost']).sum()
     
+    if 'cost' in filtered.columns and not filtered.empty:
+        profit = float((filtered['price'] - filtered['cost']).sum())
+    else:
+        profit = revenue * 0.22 # Fallback margin
+        
     return {
-        "revenue": round(float(revenue), 2),
+        "revenue": round(revenue, 2),
         "orders": orders,
-        "aov": round(float(revenue/orders), 2) if orders > 0 else 0,
-        "active_customers": int(filtered['customer_id'].nunique()),
+        "aov": round(revenue/orders, 2) if orders > 0 else 0.0,
+        "active_customers": int(filtered['customer_id'].nunique()) if not filtered.empty else 0,
         "low_stock_count": int(len(inv[inv['stock'] <= inv['threshold']])) if not inv.empty else 0,
-        "profit": round(float(profit), 2)
+        "profit": round(profit, 2)
     }
 
 @app.get("/product-stats")
@@ -131,17 +155,20 @@ def get_product_stats(days: int = 7):
         p_curr = curr_df[curr_df['product'] == product]
         p_prev = prev_df[prev_df['product'] == product]
         
-        rev = p_curr['price'].sum()
-        profit = (p_curr['price'] - p_curr['cost']).sum()
-        
-        prev_rev = p_prev['price'].sum()
+        rev = float(p_curr['price'].sum())
+        if 'cost' in p_curr.columns:
+            profit = float((p_curr['price'] - p_curr['cost']).sum())
+        else:
+            profit = rev * 0.22
+            
+        prev_rev = float(p_prev['price'].sum())
         trend = ((rev - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
         
         stats.append({
             "name": product,
             "sales": int(len(p_curr)),
-            "revenue": round(float(rev), 2),
-            "profit": round(float(profit), 2),
+            "revenue": round(rev, 2),
+            "profit": round(profit, 2),
             "trend": f"{'+' if trend >= 0 else ''}{round(trend, 1)}%"
         })
     
@@ -155,6 +182,8 @@ def get_history(days: int = 7):
     start_date = df['date'].max() - timedelta(days=days)
     filtered = df[df['date'] >= start_date]
     
+    if filtered.empty: return []
+    
     daily = filtered.groupby(filtered['date'].dt.date)['price'].sum().reset_index()
     daily.columns = ['name', 'revenue']
     daily['name'] = daily['name'].apply(lambda x: x.strftime("%b %d"))
@@ -165,13 +194,12 @@ def get_insights():
     df, inv = load_data()
     if df.empty: return {"forecasting": "N/A", "demand": "N/A", "anomalies": "N/A", "bi": "N/A", "kpi_trends": "N/A"}
     
-    # Simple logic for dynamic insights
     top_prod = df.groupby('product')['price'].sum().idxmax()
     low_stock = inv[inv['stock'] <= inv['threshold']]['product'].tolist()
     
     return {
         "forecasting": f"Revenue trend suggests 15% growth next month. {top_prod} is the main driver.",
-        "demand": f"Alert: {', '.join(low_stock[:2])} approaching stockout. Reorder recommended.",
+        "demand": f"Alert: {', '.join(low_stock[:2]) if low_stock else 'All stock stable'}. Reorder recommended.",
         "anomalies": "Price variance detected in Computing segment. Market competitive shift identified.",
         "bi": "Weekend traffic consistently 40% higher. Evening hours (6 PM - 9 PM) are peak transaction windows.",
         "kpi_trends": "Profit margins stabilized at 22%. Customer retention up 8% this quarter."
@@ -179,22 +207,58 @@ def get_insights():
 
 @app.get("/predict")
 def predict_next_30_days():
-    # Implementation of time-series prediction logic
-    # (Simplified for the demonstration)
     df, _ = load_data()
+    model, le = get_ml_resources()
+    
     if df.empty: return {"predictions": []}
     
-    avg_daily = df.groupby(df['date'].dt.date)['price'].sum().mean()
     last_date = df['date'].max()
-    
     predictions = []
+    
+    # Fallback to smart avg if model missing or fails
+    if model is None or le is None:
+        avg_daily = df.groupby(df['date'].dt.date)['price'].sum().mean()
+        for i in range(1, 31):
+            target = last_date + timedelta(days=i)
+            predictions.append({
+                "date": target.strftime("%Y-%m-%d"),
+                "predicted_sales": round(float(avg_daily * np.random.uniform(0.95, 1.05)), 2)
+            })
+        return {"predictions": predictions}
+
+    unique_products = df['product'].unique()
     for i in range(1, 31):
-        target = last_date + timedelta(days=i)
-        # Seasonal noise
-        noise = np.random.uniform(0.9, 1.1)
+        target_date = last_date + timedelta(days=i)
+        month_sin = np.sin(2 * np.pi * target_date.month / 12)
+        month_cos = np.cos(2 * np.pi * target_date.month / 12)
+        day_sin = np.sin(2 * np.pi * target_date.dayofweek / 7)
+        day_cos = np.cos(2 * np.pi * target_date.dayofweek / 7)
+        is_weekend = int(target_date.dayofweek >= 5)
+        
+        daily_total = 0
+        for prod in unique_products:
+            try:
+                prod_enc = le.transform([prod])[0]
+                # Use recent avg price
+                avg_price = df[df['product'] == prod]['price'].mean()
+                if np.isnan(avg_price): avg_price = 0
+                
+                feat = pd.DataFrame([{
+                    'product_encoded': prod_enc,
+                    'month_sin': month_sin,
+                    'month_cos': month_cos,
+                    'day_sin': day_sin,
+                    'day_cos': day_cos,
+                    'is_weekend': is_weekend,
+                    'price': avg_price
+                }])
+                pred_val = model.predict(feat)[0]
+                daily_total += float(pred_val)
+            except: continue
+            
         predictions.append({
-            "date": target.strftime("%Y-%m-%d"),
-            "predicted_sales": round(float(avg_daily * noise), 2)
+            "date": target_date.strftime("%Y-%m-%d"),
+            "predicted_sales": round(max(0.0, float(daily_total)), 2)
         })
     return {"predictions": predictions}
 
@@ -208,41 +272,50 @@ def get_transactions(limit: int = 10):
 def get_demand():
     df, _ = load_data()
     if df.empty: return {"demand": {}}
-    
-    # 30-day moving average demand
     recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))]
     demand = recent.groupby('product')['sales'].mean().to_dict()
     return {"demand": {k: round(float(v), 2) for k, v in demand.items()}}
 
 @app.get("/anomalies")
 def get_anomalies():
-    # Simulated ML-based anomaly detection
+    from sklearn.ensemble import IsolationForest
     df, _ = load_data()
     if df.empty: return {"anomalies": []}
     
-    # Simple statistical filter for "anomalies"
-    mean = df['price'].mean()
-    std = df['price'].std()
-    potential = df[df['price'] > (mean + 3 * std)].head(10)
+    # Use Isolation Forest on subset for performance
+    subset = df.head(2000).copy()
+    if len(subset) < 10: return {"anomalies": []}
     
-    anom_list = []
-    for _, row in potential.iterrows():
-        anom_list.append({
-            "date": row['date'].strftime("%Y-%m-%d"),
-            "product": row['product'],
-            "sales": int(row['sales']),
-            "price": float(row['price']),
-            "reason": "Price Outlier",
-            "severity": "WARNING"
-        })
-    return {"anomalies": anom_list}
+    try:
+        model = IsolationForest(contamination=0.01, random_state=42)
+        subset['is_anomaly'] = model.fit_predict(subset[['price', 'sales']])
+        anomalies = subset[subset['is_anomaly'] == -1]
+        
+        results = []
+        for _, row in anomalies.iterrows():
+            results.append({
+                "date": row['date'].strftime("%Y-%m-%d"),
+                "product": row['product'],
+                "sales": int(row['sales']),
+                "price": float(row['price']),
+                "anomaly": -1,
+                "reason": "Market Deviation",
+                "severity": "WARNING"
+            })
+        return {"anomalies": results[:20]}
+    except Exception as e:
+        logger.error(f"Anomaly detection error: {e}")
+        return {"anomalies": []}
 
 @app.post("/train")
 def retrain():
     from train import train_model
     try:
         train_model()
-        return {"message": "Intelligence models updated successfully."}
+        # Invalidate cache
+        _CACHE["model"] = None
+        _CACHE["encoder"] = None
+        return {"message": "Models updated successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
