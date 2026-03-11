@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import random
 
@@ -15,9 +15,9 @@ def generate_enriched_dataset():
         "Tablet G1": {"base_price": 449.99, "avg_sales": 8, "margin": 0.20, "category": "Mobile"}
     }
 
-    # Fixed start date for deterministic testing across environments
-    start_date = datetime(2025, 3, 11)
-    num_days = 365
+    # Reduced days to save memory on Render Free plan
+    start_date = datetime.now() - timedelta(days=180)
+    num_days = 180
     sales_data = []
     inventory_data = []
     
@@ -72,6 +72,5 @@ def generate_enriched_dataset():
     
     print(f"Dataset generated: {len(df_sales)} transactions.")
 
-from datetime import timedelta
 if __name__ == "__main__":
     generate_enriched_dataset()

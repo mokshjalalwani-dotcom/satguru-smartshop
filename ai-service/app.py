@@ -85,29 +85,27 @@ def startup():
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
     
-    if not os.path.exists(SALES_PATH):
-        logger.info("Initializing baseline dataset...")
-        from generate_data import generate_enriched_dataset
-        generate_enriched_dataset()
-        
-    if not os.path.exists(os.path.join(MODEL_DIR, "model.pkl")):
-        logger.info("Training initial intelligence models...")
-        from train import train_model
-        train_model()
+    # Check if data exists - handled by build command usually
+    has_sales = os.path.exists(SALES_PATH)
+    has_model = os.path.exists(os.path.join(MODEL_DIR, "model.pkl"))
     
-    # Pre-warm resources
-    get_ml_resources()
+    logger.info(f"Startup check: sales_data={has_sales}, models={has_model}")
+    
+    # Pre-warm resources lazily
+    try:
+        load_data()
+        get_ml_resources()
+    except Exception as e:
+        logger.error(f"Pre-warm failed: {e}")
+        
     logger.info("Intelligence Service V2.0 Online.")
 
 @app.get("/health")
 def health():
-    df, _ = load_data()
-    model, _ = get_ml_resources()
+    # Light health check for Render
     return {
         "status": "operational",
         "version": "2.0.0",
-        "records": len(df),
-        "model_loaded": model is not None,
         "engine": "RandomForest-V2"
     }
 
@@ -148,16 +146,17 @@ def get_stats(days: int = Query(7, ge=0)):
         return f"{'+' if change >= 0 else ''}{round(change, 1)}%"
 
     return {
-        "revenue": round(revenue, 2),
-        "orders": orders,
-        "aov": round(revenue/orders, 2) if orders > 0 else 0.0,
+        "revenue": round(float(revenue), 2),
+        "orders": int(orders),
+        "aov": round(float(revenue/orders), 2) if orders > 0 else 0.0,
         "active_customers": int(filtered['customer_id'].nunique()) if not filtered.empty else 0,
         "low_stock_count": int(len(inv[inv['stock'] <= inv['threshold']])) if not inv.empty else 0,
-        "profit": round(profit, 2),
+        "profit": round(float(profit), 2),
         "revenue_change": calc_change(revenue, prev_revenue),
         "profit_change": calc_change(profit, prev_profit),
         "orders_change": calc_change(orders, prev_orders),
-        "customers_change": calc_change(filtered['customer_id'].nunique(), prev_filtered['customer_id'].nunique())
+        "customers_change": calc_change(int(filtered['customer_id'].nunique()) if not filtered.empty else 0, 
+                                       int(prev_filtered['customer_id'].nunique()) if not prev_filtered.empty else 0)
     }
 
 @app.get("/product-stats")
