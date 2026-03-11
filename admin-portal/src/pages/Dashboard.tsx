@@ -58,6 +58,9 @@ const Dashboard: React.FC = () => {
         } else if (historyData.status === 'rejected') {
            const err = historyData.reason as any;
            setErrorStatus(`History Failed: ${err.message}`);
+        } else if (predictData.status === 'rejected') {
+           const err = predictData.reason as any;
+           setErrorStatus(`Prediction Failed: ${err.response?.data?.details || err.message}`);
         }
       } catch (error: any) {
         console.error("Dashboard Fetch Error:", error);
