@@ -247,21 +247,21 @@ const Dashboard: React.FC = () => {
                       <AlertTriangle size={14} className="text-rose-400" />
                       <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Price Spike</span>
                     </div>
-                    <p className="text-sm text-white">{insights?.anomalies || 'Detected unusual spike in Electronics (+45%) yesterday.'}</p>
+                    <p className="text-sm text-white">{insights?.anomalies || 'Detected unusual spike in Climate Control (+45%) yesterday.'}</p>
                 </div>
                 <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 transition-colors">
                     <div className="flex items-center gap-2 mb-1.5">
                       <Zap size={14} className="text-amber-400" />
                       <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Demand Anomaly</span>
                     </div>
-                    <p className="text-sm text-white">Earbuds G2 sales 3× above normal — possible bulk order detected.</p>
+                    <p className="text-sm text-white">Smart Inverter AC sales 3× above normal — extreme heatwave predicted.</p>
                 </div>
                 <div className="p-3.5 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
                     <div className="flex items-center gap-2 mb-1.5">
                       <TrendingDown size={14} className="text-cyan-400" />
                       <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Revenue Dip</span>
                     </div>
-                    <p className="text-sm text-white">Weekend revenue 18% below weekday average — seasonal pattern.</p>
+                    <p className="text-sm text-white">Washing Machine revenue 18% below weekday average — end of month pattern.</p>
                 </div>
                 <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-colors">
                     <div className="flex items-center gap-2 mb-1.5">
