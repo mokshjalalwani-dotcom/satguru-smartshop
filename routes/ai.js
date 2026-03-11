@@ -3,15 +3,21 @@ const axios = require('axios');
 const router = express.Router();
 
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
+
+// Check if we are using an internal host name (no dots and no http)
+if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http') && !AI_SERVICE_URL.includes('.')) {
+  // On Render, internal services usually talk over port 10000
+  AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
+} else if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
   AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
 }
 
 console.log(`AI Route using AI_SERVICE_URL: ${AI_SERVICE_URL}`);
 
 const instance = axios.create({
-  timeout: 15000, // 15 seconds to allow for service wake-up on Free plan
+  timeout: 60000, // 60 seconds to allow for service wake-up on Free plan
 });
+
 
 // Helper to get sanitized URL
 const getUrl = (path) => {
