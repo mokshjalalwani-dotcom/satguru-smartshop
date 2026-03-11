@@ -2,179 +2,113 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-
-// Render Networking Resiliency
-if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
-  if (!AI_SERVICE_URL.includes('.')) {
-    // Internal Render hostname: usually needs port 10000
-    AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
-  } else {
-    AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
-  }
-}
-
-// Fallback logic for common Render DNS issues on Free plans
-const originalBase = AI_SERVICE_URL;
-
-console.log(`[AI-ADAPTER] Primary Target: ${AI_SERVICE_URL}`);
-
-console.log(`AI Route using AI_SERVICE_URL: ${AI_SERVICE_URL}`);
+const AI_INTERNAL_URL = 'http://satguru-ai-service:10000';
+const AI_PUBLIC_URL = 'https://satguru-ai-service.onrender.com';
 
 const instance = axios.create({
-  timeout: 60000, // 60 seconds to allow for service wake-up on Free plan
+  timeout: 60000,
 });
 
-
-// Helper to get sanitized URL
-const getUrl = (path) => {
-  let base = AI_SERVICE_URL;
-  if (base.endsWith('/')) base = base.slice(0, -1);
+const aiRequest = async (method, path, options = {}) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${cleanPath}`;
+  
+  // Try Internal first
+  try {
+    const internalTarget = `${AI_INTERNAL_URL}${cleanPath}`;
+    console.log(`[AI-ADAPTER-TRY] Internal: ${internalTarget}`);
+    return await instance({ method, url: internalTarget, ...options });
+  } catch (internalError) {
+    if (internalError.code === 'ENOTFOUND' || internalError.code === 'ECONNREFUSED' || internalError.code === 'ETIMEDOUT') {
+      console.warn(`[AI-ADAPTER-FALLBACK] Internal failed (${internalError.code}). Trying Public...`);
+      const publicTarget = `${AI_PUBLIC_URL}${cleanPath}`;
+      try {
+        return await instance({ method, url: publicTarget, ...options });
+      } catch (publicError) {
+        throw new Error(`AI Gateway Error: Internal & Public both failed. Last Error: ${publicError.message} (Target: ${publicTarget})`);
+      }
+    }
+    throw internalError;
+  }
 };
 
-// GET /api/ai/health - Diagnostics endpoint
 router.get('/health', async (req, res) => {
-  const target = getUrl('/health');
   try {
-    const start = Date.now();
-    const response = await instance.get(target);
-    res.json({ 
-      status: 'ok', 
-      message: 'Connection successful',
-      target: target,
-      latency: `${Date.now() - start}ms`,
-      backend: response.data
-    });
+    const response = await aiRequest('GET', '/health');
+    res.json({ status: 'ok', backend: response.data });
   } catch (error) {
-    console.error(`[AI-HEALTH-ERROR] Connection to ${target} failed:`, error.message);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Failed to connect to AI Service',
-      target: target,
-      config_url: AI_SERVICE_URL,
-      error: error.message,
-      code: error.code
-    });
+    res.status(500).json({ status: 'error', details: error.message });
   }
 });
 
-// GET /api/ai/debug - Full diagnostic info
-router.get('/debug', (req, res) => {
-    res.json({
-        env_url: process.env.AI_SERVICE_URL,
-        calculated_url: AI_SERVICE_URL,
-        node_env: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
-    });
-});
-
-// GET /api/ai/predict
 router.get('/predict', async (req, res) => {
   try {
-    const response = await instance.get(getUrl('/predict'));
+    const response = await aiRequest('GET', '/predict');
     res.json(response.data);
   } catch (error) {
-    console.error(`AI Predict Error: ${error.message}`);
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+    res.status(500).json({ error: 'AI Predict Failed', details: error.message });
   }
 });
 
-// GET /api/ai/demand
-router.get('/demand', async (req, res) => {
-  try {
-    const response = await instance.get(getUrl('/demand'));
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// GET /api/ai/anomalies
-router.get('/anomalies', async (req, res) => {
-  try {
-    const response = await instance.get(getUrl('/anomalies'));
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// POST /api/ai/train
-router.post('/train', async (req, res) => {
-  try {
-    const response = await instance.post(getUrl('/train'));
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// GET /api/ai/stats
 router.get('/stats', async (req, res) => {
-  const target = getUrl('/stats');
   try {
-    const response = await instance.get(target, { params: req.query });
+    const response = await aiRequest('GET', '/stats', { params: req.query });
     res.json(response.data);
   } catch (error) {
-    console.error(`[AI-STATS-ERROR] Target: ${target}, Error: ${error.message}`);
-    res.status(500).json({ 
-        error: 'AI Service unavailable', 
-        details: `${error.message} (Target: ${target})`,
-        code: error.code 
-    });
+    res.status(500).json({ error: 'AI Stats Failed', details: error.message });
   }
 });
 
-// GET /api/ai/insights
 router.get('/insights', async (req, res) => {
   try {
-    const response = await instance.get(getUrl('/insights'));
+    const response = await aiRequest('GET', '/insights');
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+    res.status(500).json({ error: 'AI Insights Failed', details: error.message });
   }
 });
 
-// GET /api/ai/transactions
-router.get('/transactions', async (req, res) => {
-  try {
-    const response = await instance.get(getUrl('/transactions'), { params: req.query });
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// GET /api/ai/history
-router.get('/history', async (req, res) => {
-  try {
-    const response = await instance.get(getUrl('/history'), { params: req.query });
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// GET /api/ai/product-stats
-router.get('/product-stats', async (req, res) => {
-  try {
-    const response = await instance.get(getUrl('/product-stats'), { params: req.query });
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
-  }
-});
-
-// GET /api/ai/inventory
 router.get('/inventory', async (req, res) => {
   try {
-    const response = await instance.get(getUrl('/inventory'));
+    const response = await aiRequest('GET', '/inventory');
     res.json(response.data);
   } catch (error) {
-    console.error(`AI Inventory Error: ${error.message}`);
-    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+    res.status(500).json({ error: 'AI Inventory Failed', details: error.message });
+  }
+});
+
+router.get('/transactions', async (req, res) => {
+  try {
+    const response = await aiRequest('GET', '/transactions', { params: req.query });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'AI Transactions Failed', details: error.message });
+  }
+});
+
+router.get('/history', async (req, res) => {
+  try {
+    const response = await aiRequest('GET', '/history', { params: req.query });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'AI History Failed', details: error.message });
+  }
+});
+
+router.get('/product-stats', async (req, res) => {
+  try {
+    const response = await aiRequest('GET', '/product-stats', { params: req.query });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'AI Product Stats Failed', details: error.message });
+  }
+});
+
+router.post('/train', async (req, res) => {
+  try {
+    const response = await aiRequest('POST', '/train');
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'AI Training Failed', details: error.message });
   }
 });
 
