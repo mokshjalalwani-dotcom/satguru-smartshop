@@ -4,13 +4,17 @@ const router = express.Router();
 
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
-// Check if we are using an internal host name (no dots and no http)
-if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http') && !AI_SERVICE_URL.includes('.')) {
-  // On Render, internal services usually talk over port 10000
-  AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
-} else if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
-  AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
+// Render Internal Host handling
+if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
+  // If it's just a hostname like 'satguru-ai-service', default to port 10000
+  if (!AI_SERVICE_URL.includes(':') && !AI_SERVICE_URL.includes('.')) {
+    AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
+  } else {
+    AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
+  }
 }
+
+console.log(`[AI-ADAPTER] Targeting AI Service at: ${AI_SERVICE_URL}`);
 
 console.log(`AI Route using AI_SERVICE_URL: ${AI_SERVICE_URL}`);
 
@@ -29,25 +33,38 @@ const getUrl = (path) => {
 
 // GET /api/ai/health - Diagnostics endpoint
 router.get('/health', async (req, res) => {
-  const target = getUrl('/stats');
+  const target = getUrl('/health');
   try {
     const start = Date.now();
-    await instance.get(target, { params: { days: 1 } });
+    const response = await instance.get(target);
     res.json({ 
       status: 'ok', 
-      message: 'Connection to AI Service successful',
+      message: 'Connection successful',
       target: target,
-      latency: `${Date.now() - start}ms`
+      latency: `${Date.now() - start}ms`,
+      backend: response.data
     });
   } catch (error) {
+    console.error(`[AI-HEALTH-ERROR] Connection to ${target} failed:`, error.message);
     res.status(500).json({ 
       status: 'error', 
       message: 'Failed to connect to AI Service',
       target: target,
+      config_url: AI_SERVICE_URL,
       error: error.message,
       code: error.code
     });
   }
+});
+
+// GET /api/ai/debug - Full diagnostic info
+router.get('/debug', (req, res) => {
+    res.json({
+        env_url: process.env.AI_SERVICE_URL,
+        calculated_url: AI_SERVICE_URL,
+        node_env: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
 });
 
 // GET /api/ai/predict
@@ -138,6 +155,17 @@ router.get('/product-stats', async (req, res) => {
     const response = await instance.get(getUrl('/product-stats'), { params: req.query });
     res.json(response.data);
   } catch (error) {
+    res.status(500).json({ error: 'AI Service unavailable', details: error.message });
+  }
+});
+
+// GET /api/ai/inventory
+router.get('/inventory', async (req, res) => {
+  try {
+    const response = await instance.get(getUrl('/inventory'));
+    res.json(response.data);
+  } catch (error) {
+    console.error(`AI Inventory Error: ${error.message}`);
     res.status(500).json({ error: 'AI Service unavailable', details: error.message });
   }
 });

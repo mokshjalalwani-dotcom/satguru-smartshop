@@ -6,7 +6,7 @@ services:
     region: singapore
     plan: free
     rootDir: ai-service
-    buildCommand: pip install -r requirements.txt && python generate_data.py && python train.py && python test_api.py
+    buildCommand: pip install -r requirements.txt && python generate_data.py && python train.py
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
