@@ -155,7 +155,7 @@ const InventoryIntelligence: React.FC = () => {
                 <th className="p-4 pl-6 font-medium">Product</th>
                 <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium text-center">Current Stock</th>
-                <th className="p-4 font-medium text-center">Unit Price</th>
+                <th className="p-4 font-medium text-center">Days to Stockout</th>
                 <th className="p-4 font-medium text-center text-indigo-400">AI Predict (7d)</th>
                 <th className="p-4 font-medium">Trend</th>
                 <th className="p-4 pr-6 text-right font-medium">AI Suggestion</th>
@@ -178,7 +178,11 @@ const InventoryIntelligence: React.FC = () => {
                     <span className="text-lg font-bold">{item.stock}</span>
                   </td>
                   <td className="p-4 text-center">
-                    <span className="text-sm font-medium text-white/80">{formatINR(item.price)}</span>
+                    {item.days_to_stockout !== undefined ? (
+                      <span className={`text-sm font-bold px-2.5 py-1 rounded-md border ${item.urgent_flag ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-white/5 text-white/80 border-white/10'}`}>
+                        {item.days_to_stockout} Days
+                      </span>
+                    ) : '-'}
                   </td>
                   <td className="p-4 text-center">
                     <span className="text-lg font-black text-indigo-400">{item.predictedDemand}</span>

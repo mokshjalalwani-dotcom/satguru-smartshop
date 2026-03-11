@@ -233,85 +233,54 @@ def get_insights():
 @app.get("/predict")
 def predict_next_30_days():
     df, _ = load_data()
-    model, le = get_ml_resources()
+    from forecast_engine import forecast_next_period
     
     if df.empty: return {"predictions": []}
     
-    last_date = df['date'].max()
-    predictions = []
+    # Aggregate daily revenue
+    daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
+    daily_revenue.columns = ['date', 'revenue']
     
-    # Fallback to smart avg if model missing or fails
-    if model is None or le is None:
-        avg_daily = df.groupby(df['date'].dt.date)['price'].sum().mean()
-        for i in range(1, 31):
-            target = last_date + timedelta(days=i)
-            predictions.append({
-                "date": target.strftime("%Y-%m-%d"),
-                "predicted_sales": round(float(avg_daily * np.random.uniform(0.95, 1.05)), 2)
-            })
-        return {"predictions": predictions}
-
-    unique_products = df['product'].unique()
-    for i in range(1, 31):
-        target_date = last_date + timedelta(days=i)
-        month_sin = np.sin(2 * np.pi * target_date.month / 12)
-        month_cos = np.cos(2 * np.pi * target_date.month / 12)
-        day_sin = np.sin(2 * np.pi * target_date.dayofweek / 7)
-        day_cos = np.cos(2 * np.pi * target_date.dayofweek / 7)
-        is_weekend = int(target_date.dayofweek >= 5)
-        
-        daily_total = 0
-        for prod in unique_products:
-            try:
-                prod_enc = le.transform([prod])[0]
-                
-                feat = pd.DataFrame([{
-                    'product_encoded': prod_enc,
-                    'month_sin': month_sin,
-                    'month_cos': month_cos,
-                    'day_sin': day_sin,
-                    'day_cos': day_cos,
-                    'is_weekend': is_weekend
-                }])
-                pred_val = model.predict(feat)[0]
-                daily_total += float(pred_val)
-            except: continue
-            
-        predictions.append({
-            "date": target_date.strftime("%Y-%m-%d"),
-            "predicted_sales": round(max(0.0, float(daily_total)), 2)
-        })
-    return {"predictions": predictions}
+    # Use the new ML engine for the forecast
+    forecast_data = forecast_next_period(daily_revenue, days_to_predict=30)
+    
+    # Map back to what frontend currently expects while adding new fields
+    return {
+        "predictions": forecast_data["daily_forecasts"],
+        "confidence_interval": forecast_data["confidence_interval"],
+        "predicted_total": forecast_data["predicted_total"],
+        "trend_percent_change": forecast_data["trend_percent_change"],
+        "metrics": forecast_data["metrics"]
+    }
 
 @app.get("/inventory")
 def get_inventory():
     df, inv = load_data()
+    from forecast_engine import calculate_stockout_risk
     if inv.empty: return []
     
-    # Get mean sales for predicted demand
     recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))] if not df.empty else pd.DataFrame()
-    demand_lookup = recent.groupby('product')['sales'].mean().to_dict() if not recent.empty else {}
-    price_lookup = recent.groupby('product')['price'].mean().to_dict() if not recent.empty else {}
     
-    # Process for frontend
+    # Use the new ML engine
+    risk_results = calculate_stockout_risk(inv, recent)
+    
     items = []
-    for _, row in inv.iterrows():
-        prod = row['product']
-        status = "Healthy"
-        if row['stock'] <= (row['threshold'] * 0.5): status = "Critical"
-        elif row['stock'] <= row['threshold']: status = "Low Stock"
-        
+    for row in risk_results:
         items.append({
-            "id": f"P-{random.randint(100, 999)}",
-            "product": prod,
-            "stock": int(row['stock']),
-            "threshold": int(row['threshold']),
-            "predictedDemand": int(demand_lookup.get(prod, 0) * 7), # 7-day forecast
-            "status": status,
-            "reorderSuggestion": f"Order {int(row['threshold'] * 2)} units" if status != "Healthy" else "Not Needed",
-            "trend": f"+{random.randint(2, 15)}%", # Simulated trend for now
-            "price": float(price_lookup.get(prod, 0)),
-            "lead_time": int(row['lead_time_days'])
+            "id": row["product_id"],
+            "product": row["product_name"],
+            "stock": row["current_stock"],
+            "threshold": row["threshold"],
+            # Calculate demanded qty over next 7 days based on velocity
+            "predictedDemand": int(row["sales_velocity_per_day"] * 7),
+            "status": row["status"],
+            "reorderSuggestion": f"Order {row['suggested_reorder_qty']} units" if row["status"] != "Healthy" else "Not Needed",
+            "trend": row["trend"],
+            "price": row["price"],
+            "lead_time": row["lead_time_days"],
+            # Exposing extra fields for updated UI (days_to_stockout)
+            "days_to_stockout": row["days_to_stockout"],
+            "urgent_flag": row["urgent_flag"]
         })
     return items
 
@@ -331,30 +300,44 @@ def get_demand():
 
 @app.get("/anomalies")
 def get_anomalies():
-    from sklearn.ensemble import IsolationForest
+    from forecast_engine import detect_point_anomalies, detect_multivariate_anomalies
     df, _ = load_data()
     if df.empty: return {"anomalies": []}
     
-    # Use Isolation Forest on subset for performance
-    subset = df.head(2000).copy()
-    if len(subset) < 10: return {"anomalies": []}
-    
     try:
-        model = IsolationForest(contamination=0.01, random_state=42)
-        subset['is_anomaly'] = model.fit_predict(subset[['price', 'sales']])
-        anomalies = subset[subset['is_anomaly'] == -1]
+        # 1. Point Anomalies on Daily Revenue
+        daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
+        daily_revenue.columns = ['date', 'revenue']
+        point_anomalies = detect_point_anomalies(daily_revenue)
+        
+        # 2. Multivariate Isolation Forest Anomalies
+        multi_anomalies = detect_multivariate_anomalies(df)
         
         results = []
-        for _, row in anomalies.iterrows():
+        for anom in point_anomalies:
             results.append({
-                "date": row['date'].strftime("%Y-%m-%d"),
-                "product": row['product'],
-                "sales": int(row['sales']),
-                "price": float(row['price']),
-                "anomaly": -1,
-                "reason": "Market Deviation",
-                "severity": "WARNING"
+                "date": anom["date"],
+                "product": "Overall",
+                "sales": 0,
+                "price": anom["actual_value"],
+                "anomaly": anom["actual_value"] - anom["expected_value"],
+                "reason": f"Revenue anomaly: {anom['features'][0]}",
+                "severity": anom["severity"],
+                "type": anom["type"]
             })
+            
+        for anom in multi_anomalies:
+            results.append({
+                "date": df['date'].max().strftime("%Y-%m-%d"),
+                "product": anom["product_name"],
+                "sales": int(anom["actual_value"]),
+                "price": 0,
+                "anomaly": -1,
+                "reason": anom["likely_cause"],
+                "severity": anom["severity"],
+                "type": anom["type"]
+            })
+            
         return {"anomalies": results[:20]}
     except Exception as e:
         logger.error(f"Anomaly detection error: {e}")

@@ -22,6 +22,7 @@ const Dashboard: React.FC = () => {
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [predictionMetrics, setPredictionMetrics] = useState<{total: number, ci: {lower: number, upper: number}, trend: number} | null>(null);
   const [duration, setDuration] = useState<7 | 30 | 180>(7);
   const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
@@ -50,7 +51,14 @@ const Dashboard: React.FC = () => {
           setTransactions(transData.value.map((t, i) => ({ ...t, id: i.toString() })));
         }
         if (historyData.status === 'fulfilled') setHistory(historyData.value);
-        if (predictData.status === 'fulfilled') setPredictions(predictData.value.predictions);
+        if (predictData.status === 'fulfilled') {
+          setPredictions(predictData.value.predictions);
+          setPredictionMetrics({
+            total: predictData.value.predicted_total,
+            ci: predictData.value.confidence_interval,
+            trend: predictData.value.trend_percent_change
+          });
+        }
 
         if (statsData.status === 'rejected') {
            const err = statsData.reason as any;
@@ -170,10 +178,26 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="bg-xcard border border-white/5 rounded-2xl p-6 glass-morphism flex flex-col">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-6 text-white">
+          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4 text-white">
             <Clock size={20} className="text-purple-400" /> AI Predictive Forecasts
           </h2>
-          <div className="space-y-4 flex-1 pr-2 overflow-y-auto max-h-[250px] custom-scrollbar">
+          
+          {predictionMetrics && (
+             <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+               <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">30-Day Outlook</div>
+               <div className="flex items-end gap-2">
+                 <span className="text-2xl font-black text-white">{formatINR(predictionMetrics.total)}</span>
+                 <span className={`text-sm font-bold mb-1 ${predictionMetrics.trend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                   {predictionMetrics.trend >= 0 ? '+' : ''}{predictionMetrics.trend}%
+                 </span>
+               </div>
+               <div className="text-xs text-white/50 mt-1">
+                 Confidence Interval: {formatINR(predictionMetrics.ci.lower)} - {formatINR(predictionMetrics.ci.upper)}
+               </div>
+             </div>
+          )}
+
+          <div className="space-y-3 flex-1 pr-2 overflow-y-auto max-h-[180px] custom-scrollbar">
             
              {predictions.length > 0 ? predictions.slice(0, 5).map((p, i) => (
                 <div key={i} className={`p-3 border rounded-xl ${i === 0 ? 'bg-xbrand/10 border-xbrand/20' : 'bg-white/5 border-white/10'}`}>
@@ -183,7 +207,7 @@ const Dashboard: React.FC = () => {
                         </span>
                         <span className="text-[10px] text-white/50">{p.date}</span>
                     </div>
-                    <p className="text-sm text-white/90">Predicted Sales: <strong>{formatINR(p.predicted_sales)}</strong></p>
+                    <p className="text-sm text-white/90">Predicted Sales: <strong>{formatINR(p.predicted_revenue)}</strong></p>
                     <p className="text-xs text-white/40 mt-1">Confidence Score: {(92 - i * 2)}%</p>
                 </div>
              )) : (

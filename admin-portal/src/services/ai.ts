@@ -9,7 +9,15 @@ const instance = axios.create({
 
 export interface Prediction {
   date: string;
-  predicted_sales: number;
+  predicted_revenue: number;
+}
+
+export interface PredictionResponse {
+  predictions: Prediction[];
+  confidence_interval: { lower: number; upper: number };
+  predicted_total: number;
+  trend_percent_change: number;
+  metrics: { mae: number; rmse: number };
 }
 
 export interface Demand {
@@ -24,6 +32,7 @@ export interface Anomaly {
     anomaly: number;
     reason?: string;
     severity?: 'WARNING' | 'CRITICAL';
+    type?: string;
 }
 
 export interface InventoryItem {
@@ -37,7 +46,10 @@ export interface InventoryItem {
   trend: string;
   price: number;
   lead_time: number;
+  days_to_stockout?: number;
+  urgent_flag?: boolean;
 }
+
 
 export interface AIStats {
   revenue: number;
@@ -84,7 +96,7 @@ export interface HistoryData {
 }
 
 export const aiService = {
-  getPrediction: async (): Promise<{ predictions: Prediction[] }> => {
+  getPrediction: async (): Promise<PredictionResponse> => {
     const response = await instance.get("/predict");
     return response.data;
   },
