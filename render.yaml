@@ -25,5 +25,5 @@ services:
         fromService:
           type: web
           name: satguru-ai-service
-          property: host
+          property: url
 

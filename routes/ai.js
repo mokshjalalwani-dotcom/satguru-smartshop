@@ -4,17 +4,18 @@ const router = express.Router();
 
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
-// Render Internal Host handling
+// Render Internal/External URL handling
 if (AI_SERVICE_URL && !AI_SERVICE_URL.startsWith('http')) {
-  // If it's just a hostname like 'satguru-ai-service', default to port 10000
-  if (!AI_SERVICE_URL.includes(':') && !AI_SERVICE_URL.includes('.')) {
+  // If it's a raw hostname like 'satguru-ai-service', default to port 10000 (Render's internal port)
+  if (!AI_SERVICE_URL.includes('.')) {
     AI_SERVICE_URL = `http://${AI_SERVICE_URL}:10000`;
   } else {
+    // If it's something like 'my-service.render.com'
     AI_SERVICE_URL = `http://${AI_SERVICE_URL}`;
   }
 }
 
-console.log(`[AI-ADAPTER] Targeting AI Service at: ${AI_SERVICE_URL}`);
+console.log(`[AI-ADAPTER] Verified Target: ${AI_SERVICE_URL}`);
 
 console.log(`AI Route using AI_SERVICE_URL: ${AI_SERVICE_URL}`);
 
