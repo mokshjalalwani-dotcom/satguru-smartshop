@@ -18,8 +18,8 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: npm run build
-    startCommand: npm start
+    buildCommand: npm install && cd admin-portal && npm install && npm run build
+    startCommand: node server.js
     envVars:
       - key: AI_SERVICE_URL
         fromService:

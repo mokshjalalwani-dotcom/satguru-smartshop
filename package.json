@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "npm install && npm install --prefix admin-portal && npm run build --prefix admin-portal"
+    "build": "cd admin-portal && npm install && npm run build"
   },
   "dependencies": {
     "axios": "^1.13.6",

@@ -32,7 +32,7 @@ def train_model():
     X = df[features]
     y = df['sales']
     
-    model = RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42)
+    model = RandomForestRegressor(n_estimators=50, max_depth=10, random_state=42)
     model.fit(X, y)
     
     # Save model and label encoder
