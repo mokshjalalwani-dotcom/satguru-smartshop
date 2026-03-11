@@ -205,7 +205,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-3">
              <p className="text-sm text-white/70 mb-4">{insights?.demand}</p>
              <div className="space-y-2">
-                {["Smartphone X", "Laptop Pro", "Wireless Buds", "Smart Watch", "Tablet G1"].map((prod, i) => (
+                {["Smart Inverter AC", "Front Load Washing Machine", "Double Door Refrigerator", "Microwave Oven", "4K Smart LED TV"].map((prod, i) => (
                     <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
                         <span className="text-sm text-white">{prod}</span>
                         <span className="text-xs font-bold text-orange-400">High Demand</span>

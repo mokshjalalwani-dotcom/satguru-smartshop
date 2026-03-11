@@ -225,7 +225,7 @@ def get_insights():
     return {
         "forecasting": f"Revenue trend ({rev_trend}) suggests growth. {top_prod} remains the high-velocity driver.",
         "demand": f"Alert: {', '.join(low_stock[:2]) if low_stock else 'All stock stable'}. Reorder recommended soon.",
-        "anomalies": "Market variance detected in Computing segment. Isolation Forest identifies price deviations.",
+        "anomalies": "Market variance detected in Home Appliance segment. Isolation Forest identifies price deviations.",
         "bi": "Weekend traffic consistently higher. Peak performance noted during holiday simulations.",
         "kpi_trends": f"Profit margins are healthy. {recent_stats['profit_change']} growth in net profit this period."
     }
@@ -264,9 +264,6 @@ def predict_next_30_days():
         for prod in unique_products:
             try:
                 prod_enc = le.transform([prod])[0]
-                # Use recent avg price
-                avg_price = df[df['product'] == prod]['price'].mean()
-                if np.isnan(avg_price): avg_price = 0
                 
                 feat = pd.DataFrame([{
                     'product_encoded': prod_enc,
@@ -274,8 +271,7 @@ def predict_next_30_days():
                     'month_cos': month_cos,
                     'day_sin': day_sin,
                     'day_cos': day_cos,
-                    'is_weekend': is_weekend,
-                    'price': avg_price
+                    'is_weekend': is_weekend
                 }])
                 pred_val = model.predict(feat)[0]
                 daily_total += float(pred_val)

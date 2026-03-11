@@ -8,11 +8,11 @@ def generate_enriched_dataset():
     """Generates a high-fidelity synthetic retail dataset with fixed start date for deterministic testing."""
     
     products = {
-        "Smartphone X": {"base_price": 599.99, "avg_sales": 15, "margin": 0.15, "category": "Mobile"},
-        "Laptop Pro": {"base_price": 1299.99, "avg_sales": 5, "margin": 0.12, "category": "Computing"},
-        "Wireless Buds": {"base_price": 89.99, "avg_sales": 45, "margin": 0.40, "category": "Audio"},
-        "Smart Watch": {"base_price": 199.99, "avg_sales": 22, "margin": 0.35, "category": "Wearables"},
-        "Tablet G1": {"base_price": 449.99, "avg_sales": 8, "margin": 0.20, "category": "Mobile"}
+        "Smart Inverter AC": {"base_price": 40500.0, "avg_sales": 7, "margin": 0.25, "category": "Climate Control"},
+        "Front Load Washing Machine": {"base_price": 32000.0, "avg_sales": 6, "margin": 0.20, "category": "Home Appliance"},
+        "Double Door Refrigerator": {"base_price": 28000.0, "avg_sales": 8, "margin": 0.18, "category": "Home Appliance"},
+        "Microwave Oven": {"base_price": 9500.0, "avg_sales": 10, "margin": 0.30, "category": "Kitchen Appliance"},
+        "4K Smart LED TV": {"base_price": 50000.0, "avg_sales": 5, "margin": 0.22, "category": "Entertainment"}
     }
 
     # Reduced days to save memory on Render Free plan
