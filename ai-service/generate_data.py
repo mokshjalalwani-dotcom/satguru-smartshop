@@ -2,62 +2,82 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import os
+import random
 
 def generate_enriched_dataset():
+    """Generates a high-fidelity synthetic retail dataset for AI training."""
+    
+    # Configuration for distinct product segments
     products = {
-        "Smartphone X": {"base_price": 599.99, "avg_sales": 150, "std_sales": 20, "stock": 15},
-        "Laptop Pro": {"base_price": 1299.99, "avg_sales": 50, "std_sales": 10, "stock": 5},
-        "Wireless Buds": {"base_price": 100.0, "avg_sales": 100, "std_sales": 15, "stock": 100},
-        "Smart Watch": {"base_price": 200.0, "avg_sales": 80, "std_sales": 12, "stock": 40},
-        "Tablet G1": {"base_price": 450.0, "avg_sales": 60, "std_sales": 10, "stock": 8}
+        "Smartphone X": {"base_price": 599.99, "avg_sales": 15, "margin": 0.15, "category": "Mobile"},
+        "Laptop Pro": {"base_price": 1299.99, "avg_sales": 5, "margin": 0.12, "category": "Computing"},
+        "Wireless Buds": {"base_price": 89.99, "avg_sales": 45, "margin": 0.40, "category": "Audio"},
+        "Smart Watch": {"base_price": 199.99, "avg_sales": 22, "margin": 0.35, "category": "Wearables"},
+        "Tablet G1": {"base_price": 449.99, "avg_sales": 8, "margin": 0.20, "category": "Mobile"}
     }
 
-    # Start date exactly one year ago from today
-    start_date = datetime(2025, 3, 11)
+    start_date = datetime.now() - timedelta(days=365)
     num_days = 365
     sales_data = []
+    inventory_data = []
     
     np.random.seed(42)
+    random.seed(42)
+
+    print("Generating Intelligent Sales Data...")
 
     for day in range(num_days):
         current_date = start_date + timedelta(days=day)
+        is_weekend = current_date.weekday() >= 5
+        month = current_date.month
+        
+        # Seasonality factors
+        month_factor = 1.6 if month in [11, 12] else 1.2 if month == 3 else 1.0 # Peaks in Holi (Mar) and Year-End
+        day_factor = 1.4 if is_weekend else 1.0
+        
         for product, config in products.items():
-            month_factor = 1.4 if current_date.month in [11, 12] else 1.0
-            weekend_factor = 1.3 if current_date.weekday() >= 5 else 1.0
+            # Calculate daily sales volume with noise
+            base_vol = config["avg_sales"] * month_factor * day_factor
+            num_sales = int(np.random.poisson(base_vol))
             
-            avg = config["avg_sales"] * month_factor * weekend_factor
-            num_transactions = int(np.random.normal(avg, config["std_sales"]))
-            num_transactions = max(1, num_transactions)
+            # Add occasional "Flash Sale" spikes (2% chance)
+            if random.random() < 0.02:
+                num_sales = int(num_sales * 2.5)
 
-            for i in range(num_transactions):
-                qty = 1 # Simple qty for now
-                price = config["base_price"] + np.random.uniform(-5, 5)
+            for i in range(num_sales):
+                # Slight price variation per transaction (market dynamics)
+                price_variance = np.random.uniform(-0.02, 0.02)
+                sale_price = round(config["base_price"] * (1 + price_variance), 2)
                 
                 sales_data.append({
-                    "order_id": f"ORD-{current_date.strftime('%y%m%d')}-{np.random.randint(1000, 9999)}-{i}",
+                    "order_id": f"ORD-{current_date.strftime('%y%m%d')}-{random.randint(1000, 9999)}",
                     "date": current_date.strftime("%Y-%m-%d %H:%M:%S"),
-                    "customer_id": f"CUST-{np.random.randint(100, 999)}",
+                    "customer_id": f"CUST-{random.randint(100, 999)}",
                     "product": product,
-                    "sales": qty,
-                    "price": round(price, 2),
-                    "payment_status": "Completed" if np.random.random() > 0.05 else "Pending"
+                    "category": config["category"],
+                    "sales": 1,
+                    "price": sale_price,
+                    "cost": round(sale_price * (1 - config["margin"]), 2),
+                    "payment_status": "Completed" if random.random() > 0.03 else "Pending"
                 })
 
-    df = pd.DataFrame(sales_data)
+    # Save Sales
+    df_sales = pd.DataFrame(sales_data)
     os.makedirs("data", exist_ok=True)
-    df.to_csv("data/sales.csv", index=False)
+    df_sales.to_csv("data/sales.csv", index=False)
     
     # Generate Inventory
-    inv_data = []
     for prod, config in products.items():
-        inv_data.append({
+        stock = random.randint(20, 150)
+        inventory_data.append({
             "product": prod,
-            "stock": config["stock"] + np.random.randint(0, 50),
-            "threshold": 15
+            "stock": stock,
+            "threshold": 30,
+            "lead_time_days": random.randint(3, 7)
         })
-    pd.DataFrame(inv_data).to_csv("data/inventory.csv", index=False)
+    pd.DataFrame(inventory_data).to_csv("data/inventory.csv", index=False)
     
-    print(f"Generated {len(df)} transactions and inventory file.")
+    print(f"Dataset finalized: {len(df_sales)} transactions across 5 categories.")
 
 if __name__ == "__main__":
     generate_enriched_dataset()
