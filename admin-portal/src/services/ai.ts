@@ -26,6 +26,16 @@ export interface Anomaly {
     severity?: 'WARNING' | 'CRITICAL';
 }
 
+export interface InventoryItem {
+  id: string;
+  product: string;
+  stock: number;
+  threshold: number;
+  status: "Healthy" | "Low Stock" | "Critical";
+  reorderSuggestion: string;
+  lead_time: number;
+}
+
 export interface AIStats {
   revenue: number;
   orders: number;
@@ -109,6 +119,11 @@ export const aiService = {
   
   getProductStats: async (days: number = 7): Promise<ProductStat[]> => {
     const response = await instance.get("/product-stats", { params: { days } });
+    return response.data;
+  },
+
+  getInventory: async (): Promise<InventoryItem[]> => {
+    const response = await instance.get("/inventory");
     return response.data;
   }
 };

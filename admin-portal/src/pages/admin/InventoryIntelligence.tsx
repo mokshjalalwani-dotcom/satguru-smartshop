@@ -27,21 +27,28 @@ const fallbackData: InventoryItem[] = [
 const formatINR = (amount: number) => "₹" + amount.toLocaleString('en-IN');
 
 const InventoryIntelligence: React.FC = () => {
-  const [data, _setData] = useState<InventoryItem[]>(fallbackData);
+  const [data, setData] = useState<InventoryItem[]>([]);
   const [searchTerm, _setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [_stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const statsData = await aiService.getStats(7);
+        const [statsData, inventoryData] = await Promise.all([
+          aiService.getStats(7),
+          aiService.getInventory()
+        ]);
         setStats(statsData);
+        setData(inventoryData);
       } catch (e) {
-        /* graceful fallback — stats just won't update */
+        console.error("Inventory Fetch Error:", e);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchStats();
+    fetchData();
   }, []);
 
   const getStatusColor = (status: string) => {

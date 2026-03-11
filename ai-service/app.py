@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+import random
 import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -261,6 +262,38 @@ def predict_next_30_days():
             "predicted_sales": round(max(0.0, float(daily_total)), 2)
         })
     return {"predictions": predictions}
+
+@app.get("/inventory")
+def get_inventory():
+    df, inv = load_data()
+    if inv.empty: return []
+    
+    # Get mean sales for predicted demand
+    recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))] if not df.empty else pd.DataFrame()
+    demand_lookup = recent.groupby('product')['sales'].mean().to_dict() if not recent.empty else {}
+    price_lookup = recent.groupby('product')['price'].mean().to_dict() if not recent.empty else {}
+    
+    # Process for frontend
+    items = []
+    for _, row in inv.iterrows():
+        prod = row['product']
+        status = "Healthy"
+        if row['stock'] <= (row['threshold'] * 0.5): status = "Critical"
+        elif row['stock'] <= row['threshold']: status = "Low Stock"
+        
+        items.append({
+            "id": f"P-{random.randint(100, 999)}",
+            "product": prod,
+            "stock": int(row['stock']),
+            "threshold": int(row['threshold']),
+            "predictedDemand": int(demand_lookup.get(prod, 0) * 7), # 7-day forecast
+            "status": status,
+            "reorderSuggestion": f"Order {int(row['threshold'] * 2)} units" if status != "Healthy" else "Not Needed",
+            "trend": f"+{random.randint(2, 15)}%", # Simulated trend for now
+            "price": float(price_lookup.get(prod, 0)),
+            "lead_time": int(row['lead_time_days'])
+        })
+    return items
 
 @app.get("/transactions")
 def get_transactions(limit: int = 10):

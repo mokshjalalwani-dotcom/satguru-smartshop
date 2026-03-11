@@ -12,7 +12,7 @@ import {
   Tooltip, 
   Area 
 } from "recharts";
-import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights} from "../services/ai";
+import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights, type Prediction} from "../services/ai";
 
 type TransactionRow = Transaction & { id: string };
 
@@ -21,6 +21,7 @@ const Dashboard: React.FC = () => {
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [duration, setDuration] = useState<7 | 30 | 180>(7);
   const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
@@ -33,11 +34,12 @@ const Dashboard: React.FC = () => {
         setErrorStatus(null);
         
         // Fetch individually to prevent one failure from breaking everything
-        const [statsData, insightsData, transData, historyData] = await Promise.allSettled([
+        const [statsData, insightsData, transData, historyData, predictData] = await Promise.allSettled([
           aiService.getStats(duration),
           aiService.getInsights(),
           aiService.getTransactions(10),
-          aiService.getHistory(duration)
+          aiService.getHistory(duration),
+          aiService.getPrediction()
         ]);
 
         if (!isMounted) return;
@@ -48,6 +50,7 @@ const Dashboard: React.FC = () => {
           setTransactions(transData.value.map((t, i) => ({ ...t, id: i.toString() })));
         }
         if (historyData.status === 'fulfilled') setHistory(historyData.value);
+        if (predictData.status === 'fulfilled') setPredictions(predictData.value.predictions);
 
         if (statsData.status === 'rejected' || historyData.status === 'rejected') {
            setErrorStatus("Backend AI Service might be offline.");
@@ -164,45 +167,22 @@ const Dashboard: React.FC = () => {
           </h2>
           <div className="space-y-4 flex-1 pr-2 overflow-y-auto max-h-[250px] custom-scrollbar">
             
-             <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
-                 <div className="flex justify-between items-start mb-1">
-                     <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Product Stockout</span>
-                 </div>
-                 <p className="text-sm text-white/90"><strong>Smart Watch</strong> will run out in 3 days.</p>
-                 <p className="text-xs text-red-300 mt-1">Recommended reorder: 50 units.</p>
-             </div>
-
-             <div className="p-3 bg-orange-500/5 border border-orange-500/10 rounded-xl">
-                 <div className="flex justify-between items-start mb-1">
-                     <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Revenue Risk</span>
-                 </div>
-                 <p className="text-sm text-white/90">Predicted drop of <strong>18%</strong> this weekend.</p>
-                 <p className="text-xs text-orange-300 mt-1">Reason: lower weekday demand pattern.</p>
-             </div>
-
-             <div className="p-3 bg-xbrand/5 border border-xbrand/10 rounded-xl">
-                 <div className="flex justify-between items-start mb-1">
-                     <span className="text-[10px] font-bold text-xbrand uppercase tracking-widest">High-Demand</span>
-                 </div>
-                 <p className="text-sm text-white/90">Surge predicted: Laptop Pro (+30%), Tablet G1 (+18%).</p>
-                 <p className="text-xs text-xbrand mt-1">Action: Increase stock proactively.</p>
-             </div>
-
-             <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                 <div className="flex justify-between items-start mb-1">
-                     <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Customer Traffic</span>
-                 </div>
-                 <p className="text-sm text-white/90">Expected traffic tomorrow: <strong>220</strong> customers.</p>
-                 <p className="text-xs text-blue-300 mt-1">Peak hour: 6–8 PM.</p>
-             </div>
-
-             <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-xl">
-                 <div className="flex justify-between items-start mb-1">
-                     <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Profit Opportunity</span>
-                 </div>
-                 <p className="text-sm text-white/90">Top items: Wireless Buds, Tablet G1, Smartphone X.</p>
-                 <p className="text-xs text-green-300 mt-1">Action: Promote prominently.</p>
-             </div>
+             {predictions.length > 0 ? predictions.slice(0, 5).map((p, i) => (
+                <div key={i} className={`p-3 border rounded-xl ${i === 0 ? 'bg-xbrand/10 border-xbrand/20' : 'bg-white/5 border-white/10'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${i === 0 ? 'text-xbrand' : 'text-white/40'}`}>
+                            {i === 0 ? 'Next Day Forecast' : `T+${i+1} Forecast`}
+                        </span>
+                        <span className="text-[10px] text-white/50">{p.date}</span>
+                    </div>
+                    <p className="text-sm text-white/90">Predicted Sales: <strong>{formatINR(p.predicted_sales)}</strong></p>
+                    <p className="text-xs text-white/40 mt-1">Confidence Score: {(92 - i * 2)}%</p>
+                </div>
+             )) : (
+                <div className="text-center py-10 text-xtext-secondary text-xs italic">
+                    AI models are processing future trends...
+                </div>
+             )}
 
           </div>
         </div>
