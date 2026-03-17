@@ -1,8 +1,6 @@
 const { recordSale } = require('../db/salesDB');
 const { updateStock } = require('../db/productsDB');
 const { generateInvoice } = require('../utils/generateInvoice');
-const { uploadFile } = require('../utils/s3Upload');
-
 const createSale = async (req, res) => {
     const { product_id, quantity, product_name, price } = req.body;
 
@@ -19,11 +17,12 @@ const createSale = async (req, res) => {
         // Generate invoice PDF
         const invoicePath = generateInvoice(sale, product_name);
 
-        // Upload to S3
-        const s3Key = `invoices/invoice_${sale.sale_id}.pdf`;
-        const uploadResult = await uploadFile(invoicePath, s3Key);
-
-        res.json({ message: 'Sale recorded', sale, invoiceUrl: uploadResult.Location });
+        // No more S3 upload. Return local path or just confirmation.
+        res.json({ 
+            message: 'Sale recorded', 
+            sale, 
+            invoiceLocalPath: invoicePath 
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
