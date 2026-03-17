@@ -7,10 +7,16 @@ services:
     plan: free
     rootDir: ai-service
     buildCommand: pip install -r requirements.txt && python generate_data.py && python train.py
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    startCommand: python sync_data.py && uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
 
   # 2. Main Shop Portal (Node.js/Express + React Frontend)
   - type: web
