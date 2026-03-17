@@ -2,11 +2,19 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
+// URL Sanitization Utility
+const buildUrl = (base, path) => {
+  if (!base) return '';
+  const cleanBase = base.trim().replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
 const AI_INTERNAL_URL = process.env.AI_SERVICE_INTERNAL_URL || 'http://satguru-ai-service:10000';
 const AI_PUBLIC_URL = process.env.AI_SERVICE_URL || 'https://satguru-ai-service.onrender.com';
 
 const instance = axios.create({
-  timeout: 30000, // Reduced timeout for faster failover
+  timeout: 30000,
 });
 
 // Simple in-memory cache
@@ -15,14 +23,12 @@ const CACHE_TTL = 300 * 1000; // 5 minutes standard
 const STALE_TTL = 3600 * 1000; // 1 hour for stale fallback
 
 const aiRequest = async (method, path, options = {}) => {
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  const cacheKey = `${method}:${cleanPath}:${JSON.stringify(options.params || {})}`;
+  const cacheKey = `${method}:${path}:${JSON.stringify(options.params || {})}`;
 
   // Helper to get from cache (including stale)
   const getFromCache = (key, allowStale = false) => {
     const cached = cache.get(key);
     if (!cached) return null;
-    
     const age = Date.now() - cached.timestamp;
     if (age < CACHE_TTL || (allowStale && age < STALE_TTL)) {
       return cached.data;
@@ -34,49 +40,62 @@ const aiRequest = async (method, path, options = {}) => {
   if (method.toUpperCase() === 'GET') {
     const data = getFromCache(cacheKey);
     if (data) {
-      console.log(`[AI-CACHE-HIT] ${cleanPath}`);
+      console.log(`[AI-CACHE-HIT] ${path}`);
       return { data };
     }
   }
 
-  const performRequestWithFallback = async () => {
-    // 1. Try Internal
+  // --- Request Logic ---
+  let lastError = null;
+  let response = null;
+
+  // 1. Try Internal
+  const internalTarget = buildUrl(AI_INTERNAL_URL, path);
+  if (internalTarget) {
     try {
-      const internalTarget = `${AI_INTERNAL_URL}${cleanPath}`;
-      console.log(`[AI-ADAPTER-TRY] Internal: ${internalTarget}`);
-      return await instance({ method, url: internalTarget, ...options });
-    } catch (internalError) {
-      // If it's a 429, don't even try public, just return stale cache if we have it
-      if (internalError.response?.status === 429) {
-        const staleData = getFromCache(cacheKey, true);
-        if (staleData) {
-          console.warn(`[AI-GATEWAY-429] Internal Rate Limited. Returning stale data for ${cleanPath}`);
-          return { data: staleData, _status: 429 };
+      console.log(`[AI-TRY] Internal: ${internalTarget}`);
+      response = await instance({ method, url: internalTarget, ...options });
+    } catch (err) {
+      lastError = err;
+      if (err.response?.status === 429) {
+        const stale = getFromCache(cacheKey, true);
+        if (stale) {
+          console.warn(`[AI-429] Internal Rate Limit. Serving stale cache for ${path}`);
+          return { data: stale, _status: 429 };
         }
       }
+      console.warn(`[AI-FAIL] Internal failed: ${err.message}`);
+    }
+  }
 
-      console.warn(`[AI-ADAPTER-FALLBACK] Internal failed (${internalError.code || internalError.message}). Trying Public...`);
-      
-      // 2. Try Public
+  // 2. Try Public if internal failed
+  if (!response) {
+    const publicTarget = buildUrl(AI_PUBLIC_URL, path);
+    if (publicTarget) {
       try {
-        const publicTarget = `${AI_PUBLIC_URL}${cleanPath}`;
-        return await instance({ method, url: publicTarget, ...options });
-      } catch (publicError) {
-        // If public also fails or is rate limited, check stale cache as absolute last resort
-        const staleData = getFromCache(cacheKey, true);
-        if (staleData) {
-          console.error(`[AI-GATEWAY-RECOVERY] Both failed. Returning stale data for ${cleanPath}`);
-          return { data: staleData, _status: 'recovery' };
-        }
-        
-        throw new Error(`AI Gateway Error: All routes failed. Last Error: ${publicError.message}`);
+        console.log(`[AI-TRY] Public: ${publicTarget}`);
+        response = await instance({ method, url: publicTarget, ...options });
+      } catch (err) {
+        lastError = err;
+        console.error(`[AI-FAIL] Public failed: ${err.message}`);
       }
     }
-  };
+  }
 
-  const response = await performRequestWithFallback();
+  // 3. Absolute Last Resort: Stale Cache
+  if (!response) {
+    const stale = getFromCache(cacheKey, true);
+    if (stale) {
+      console.error(`[AI-RECOVERY] All routes failed. serving stale cache for ${path}`);
+      return { data: stale, _status: 'recovery' };
+    }
+    
+    // Final Error Report
+    const errMsg = lastError?.message || 'No route available';
+    throw new Error(`AI Gateway Error: All routes failed. Last Error: ${errMsg}`);
+  }
 
-  // Update cache on success (not on recovery data)
+  // Update cache on fresh success
   if (method.toUpperCase() === 'GET' && !response._status) {
     cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
   }
