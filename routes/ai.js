@@ -2,33 +2,86 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-const AI_INTERNAL_URL = 'http://satguru-ai-service:10000';
-const AI_PUBLIC_URL = 'https://satguru-ai-service.onrender.com';
+const AI_INTERNAL_URL = process.env.AI_SERVICE_INTERNAL_URL || 'http://satguru-ai-service:10000';
+const AI_PUBLIC_URL = process.env.AI_SERVICE_URL || 'https://satguru-ai-service.onrender.com';
 
 const instance = axios.create({
-  timeout: 60000,
+  timeout: 30000, // Reduced timeout for faster failover
 });
+
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_TTL = 300 * 1000; // 5 minutes standard
+const STALE_TTL = 3600 * 1000; // 1 hour for stale fallback
 
 const aiRequest = async (method, path, options = {}) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
-  // Try Internal first
-  try {
-    const internalTarget = `${AI_INTERNAL_URL}${cleanPath}`;
-    console.log(`[AI-ADAPTER-TRY] Internal: ${internalTarget}`);
-    return await instance({ method, url: internalTarget, ...options });
-  } catch (internalError) {
-    if (internalError.code === 'ENOTFOUND' || internalError.code === 'ECONNREFUSED' || internalError.code === 'ETIMEDOUT') {
-      console.warn(`[AI-ADAPTER-FALLBACK] Internal failed (${internalError.code}). Trying Public...`);
-      const publicTarget = `${AI_PUBLIC_URL}${cleanPath}`;
+  const cacheKey = `${method}:${cleanPath}:${JSON.stringify(options.params || {})}`;
+
+  // Helper to get from cache (including stale)
+  const getFromCache = (key, allowStale = false) => {
+    const cached = cache.get(key);
+    if (!cached) return null;
+    
+    const age = Date.now() - cached.timestamp;
+    if (age < CACHE_TTL || (allowStale && age < STALE_TTL)) {
+      return cached.data;
+    }
+    return null;
+  };
+
+  // Check cache for GET requests first
+  if (method.toUpperCase() === 'GET') {
+    const data = getFromCache(cacheKey);
+    if (data) {
+      console.log(`[AI-CACHE-HIT] ${cleanPath}`);
+      return { data };
+    }
+  }
+
+  const performRequestWithFallback = async () => {
+    // 1. Try Internal
+    try {
+      const internalTarget = `${AI_INTERNAL_URL}${cleanPath}`;
+      console.log(`[AI-ADAPTER-TRY] Internal: ${internalTarget}`);
+      return await instance({ method, url: internalTarget, ...options });
+    } catch (internalError) {
+      // If it's a 429, don't even try public, just return stale cache if we have it
+      if (internalError.response?.status === 429) {
+        const staleData = getFromCache(cacheKey, true);
+        if (staleData) {
+          console.warn(`[AI-GATEWAY-429] Internal Rate Limited. Returning stale data for ${cleanPath}`);
+          return { data: staleData, _status: 429 };
+        }
+      }
+
+      console.warn(`[AI-ADAPTER-FALLBACK] Internal failed (${internalError.code || internalError.message}). Trying Public...`);
+      
+      // 2. Try Public
       try {
+        const publicTarget = `${AI_PUBLIC_URL}${cleanPath}`;
         return await instance({ method, url: publicTarget, ...options });
       } catch (publicError) {
-        throw new Error(`AI Gateway Error: Internal & Public both failed. Last Error: ${publicError.message} (Target: ${publicTarget})`);
+        // If public also fails or is rate limited, check stale cache as absolute last resort
+        const staleData = getFromCache(cacheKey, true);
+        if (staleData) {
+          console.error(`[AI-GATEWAY-RECOVERY] Both failed. Returning stale data for ${cleanPath}`);
+          return { data: staleData, _status: 'recovery' };
+        }
+        
+        throw new Error(`AI Gateway Error: All routes failed. Last Error: ${publicError.message}`);
       }
     }
-    throw internalError;
+  };
+
+  const response = await performRequestWithFallback();
+
+  // Update cache on success (not on recovery data)
+  if (method.toUpperCase() === 'GET' && !response._status) {
+    cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
   }
+
+  return response;
 };
 
 router.get('/health', async (req, res) => {

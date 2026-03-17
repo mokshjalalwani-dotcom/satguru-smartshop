@@ -26,4 +26,6 @@ services:
           type: web
           name: satguru-ai-service
           property: url
+      - key: AI_SERVICE_INTERNAL_URL
+        value: "http://satguru-ai-service:10000"
 
