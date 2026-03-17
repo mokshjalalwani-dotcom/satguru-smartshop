@@ -3,26 +3,39 @@ const axios = require('axios');
 const router = express.Router();
 
 // Helper to sanitize and validate base URLs
-const sanitizeBaseUrl = (url, defaultVal) => {
-  if (!url || typeof url !== 'string' || url.trim() === '') return defaultVal;
+const sanitizeBaseUrl = (url, type = 'public') => {
+  const defaultInternal = 'http://satguru-ai-service:10000';
+  const defaultPublic = 'https://satguru-ai-service.onrender.com';
+  
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return type === 'internal' ? defaultInternal : defaultPublic;
+  }
+
   let sanitized = url.trim().replace(/\/+$/, '');
   
-  // If it already has a protocol, leave it alone
-  if (/^https?:\/\//i.test(sanitized)) {
+  // 1. Handle localhost/local dev
+  if (sanitized.includes('localhost') || sanitized.includes('127.0.0.1')) {
+    if (!sanitized.startsWith('http')) sanitized = `http://${sanitized}`;
     return sanitized;
   }
-  
-  // If it looks like an internal Render hostname (no dots, or ends with :port), use http
-  // Otherwise default to https for public URLs
-  if (!sanitized.includes('.') || /:\d+$/.test(sanitized)) {
-    return `http://${sanitized}`;
+
+  // 2. Fix partial Render URLs (e.g. "satguru-ai-service" -> "satguru-ai-service.onrender.com")
+  if (type === 'public' && sanitized.startsWith('satguru-') && !sanitized.includes('.')) {
+    sanitized = `${sanitized}.onrender.com`;
+  }
+
+  // 3. Ensure Protocol
+  if (!/^https?:\/\//i.test(sanitized)) {
+    // Internal Render hostnames use http, public usually https
+    const isInternal = !sanitized.includes('.') || sanitized.includes('onrender.com') === false;
+    sanitized = isInternal ? `http://${sanitized}` : `https://${sanitized}`;
   }
   
-  return `https://${sanitized}`;
+  return sanitized;
 };
 
-const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'http://satguru-ai-service:10000');
-const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'https://satguru-ai-service.onrender.com');
+const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'internal');
+const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'public');
 
 const instance = axios.create({
   timeout: 45000, // Slightly increased timeout
