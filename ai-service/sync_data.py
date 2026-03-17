@@ -25,7 +25,7 @@ def sync():
         print("Fetching Products...")
         products = list(products_col.find({}))
         
-        product_map = {p['product_id']: p for p in products}
+        product_map = {p.get('product_id'): p for p in products if p.get('product_id')}
         
         # Create inventory.csv
         inventory_data = []
@@ -52,11 +52,20 @@ def sync():
             
             # Use timestamp if available, else current time
             dt = s.get('timestamp', datetime.now())
-            if isinstance(dt, datetime):
-                dt_str = dt.isoformat()
-            else:
-                dt_str = str(dt)
+            if not isinstance(dt, datetime):
+                # Try parsing if it's a string
+                try:
+                    from dateutil import parser
+                    dt = parser.parse(str(dt))
+                except:
+                    dt = datetime.now()
+            
+            dt_str = dt.isoformat()
                 
+            # Correctly handle Decimal conversion for cost calculation to please linter and runtime
+            price_dec = Decimal(str(round(unit_price, 2)))
+            cost_dec = price_dec * Decimal('0.8')
+            
             sales_data.append({
                 "order_id": str(s.get('sale_id', 'Unknown')),
                 "date": dt_str,
@@ -64,8 +73,8 @@ def sync():
                 "product": str(p_info.get('name', 'Unknown')),
                 "category": str(p_info.get('category', 'General')),
                 "sales": int(qty),
-                "price": float(unit_price),
-                "cost": float(round(Decimal(str(unit_price)) * Decimal('0.8'), 2)),
+                "price": float(price_dec),
+                "cost": float(round(cost_dec, 2)),
                 "payment_status": "Completed"
             })
 
@@ -84,8 +93,6 @@ def sync():
             
     except Exception as e:
         print(f"Sync failed: {e}")
-        # Re-raise to allow startup to fail if sync is critical, 
-        # or handle gracefully by continuing with existing/synthetic data
         print("Continuing with existing/synthetic data...")
 
 if __name__ == "__main__":

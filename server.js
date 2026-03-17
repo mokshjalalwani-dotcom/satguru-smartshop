@@ -1,3 +1,7 @@
+const path = require('path');
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const connectDB = require('./backend-api/db/mongoClient');
 
 const productsRoute = require('./routes/products');
@@ -5,7 +9,10 @@ const salesRoute = require('./routes/sales');
 const aiRoute = require('./routes/ai');
 
 const app = express();
+
+// Initialize MongoDB Connection
 connectDB();
+
 app.use(cors());
 app.use(bodyParser.json());
 
