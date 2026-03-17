@@ -2,100 +2,86 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-// URL Sanitization Utility
-const buildUrl = (base, path) => {
-  if (!base) return '';
-  const cleanBase = base.trim().replace(/\/+$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${cleanBase}${cleanPath}`;
+// Helper to sanitize and validate base URLs
+const sanitizeBaseUrl = (url, defaultVal) => {
+  if (!url || typeof url !== 'string') return defaultVal;
+  let sanitized = url.trim().replace(/\/+$/, '');
+  // Force protocol if missing
+  if (sanitized && !/^https?:\/\//i.test(sanitized)) {
+    sanitized = `https://${sanitized}`;
+  }
+  return sanitized || defaultVal;
 };
 
-const AI_INTERNAL_URL = process.env.AI_SERVICE_INTERNAL_URL || 'http://satguru-ai-service:10000';
-const AI_PUBLIC_URL = process.env.AI_SERVICE_URL || 'https://satguru-ai-service.onrender.com';
+const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'http://satguru-ai-service:10000');
+const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'https://satguru-ai-service.onrender.com');
 
 const instance = axios.create({
-  timeout: 30000,
+  timeout: 45000, // Slightly increased timeout
 });
 
 // Simple in-memory cache
 const cache = new Map();
-const CACHE_TTL = 300 * 1000; // 5 minutes standard
-const STALE_TTL = 3600 * 1000; // 1 hour for stale fallback
+const CACHE_TTL = 300 * 1000;
+const STALE_TTL = 3600 * 1000;
 
 const aiRequest = async (method, path, options = {}) => {
   const cacheKey = `${method}:${path}:${JSON.stringify(options.params || {})}`;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-  // Helper to get from cache (including stale)
   const getFromCache = (key, allowStale = false) => {
     const cached = cache.get(key);
     if (!cached) return null;
     const age = Date.now() - cached.timestamp;
-    if (age < CACHE_TTL || (allowStale && age < STALE_TTL)) {
-      return cached.data;
-    }
-    return null;
+    return (age < CACHE_TTL || (allowStale && age < STALE_TTL)) ? cached.data : null;
   };
 
-  // Check cache for GET requests first
   if (method.toUpperCase() === 'GET') {
     const data = getFromCache(cacheKey);
-    if (data) {
-      console.log(`[AI-CACHE-HIT] ${path}`);
-      return { data };
-    }
+    if (data) return { data };
   }
 
-  // --- Request Logic ---
   let lastError = null;
   let response = null;
+  let attempts = [];
 
-  // 1. Try Internal
-  const internalTarget = buildUrl(AI_INTERNAL_URL, path);
-  if (internalTarget) {
+  // Attempt 1: Internal
+  try {
+    const target = `${AI_INTERNAL_URL}${cleanPath}`;
+    attempts.push(`Internal (${target})`);
+    console.log(`[AI-TRY] ${attempts[attempts.length-1]}`);
+    response = await instance({ method, baseURL: AI_INTERNAL_URL, url: cleanPath, ...options });
+  } catch (err) {
+    lastError = err;
+    if (err.response?.status === 429) {
+      const stale = getFromCache(cacheKey, true);
+      if (stale) return { data: stale, _status: 429 };
+    }
+  }
+
+  // Attempt 2: Public
+  if (!response) {
     try {
-      console.log(`[AI-TRY] Internal: ${internalTarget}`);
-      response = await instance({ method, url: internalTarget, ...options });
+      const target = `${AI_PUBLIC_URL}${cleanPath}`;
+      attempts.push(`Public (${target})`);
+      console.log(`[AI-TRY] ${attempts[attempts.length-1]}`);
+      response = await instance({ method, baseURL: AI_PUBLIC_URL, url: cleanPath, ...options });
     } catch (err) {
       lastError = err;
-      if (err.response?.status === 429) {
-        const stale = getFromCache(cacheKey, true);
-        if (stale) {
-          console.warn(`[AI-429] Internal Rate Limit. Serving stale cache for ${path}`);
-          return { data: stale, _status: 429 };
-        }
-      }
-      console.warn(`[AI-FAIL] Internal failed: ${err.message}`);
+      console.error(`[AI-FAIL] Public failure: ${err.message}`);
     }
   }
 
-  // 2. Try Public if internal failed
-  if (!response) {
-    const publicTarget = buildUrl(AI_PUBLIC_URL, path);
-    if (publicTarget) {
-      try {
-        console.log(`[AI-TRY] Public: ${publicTarget}`);
-        response = await instance({ method, url: publicTarget, ...options });
-      } catch (err) {
-        lastError = err;
-        console.error(`[AI-FAIL] Public failed: ${err.message}`);
-      }
-    }
-  }
-
-  // 3. Absolute Last Resort: Stale Cache
+  // Final Recovery
   if (!response) {
     const stale = getFromCache(cacheKey, true);
-    if (stale) {
-      console.error(`[AI-RECOVERY] All routes failed. serving stale cache for ${path}`);
-      return { data: stale, _status: 'recovery' };
-    }
-    
-    // Final Error Report
-    const errMsg = lastError?.message || 'No route available';
-    throw new Error(`AI Gateway Error: All routes failed. Last Error: ${errMsg}`);
+    if (stale) return { data: stale, _status: 'recovery' };
+
+    const detail = lastError?.message || 'Unknown network error';
+    const trace = attempts.join(' -> ');
+    throw new Error(`AI Gateway Error: ${detail} (Path: ${cleanPath}, Trace: ${trace})`);
   }
 
-  // Update cache on fresh success
   if (method.toUpperCase() === 'GET' && !response._status) {
     cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
   }
