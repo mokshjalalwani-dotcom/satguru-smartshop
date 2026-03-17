@@ -11,8 +11,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
-      - key: AWS_REGION
-        value: us-east-1
+      - key: MONGODB_URI
+        sync: false
 
   # 2. Main Shop Portal (Node.js/Express + React Frontend)
   - type: web
@@ -30,3 +30,5 @@ services:
           property: url
       - key: AI_SERVICE_INTERNAL_URL
         value: "http://satguru-ai-service:10000"
+      - key: MONGODB_URI
+        sync: false

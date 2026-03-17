@@ -4,13 +4,21 @@ const router = express.Router();
 
 // Helper to sanitize and validate base URLs
 const sanitizeBaseUrl = (url, defaultVal) => {
-  if (!url || typeof url !== 'string') return defaultVal;
+  if (!url || typeof url !== 'string' || url.trim() === '') return defaultVal;
   let sanitized = url.trim().replace(/\/+$/, '');
-  // Force protocol if missing
-  if (sanitized && !/^https?:\/\//i.test(sanitized)) {
-    sanitized = `https://${sanitized}`;
+  
+  // If it already has a protocol, leave it alone
+  if (/^https?:\/\//i.test(sanitized)) {
+    return sanitized;
   }
-  return sanitized || defaultVal;
+  
+  // If it looks like an internal Render hostname (no dots, or ends with :port), use http
+  // Otherwise default to https for public URLs
+  if (!sanitized.includes('.') || /:\d+$/.test(sanitized)) {
+    return `http://${sanitized}`;
+  }
+  
+  return `https://${sanitized}`;
 };
 
 const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'http://satguru-ai-service:10000');

@@ -6,4 +6,4 @@ numpy
 joblib
 python-dateutil
 requests
-boto3
+pymongo
