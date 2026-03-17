@@ -343,6 +343,20 @@ def get_anomalies():
         logger.error(f"Anomaly detection error: {e}")
         return {"anomalies": []}
 
+@app.post("/sync")
+def sync_now():
+    from sync_data import sync
+    try:
+        sync()
+        # Invalidate cache to force reload of the new CSVs
+        _CACHE["df"] = None
+        _CACHE["inventory"] = None
+        _CACHE["last_load"] = None
+        return {"message": "Data synchronized successfully from MongoDB."}
+    except Exception as e:
+        logger.error(f"Sync error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/train")
 def retrain():
     from train import train_model
