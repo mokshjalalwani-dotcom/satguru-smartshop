@@ -38,13 +38,10 @@ const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'in
 const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'public');
 
 const instance = axios.create({
-  timeout: 45000, // Slightly increased timeout
+  timeout: 60000, // 60 seconds for cold starts
 });
 
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_TTL = 300 * 1000;
-const STALE_TTL = 3600 * 1000;
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const aiRequest = async (method, path, options = {}) => {
   const cacheKey = `${method}:${path}:${JSON.stringify(options.params || {})}`;
@@ -65,41 +62,60 @@ const aiRequest = async (method, path, options = {}) => {
   let lastError = null;
   let response = null;
   let attempts = [];
+  
+  // Try Internal and then Public with Retries
+  const targets = [
+    { name: 'Internal', url: AI_INTERNAL_URL },
+    { name: 'Public', url: AI_PUBLIC_URL }
+  ];
 
-  // Attempt 1: Internal
-  try {
-    const target = `${AI_INTERNAL_URL}${cleanPath}`;
-    attempts.push(`Internal (${target})`);
-    console.log(`[AI-TRY] ${attempts[attempts.length-1]}`);
-    response = await instance({ method, baseURL: AI_INTERNAL_URL, url: cleanPath, ...options });
-  } catch (err) {
-    lastError = err;
-    if (err.response?.status === 429) {
-      const stale = getFromCache(cacheKey, true);
-      if (stale) return { data: stale, _status: 429 };
+  for (const target of targets) {
+    let retries = 3;
+    let delay = 2000;
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const fullUrl = `${target.url}${cleanPath}`;
+        attempts.push(`${target.name} [Try ${i+1}]`);
+        console.log(`[AI-TRY] ${target.name} attempt ${i+1}: ${fullUrl}`);
+        
+        response = await instance({ 
+          method, 
+          baseURL: target.url, 
+          url: cleanPath, 
+          ...options 
+        });
+        
+        if (response) break; // Success!
+      } catch (err) {
+        lastError = err;
+        const status = err.response?.status;
+        
+        // If it's a 429 or 503, wait and retry
+        if ((status === 429 || status === 503) && i < retries - 1) {
+          console.warn(`[AI-RETRY] Received ${status}, retrying in ${delay}ms...`);
+          await sleep(delay);
+          delay *= 2; // Exponential backoff
+          continue;
+        }
+        
+        // If it's any other error, or we're out of retries for this target, move to next target
+        console.error(`[AI-FAIL] ${target.name} failed: ${err.message}`);
+        break; 
+      }
     }
+    if (response) break;
   }
 
-  // Attempt 2: Public
-  if (!response) {
-    try {
-      const target = `${AI_PUBLIC_URL}${cleanPath}`;
-      attempts.push(`Public (${target})`);
-      console.log(`[AI-TRY] ${attempts[attempts.length-1]}`);
-      response = await instance({ method, baseURL: AI_PUBLIC_URL, url: cleanPath, ...options });
-    } catch (err) {
-      lastError = err;
-      console.error(`[AI-FAIL] Public failure: ${err.message}`);
-    }
-  }
-
-  // Final Recovery
+  // Final Recovery Flow
   if (!response) {
     const stale = getFromCache(cacheKey, true);
     if (stale) return { data: stale, _status: 'recovery' };
 
-    const detail = lastError?.message || 'Unknown network error';
+    const detail = lastError?.message || 'AI Service is currently warming up';
     const trace = attempts.join(' -> ');
+    
+    // Structured error for frontend to show a "Warming Up" message instead of a crash
     throw new Error(`AI Gateway Error: ${detail} (Path: ${cleanPath}, Trace: ${trace})`);
   }
 
