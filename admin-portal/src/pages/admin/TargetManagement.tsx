@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Target, TrendingUp, IndianRupee, Users, Edit3, Check, X, Award, BarChart3 } from "lucide-react";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 const formatINR = (n: number) => "₹" + n.toLocaleString('en-IN');
 
@@ -23,7 +24,7 @@ const initialTargets: EmployeeTarget[] = [
 ];
 
 const TargetManagement: React.FC = () => {
-  const [targets, setTargets] = useState(initialTargets);
+  const [targets, setTargets] = useLocalStorage<EmployeeTarget[]>("ss_targets", initialTargets);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({ revenue: 0, units: 0 });
 

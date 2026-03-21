@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Package, Search, AlertTriangle, Plus, Minus } from "lucide-react";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 // Mock data
 const initialInventory = [
@@ -10,7 +11,7 @@ const initialInventory = [
 ];
 
 const InventoryUpdates: React.FC = () => {
-  const [inventory, setInventory] = useState(initialInventory);
+  const [inventory, setInventory] = useLocalStorage("ss_inventory", initialInventory);
   const [searchTerm, setSearchTerm] = useState("");
 
   const updateStock = (id: string, delta: number) => {

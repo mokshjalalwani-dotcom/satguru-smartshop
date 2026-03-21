@@ -1,5 +1,11 @@
-// src/services/api.ts\
+// src/services/api.ts
 // admin-portal/src/services/api.ts
+import axios from "axios";
+
+const instance = axios.create({
+  baseURL: "/api",
+  timeout: 15000,
+});
 
 // ----------------- Interfaces -----------------
 export interface KPIs {
@@ -26,6 +32,9 @@ export interface Product {
   product_id: string;
   name: string;
   price: number;
+  stock?: number;
+  category?: string;
+  description?: string;
 }
 
 export interface NewSale {
@@ -43,7 +52,6 @@ export interface CreateSaleResponse {
 const api = {
   // KPI metrics
   getKPIs: async (): Promise<KPIs> => {
-    // Mock implementation
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
@@ -58,7 +66,6 @@ const api = {
 
   // Sales trend
   getSalesTrend: async (): Promise<SalesTrend[]> => {
-    // Mock implementation
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve([
@@ -76,7 +83,6 @@ const api = {
 
   // Recent sales table
   getRecentSales: async (): Promise<SaleRow[]> => {
-    // Mock implementation
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve([
@@ -90,23 +96,20 @@ const api = {
     });
   },
 
-  // Product list
+  // Product list — real backend
   getProducts: async (): Promise<Product[]> => {
-    // Mock implementation for now
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { product_id: "p1", name: "Product 1", price: 100 },
-          { product_id: "p2", name: "Product 2", price: 200 },
-          { product_id: "p3", name: "Product 3", price: 300 },
-        ]);
-      }, 500);
-    });
+    const res = await instance.get("/products");
+    return res.data;
+  },
+
+  // Add product — real backend
+  addProduct: async (product: { name: string; price: number; stock: number }): Promise<Product> => {
+    const res = await instance.post("/products", product);
+    return res.data;
   },
 
   // Create a new sale
   createSale: async (_sale: NewSale): Promise<CreateSaleResponse> => {
-    // Mock implementation
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({

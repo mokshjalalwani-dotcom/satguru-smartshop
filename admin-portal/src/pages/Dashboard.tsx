@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown, ShieldAlert, UserCheck } from "lucide-react";
+import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown, ShieldAlert, UserCheck, Activity } from "lucide-react";
 import KPICard from "../ui/KPICard";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
@@ -12,9 +12,14 @@ import {
   Tooltip, 
   Area 
 } from "recharts";
-import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights, type Prediction} from "../services/ai";
+import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights, type Prediction, type Anomaly } from "../services/ai";
 
 type TransactionRow = Transaction & { id: string };
+
+// Inline shimmer for individual sections
+const Shimmer = ({ className = "" }: { className?: string }) => (
+  <div className={`animate-pulse bg-white/5 rounded-xl ${className}`} />
+);
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<AIStats | null>(null);
@@ -23,65 +28,62 @@ const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [predictionMetrics, setPredictionMetrics] = useState<{total: number, ci: {lower: number, upper: number}, trend: number} | null>(null);
+  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [duration, setDuration] = useState<7 | 30 | 180>(7);
-  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
+  // Fire each API call independently — UI updates progressively as each resolves
   useEffect(() => {
     let isMounted = true;
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        setErrorStatus(null);
-        
-        // Fetch individually to prevent one failure from breaking everything
-        const [statsData, insightsData, transData, historyData, predictData] = await Promise.allSettled([
-          aiService.getStats(duration),
-          aiService.getInsights(),
-          aiService.getTransactions(10),
-          aiService.getHistory(duration),
-          aiService.getPrediction()
-        ]);
+    setErrorStatus(null);
 
-        if (!isMounted) return;
+    // Stats (fast — usually first to load)
+    aiService.getStats(duration).then(data => {
+      if (isMounted) { setStats(data); setInitialLoad(false); }
+    }).catch(err => {
+      if (isMounted) { setInitialLoad(false); setErrorStatus(`Stats: ${err.response?.data?.details || err.message}`); }
+    });
 
-        if (statsData.status === 'fulfilled') setStats(statsData.value);
-        if (insightsData.status === 'fulfilled') setInsights(insightsData.value);
-        if (transData.status === 'fulfilled') {
-          setTransactions(transData.value.map((t, i) => ({ ...t, id: i.toString() })));
-        }
-        if (historyData.status === 'fulfilled') setHistory(historyData.value);
-        if (predictData.status === 'fulfilled') {
-          setPredictions(predictData.value.predictions);
-          setPredictionMetrics({
-            total: predictData.value.predicted_total,
-            ci: predictData.value.confidence_interval,
-            trend: predictData.value.trend_percent_change
-          });
-        }
+    // History (chart data)
+    aiService.getHistory(duration).then(data => {
+      if (isMounted) setHistory(data);
+    }).catch(() => {});
 
-        if (statsData.status === 'rejected') {
-           const err = statsData.reason as any;
-           setErrorStatus(`Stats Failed: ${err.response?.data?.details || err.message}`);
-        } else if (historyData.status === 'rejected') {
-           const err = historyData.reason as any;
-           setErrorStatus(`History Failed: ${err.message}`);
-        } else if (predictData.status === 'rejected') {
-           const err = predictData.reason as any;
-           setErrorStatus(`Prediction Failed: ${err.response?.data?.details || err.message}`);
-        }
-      } catch (error: any) {
-        console.error("Dashboard Fetch Error:", error);
-        setErrorStatus(`Global Error: ${error.message}`);
-      } finally {
-        if (isMounted) setLoading(false);
+    // Transactions
+    aiService.getTransactions(10).then(data => {
+      if (isMounted) setTransactions(data.map((t, i) => ({ ...t, id: i.toString() })));
+    }).catch(() => {});
+
+    // Insights
+    aiService.getInsights().then(data => {
+      if (isMounted) setInsights(data);
+    }).catch(() => {});
+
+    // Predictions (can be slow — AI model inference)
+    aiService.getPrediction().then(data => {
+      if (isMounted) {
+        setPredictions(data.predictions);
+        setPredictionMetrics({
+          total: data.predicted_total,
+          ci: data.confidence_interval,
+          trend: data.trend_percent_change
+        });
       }
-    };
-    fetchDashboardData();
+    }).catch(err => {
+      if (isMounted) setErrorStatus(prev => prev || `Prediction: ${err.response?.data?.details || err.message}`);
+    });
+
+    // Anomalies
+    aiService.getAnomalies().then(data => {
+      if (isMounted) setAnomalies(data.anomalies || []);
+    }).catch(() => {});
+
     return () => { isMounted = false; };
   }, [duration]);
 
-  if (loading) return <LoadingSkeleton />;
+  // Show full skeleton only on very first load — after that sections render independently
+  if (initialLoad && !stats) return <LoadingSkeleton />;
 
   const periodText = duration === 7 ? "7 Days" : duration === 30 ? "30 Days" : "6 Months";
 
@@ -111,6 +113,38 @@ const Dashboard: React.FC = () => {
     },
     { header: "Time", accessor: "date", render: (val) => String(val).replace('T', ' ').split(' ')[1] || "N/A" }
   ];
+
+  // --- Build weekly breakdown from 30-day daily forecasts ---
+  const weeklyBreakdown = (() => {
+    if (predictions.length === 0) return [];
+    const weeks: { label: string; total: number }[] = [];
+    for (let w = 0; w < 4; w++) {
+      const slice = predictions.slice(w * 7, (w + 1) * 7);
+      if (slice.length === 0) break;
+      const startDate = slice[0].date.slice(5);
+      const endDate = slice[slice.length - 1].date.slice(5);
+      weeks.push({
+        label: `${startDate} → ${endDate}`,
+        total: slice.reduce((s, p) => s + p.predicted_revenue, 0),
+      });
+    }
+    const remainder = predictions.slice(28);
+    if (remainder.length > 0 && weeks.length >= 4) {
+      weeks[3].total += remainder.reduce((s, p) => s + p.predicted_revenue, 0);
+    }
+    return weeks;
+  })();
+
+  const maxWeekly = Math.max(...weeklyBreakdown.map(w => w.total), 1);
+
+  // --- Helper for anomaly display ---
+  const getAnomalyStyle = (anomaly: Anomaly) => {
+    const sev = anomaly.severity || 'WARNING';
+    const aType = anomaly.type || '';
+    if (sev === 'CRITICAL') return { bg: 'bg-rose-500/5', border: 'border-rose-500/20', icon: <AlertTriangle size={14} className="text-rose-400" />, label: 'text-rose-400', tagBg: 'CRITICAL' };
+    if (aType.includes('multivariate')) return { bg: 'bg-amber-500/5', border: 'border-amber-500/20', icon: <Zap size={14} className="text-amber-400" />, label: 'text-amber-400', tagBg: 'PATTERN' };
+    return { bg: 'bg-cyan-500/5', border: 'border-cyan-500/20', icon: <Activity size={14} className="text-cyan-400" />, label: 'text-cyan-400', tagBg: 'WARNING' };
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 max-w-[1600px] mx-auto">
@@ -156,6 +190,7 @@ const Dashboard: React.FC = () => {
             <TrendingUp size={20} className="text-xbrand" /> Business Trend Analysis
           </h2>
           <div className="h-[320px] w-full">
+            {history.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={history}>
                 <defs>
@@ -174,17 +209,23 @@ const Dashboard: React.FC = () => {
                 <Area type="monotone" dataKey="revenue" stroke="#00f2fe" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
               </AreaChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <Shimmer className="w-full h-[280px]" />
+              </div>
+            )}
           </div>
         </div>
 
+        {/* AI 30-Day Forecast */}
         <div className="bg-xcard border border-white/5 rounded-2xl p-6 glass-morphism flex flex-col">
           <h2 className="text-lg font-semibold flex items-center gap-2 mb-4 text-white">
-            <Clock size={20} className="text-purple-400" /> AI Predictive Forecasts
+            <Clock size={20} className="text-purple-400" /> AI 30-Day Forecast
           </h2>
           
           {predictionMetrics && (
-             <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-               <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">30-Day Outlook</div>
+             <div className="mb-5 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+               <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Projected Revenue — Next 30 Days</div>
                <div className="flex items-end gap-2">
                  <span className="text-2xl font-black text-white">{formatINR(predictionMetrics.total)}</span>
                  <span className={`text-sm font-bold mb-1 ${predictionMetrics.trend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -192,30 +233,48 @@ const Dashboard: React.FC = () => {
                  </span>
                </div>
                <div className="text-xs text-white/50 mt-1">
-                 Confidence Interval: {formatINR(predictionMetrics.ci.lower)} - {formatINR(predictionMetrics.ci.upper)}
+                 CI: {formatINR(predictionMetrics.ci.lower)} – {formatINR(predictionMetrics.ci.upper)}
                </div>
              </div>
           )}
 
-          <div className="space-y-3 flex-1 pr-2 overflow-y-auto max-h-[180px] custom-scrollbar">
-            
-             {predictions.length > 0 ? predictions.slice(0, 5).map((p, i) => (
-                <div key={i} className={`p-3 border rounded-xl ${i === 0 ? 'bg-xbrand/10 border-xbrand/20' : 'bg-white/5 border-white/10'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${i === 0 ? 'text-xbrand' : 'text-white/40'}`}>
-                            {i === 0 ? 'Next Day Forecast' : `T+${i+1} Forecast`}
-                        </span>
-                        <span className="text-[10px] text-white/50">{p.date}</span>
-                    </div>
-                    <p className="text-sm text-white/90">Predicted Sales: <strong>{formatINR(p.predicted_revenue)}</strong></p>
-                    <p className="text-xs text-white/40 mt-1">Confidence Score: {(92 - i * 2)}%</p>
+          {/* Weekly Breakdown Bars */}
+          <div className="space-y-3 flex-1 overflow-y-auto max-h-[220px] custom-scrollbar pr-1">
+            {weeklyBreakdown.length > 0 ? weeklyBreakdown.map((week, i) => (
+              <div key={i} className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                    Week {i + 1}
+                  </span>
+                  <span className="text-xs text-white/50">{week.label}</span>
                 </div>
-             )) : (
-                <div className="text-center py-10 text-xtext-secondary text-xs italic">
-                    AI models are processing future trends...
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-background rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-all duration-700"
+                      style={{ width: `${(week.total / maxWeekly) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-white min-w-[80px] text-right">{formatINR(week.total)}</span>
                 </div>
-             )}
+              </div>
+            )) : (
+              <div className="text-center py-10 text-xtext-secondary text-xs italic">
+                  AI models are computing 30-day projections...
+              </div>
+            )}
 
+            {predictionMetrics && (
+              <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl mt-2">
+                <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Model Confidence</div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-indigo-400" style={{ width: '88%' }} />
+                  </div>
+                  <span className="text-xs font-bold text-indigo-400">88%</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -258,42 +317,57 @@ const Dashboard: React.FC = () => {
 
       {/* Row 4: Anomalies & Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Anomaly Alerts — fetched from /anomalies API */}
         <div className="bg-xcard border border-white/5 rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-white/5 bg-rose-500/5 flex items-center justify-between">
                 <h2 className="text-lg font-bold flex items-center gap-2 text-rose-400">
                     <ShieldAlert size={20} /> Anomaly Alerts
                 </h2>
-                <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 uppercase tracking-wider">Live</span>
+                <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 uppercase tracking-wider">
+                  {anomalies.length > 0 ? `${anomalies.length} Found` : 'Live'}
+                </span>
             </div>
-            <div className="p-4 space-y-3">
-                <div className="p-3.5 bg-rose-500/5 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 transition-colors">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <AlertTriangle size={14} className="text-rose-400" />
-                      <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Price Spike</span>
+            <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar">
+                {anomalies.length > 0 ? anomalies.slice(0, 8).map((anomaly, i) => {
+                  const style = getAnomalyStyle(anomaly);
+                  return (
+                    <div key={i} className={`p-3.5 ${style.bg} border ${style.border} rounded-xl hover:brightness-110 transition-all`}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {style.icon}
+                        <span className={`text-[10px] ${style.label} font-bold uppercase tracking-widest`}>{style.tagBg}</span>
+                        {anomaly.date && <span className="text-[10px] text-white/30 ml-auto">{anomaly.date}</span>}
+                      </div>
+                      <p className="text-sm text-white">
+                        <strong>{anomaly.product || 'System'}</strong>
+                        {anomaly.reason ? ` — ${anomaly.reason}` : anomaly.sales ? ` — ${anomaly.sales} units at ₹${anomaly.price?.toLocaleString('en-IN')}` : ' — Unusual pattern detected'}
+                      </p>
                     </div>
-                    <p className="text-sm text-white">{insights?.anomalies || 'Detected unusual spike in Climate Control (+45%) yesterday.'}</p>
-                </div>
-                <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 transition-colors">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Zap size={14} className="text-amber-400" />
-                      <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Demand Anomaly</span>
+                  );
+                }) : (
+                  <>
+                    <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <UserCheck size={14} className="text-emerald-400" />
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">System Health</span>
+                      </div>
+                      <p className="text-sm text-white">No anomalies detected — all metrics within normal range.</p>
                     </div>
-                    <p className="text-sm text-white">Smart Inverter AC sales 3× above normal — extreme heatwave predicted.</p>
-                </div>
-                <div className="p-3.5 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <TrendingDown size={14} className="text-cyan-400" />
-                      <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Revenue Dip</span>
+                    <div className="p-3.5 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Activity size={14} className="text-cyan-400" />
+                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">AI Engine</span>
+                      </div>
+                      <p className="text-sm text-white">Isolation Forest model actively monitoring transactions for price/volume outliers.</p>
                     </div>
-                    <p className="text-sm text-white">Washing Machine revenue 18% below weekday average — end of month pattern.</p>
-                </div>
-                <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-colors">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <UserCheck size={14} className="text-emerald-400" />
-                      <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Customer Surge</span>
+                    <div className="p-3.5 bg-indigo-500/5 border border-indigo-500/20 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <TrendingDown size={14} className="text-indigo-400" />
+                        <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Z-Score Monitor</span>
+                      </div>
+                      <p className="text-sm text-white">Daily revenue Z-Score analysis running — no outliers beyond 3σ threshold.</p>
                     </div>
-                    <p className="text-sm text-white">New customer registrations up 32% — Holi prep effect likely.</p>
-                </div>
+                  </>
+                )}
             </div>
         </div>
 

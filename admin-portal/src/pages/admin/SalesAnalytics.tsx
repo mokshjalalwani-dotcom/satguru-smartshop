@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, IndianRupee, Activity, Users, Package, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { TrendingUp, IndianRupee, Activity, Users, Package, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
 import { ResponsiveContainer, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Area } from "recharts";
 import { aiService, type HistoryData } from "../../services/ai";
 
@@ -23,9 +23,6 @@ const SalesAnalytics: React.FC = () => {
         aiService.getStats(days),
         aiService.getProductStats(days)
       ]);
-
-      console.log("history:", history);
-      console.log("statsData:", statsData);  // 👈 check keys here
 
       setChartData(history);
       setStats(statsData);
@@ -86,7 +83,22 @@ const SalesAnalytics: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">Sales Analytics</h1>
           <p className="text-xtext-secondary text-sm">Deep dive into revenue metrics, customer behavior, and transaction history.</p>
         </div>
-        <div className="flex gap-1 bg-white/5 p-1 rounded-xl border border-white/5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (!productStats.length) return;
+              const header = "Product,Sales,Revenue,Profit,Trend\n";
+              const rows = productStats.map(p => `"${p.name}",${p.sales},${p.revenue},${p.profit},"${p.trend}"`).join("\n");
+              const blob = new Blob([header + rows], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `sales_analytics_${period}.csv`; a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 text-xs font-bold uppercase tracking-wider transition-all"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+          <div className="flex gap-1 bg-white/5 p-1 rounded-xl border border-white/5">
           {(['week', 'month', 'year'] as const).map(p => (
             <button
               key={p}
@@ -98,6 +110,7 @@ const SalesAnalytics: React.FC = () => {
               {p === 'week' ? '7 Days' : p === 'month' ? '30 Days' : '6 Months'}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

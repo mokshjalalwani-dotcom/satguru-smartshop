@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { CheckCircle2, Clock, UploadCloud } from "lucide-react";
+import React from "react";
+import { CheckCircle2, Clock, UploadCloud, Play } from "lucide-react";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 interface Task {
   id: string;
@@ -17,12 +18,14 @@ const initialTasks: Task[] = [
 ];
 
 const TaskExecution: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useLocalStorage<Task[]>("ss_exec_tasks", initialTasks);
 
-  const toggleTaskStatus = (id: string) => {
+  const cycleTaskStatus = (id: string) => {
+    const statusOrder: Task["status"][] = ["Pending", "In Progress", "Completed"];
     setTasks(tasks.map(t => {
       if (t.id === id) {
-        return { ...t, status: t.status === "Completed" ? "Pending" : "Completed" };
+        const idx = statusOrder.indexOf(t.status);
+        return { ...t, status: statusOrder[(idx + 1) % statusOrder.length] };
       }
       return t;
     }));
@@ -86,15 +89,17 @@ const TaskExecution: React.FC = () => {
               
               <div className="flex items-center justify-between mt-auto">
                 <button 
-                  onClick={() => toggleTaskStatus(task.id)}
+                  onClick={() => cycleTaskStatus(task.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                     isCompleted 
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : task.status === 'In Progress'
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                     : 'bg-white/5 hover:bg-white/10 text-white border border-transparent'
                   }`}
                 >
-                  <CheckCircle2 size={16} className={isCompleted ? '' : 'text-white/40 group-hover:text-emerald-400 transition-colors'} />
-                  {isCompleted ? 'Completed' : 'Mark Done'}
+                  {isCompleted ? <CheckCircle2 size={16} /> : task.status === 'In Progress' ? <Play size={16} /> : <CheckCircle2 size={16} className="text-white/40 group-hover:text-emerald-400 transition-colors" />}
+                  {isCompleted ? 'Completed' : task.status === 'In Progress' ? 'In Progress' : 'Start Task'}
                 </button>
                 
                 <button className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-xtext-secondary hover:text-cyan-400 transition-colors rounded-lg hover:bg-cyan-400/10">
