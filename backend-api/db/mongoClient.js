@@ -30,7 +30,8 @@ const connectDB = async () => {
         triggerSync(5); // Launch in background without blocking DB connect
     } catch (err) {
         console.error('MongoDB connection error:', err.message);
-        process.exit(1);
+        console.warn('Backend server will continue running, but database operations will fail until resolved.');
+        // Removed process.exit(1) to prevent Render from infinitely crashing the service
     }
 };
 
