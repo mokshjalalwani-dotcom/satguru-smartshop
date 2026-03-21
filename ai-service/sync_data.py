@@ -4,6 +4,7 @@ import pandas as pd
 import os
 from datetime import datetime
 from decimal import Decimal
+import random
 
 # MongoDB Configuration from environment
 MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/smartshop')
@@ -71,7 +72,7 @@ def sync():
                 sales_data.append({
                     "order_id": str(s.get('sale_id', 'Unknown')),
                     "date": dt_str,
-                    "customer_id": "CUST-LIVE",
+                    "customer_id": f"CUST-LIVE-{random.randint(1000, 1500)}",
                     "product": str(p_info.get('name', 'Unknown')),
                     "category": str(p_info.get('category', 'General')),
                     "sales": int(qty),

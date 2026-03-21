@@ -252,14 +252,6 @@ const Dashboard: React.FC = () => {
 
             {/* Anomaly Alerts exactly matching the picture */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                <h3 className="text-sm font-bold flex items-center gap-2 text-rose-400">
-                  <ShieldAlert size={16} /> Anomaly Alerts
-                </h3>
-                <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 uppercase tracking-wider">
-                  LIVE
-                </span>
-              </div>
               
               <div className="space-y-3">
                 <div className="p-3.5 bg-rose-500/5 border border-rose-500/20 rounded-xl">
