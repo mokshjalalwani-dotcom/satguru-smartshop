@@ -41,6 +41,10 @@ const instance = axios.create({
   timeout: 60000, // 60 seconds for cold starts
 });
 
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes caching
+const STALE_TTL = 30 * 60 * 1000; // 30 minutes stale
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const aiRequest = async (method, path, options = {}) => {
@@ -70,8 +74,8 @@ const aiRequest = async (method, path, options = {}) => {
   ];
 
   for (const target of targets) {
-    let retries = 3;
-    let delay = 2000;
+    let retries = 5;
+    let delay = 3000;
 
     for (let i = 0; i < retries; i++) {
       try {

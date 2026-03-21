@@ -11,7 +11,7 @@ MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/smartshop
 def sync():
     print(f"Starting Live Data Sync from MongoDB...")
     
-    max_retries = 5
+    max_retries = 15 # Increased to wait up to 75s for backend seed on Render
     retry_delay = 5
     
     for attempt in range(max_retries):
