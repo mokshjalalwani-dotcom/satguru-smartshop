@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown, ShieldAlert, UserCheck, Activity } from "lucide-react";
+import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown } from "lucide-react";
 import KPICard from "../ui/KPICard";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
@@ -12,7 +12,7 @@ import {
   Tooltip, 
   Area 
 } from "recharts";
-import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights, type Prediction, type Anomaly } from "../services/ai";
+import { aiService, type Transaction, type HistoryData, type AIStats, type AIInsights } from "../services/ai";
 
 type TransactionRow = Transaction & { id: string };
 
@@ -26,9 +26,8 @@ const Dashboard: React.FC = () => {
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [predictionMetrics, setPredictionMetrics] = useState<{total: number, ci: {lower: number, upper: number}, trend: number} | null>(null);
-  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
+
   const [duration, setDuration] = useState<7 | 30 | 180>(7);
   const [initialLoad, setInitialLoad] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
@@ -63,7 +62,6 @@ const Dashboard: React.FC = () => {
     // Predictions (can be slow — AI model inference)
     aiService.getPrediction().then(data => {
       if (isMounted) {
-        setPredictions(data.predictions);
         setPredictionMetrics({
           total: data.predicted_total,
           ci: data.confidence_interval,
@@ -75,8 +73,7 @@ const Dashboard: React.FC = () => {
     });
 
     // Anomalies
-    aiService.getAnomalies().then(data => {
-      if (isMounted) setAnomalies(data.anomalies || []);
+    aiService.getAnomalies().then(() => {
     }).catch(() => {});
 
     return () => { isMounted = false; };
@@ -114,37 +111,9 @@ const Dashboard: React.FC = () => {
     { header: "Time", accessor: "date", render: (val) => String(val).replace('T', ' ').split(' ')[1] || "N/A" }
   ];
 
-  // --- Build weekly breakdown from 30-day daily forecasts ---
-  const weeklyBreakdown = (() => {
-    if (predictions.length === 0) return [];
-    const weeks: { label: string; total: number }[] = [];
-    for (let w = 0; w < 4; w++) {
-      const slice = predictions.slice(w * 7, (w + 1) * 7);
-      if (slice.length === 0) break;
-      const startDate = slice[0].date.slice(5);
-      const endDate = slice[slice.length - 1].date.slice(5);
-      weeks.push({
-        label: `${startDate} → ${endDate}`,
-        total: slice.reduce((s, p) => s + p.predicted_revenue, 0),
-      });
-    }
-    const remainder = predictions.slice(28);
-    if (remainder.length > 0 && weeks.length >= 4) {
-      weeks[3].total += remainder.reduce((s, p) => s + p.predicted_revenue, 0);
-    }
-    return weeks;
-  })();
 
-  const maxWeekly = Math.max(...weeklyBreakdown.map(w => w.total), 1);
 
-  // --- Helper for anomaly display ---
-  const getAnomalyStyle = (anomaly: Anomaly) => {
-    const sev = anomaly.severity || 'WARNING';
-    const aType = anomaly.type || '';
-    if (sev === 'CRITICAL') return { bg: 'bg-rose-500/5', border: 'border-rose-500/20', icon: <AlertTriangle size={14} className="text-rose-400" />, label: 'text-rose-400', tagBg: 'CRITICAL' };
-    if (aType.includes('multivariate')) return { bg: 'bg-amber-500/5', border: 'border-amber-500/20', icon: <Zap size={14} className="text-amber-400" />, label: 'text-amber-400', tagBg: 'PATTERN' };
-    return { bg: 'bg-cyan-500/5', border: 'border-cyan-500/20', icon: <Activity size={14} className="text-cyan-400" />, label: 'text-cyan-400', tagBg: 'WARNING' };
-  };
+
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-10">
