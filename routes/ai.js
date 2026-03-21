@@ -74,8 +74,8 @@ const aiRequest = async (method, path, options = {}) => {
   ];
 
   for (const target of targets) {
-    let retries = 5;
-    let delay = 3000;
+    let retries = 8;
+    let delay = 2000;
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -94,12 +94,13 @@ const aiRequest = async (method, path, options = {}) => {
       } catch (err) {
         lastError = err;
         const status = err.response?.status;
+        const isNetworkError = !err.response || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET';
         
-        // If it's a 429 or 503, wait and retry
-        if ((status === 429 || status === 503) && i < retries - 1) {
-          console.warn(`[AI-RETRY] Received ${status}, retrying in ${delay}ms...`);
+        // If it's a 429, 503, or Network Error, wait and retry
+        if ((status === 429 || status === 503 || isNetworkError) && i < retries - 1) {
+          console.warn(`[AI-RETRY] ${target.name} failed (${status || err.code || 'Network'}), retrying in ${delay}ms...`);
           await sleep(delay);
-          delay *= 2; // Exponential backoff
+          delay = Math.min(delay * 2, 10000); // cap delay at 10 seconds 
           continue;
         }
         
@@ -124,7 +125,10 @@ const aiRequest = async (method, path, options = {}) => {
   }
 
   if (method.toUpperCase() === 'GET' && !response._status) {
-    cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
+    const isZeroData = response.data && typeof response.data.revenue === 'number' && response.data.revenue === 0;
+    if (!isZeroData) {
+      cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
+    }
   }
 
   return response;

@@ -13,14 +13,21 @@ const connectDB = async () => {
         // Auto-seed if empty
         await seedData();
 
-        // Proactively trigger AI sync so the CSVs are ready immediately
-        try {
-            console.log('Triggering AI service data sync...');
-            await axios.post(`${AI_SERVICE_INTERNAL}/sync`, {}, { timeout: 10000 });
-            console.log('AI Sync triggered successfully.');
-        } catch (syncErr) {
-            console.warn('AI Sync trigger failed (Service might still be starting up):', syncErr.message);
-        }
+        // Proactively trigger AI sync with background retries so the CSVs are ready
+        const triggerSync = async (retries = 5) => {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    console.log(`Triggering AI service data sync (Attempt ${i + 1})...`);
+                    await axios.post(`${AI_SERVICE_INTERNAL}/sync`, {}, { timeout: 15000 });
+                    console.log('AI Sync triggered successfully.');
+                    return;
+                } catch (syncErr) {
+                    console.warn(`AI Sync trigger failed: ${syncErr.message}. Retrying in 10s...`);
+                    await new Promise(r => setTimeout(r, 10000));
+                }
+            }
+        };
+        triggerSync(5); // Launch in background without blocking DB connect
     } catch (err) {
         console.error('MongoDB connection error:', err.message);
         process.exit(1);
