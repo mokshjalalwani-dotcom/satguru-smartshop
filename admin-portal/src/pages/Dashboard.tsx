@@ -32,49 +32,62 @@ const Dashboard: React.FC = () => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
-  // Fire each API call independently — UI updates progressively as each resolves
+  // Sequentialize API calls to prevent "Cold Start" memory spikes on Render Free Tier
   useEffect(() => {
     let isMounted = true;
     setErrorStatus(null);
 
-    // Stats (fast — usually first to load)
-    aiService.getStats(duration).then(data => {
-      if (isMounted) { setStats(data); setInitialLoad(false); }
-    }).catch(err => {
-      if (isMounted) { setInitialLoad(false); setErrorStatus(`Stats: ${err.response?.data?.details || err.message}`); }
-    });
+    const loadDashboardData = async () => {
+      try {
+        // 1. Stats (Priority 1)
+        const statsData = await aiService.getStats(duration);
+        if (!isMounted) return;
+        setStats(statsData);
+        setInitialLoad(false);
 
-    // History (chart data)
-    aiService.getHistory(duration).then(data => {
-      if (isMounted) setHistory(data);
-    }).catch(() => {});
+        // Small pauses (600ms+) between calls prevent parallel CPU/RAM spikes
+        await new Promise(r => setTimeout(r, 600));
 
-    // Transactions
-    aiService.getTransactions(10).then(data => {
-      if (isMounted) setTransactions(data.map((t, i) => ({ ...t, id: i.toString() })));
-    }).catch(() => {});
+        // 2. History & Transactions (Priority 2)
+        const [historyData, transData] = await Promise.all([
+          aiService.getHistory(duration),
+          aiService.getTransactions(10)
+        ]);
+        if (!isMounted) return;
+        setHistory(historyData);
+        setTransactions(transData.map((t, i) => ({ ...t, id: i.toString() })));
 
-    // Insights
-    aiService.getInsights().then(data => {
-      if (isMounted) setInsights(data);
-    }).catch(() => {});
+        await new Promise(r => setTimeout(r, 1000));
 
-    // Predictions (can be slow — AI model inference)
-    aiService.getPrediction().then(data => {
-      if (isMounted) {
-        setPredictionMetrics({
-          total: data.predicted_total,
-          ci: data.confidence_interval,
-          trend: data.trend_percent_change
-        });
+        // 3. Insights (Non-critical)
+        const insightsData = await aiService.getInsights();
+        if (isMounted) setInsights(insightsData);
+
+        await new Promise(r => setTimeout(r, 1500));
+
+        // 4. Predictions (The heavy ML step - do last)
+        const predData = await aiService.getPrediction();
+        if (isMounted) {
+          setPredictionMetrics({
+            total: predData.predicted_total,
+            ci: predData.confidence_interval,
+            trend: predData.trend_percent_change
+          });
+        }
+        
+        // 5. Anomalies (Can fail silently)
+        await aiService.getAnomalies().catch(() => {});
+
+      } catch (err: any) {
+        if (isMounted) {
+          console.error("Dashboard Load Error:", err);
+          setInitialLoad(false);
+          setErrorStatus(`AI Gateway Error: ${err.response?.data?.details || err.message}`);
+        }
       }
-    }).catch(err => {
-      if (isMounted) setErrorStatus(prev => prev || `Prediction: ${err.response?.data?.details || err.message}`);
-    });
+    };
 
-    // Anomalies
-    aiService.getAnomalies().then(() => {
-    }).catch(() => {});
+    loadDashboardData();
 
     return () => { isMounted = false; };
   }, [duration]);
