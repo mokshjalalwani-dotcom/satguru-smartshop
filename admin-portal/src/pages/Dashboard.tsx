@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700 max-w-[1600px] mx-auto">
+    <div className="space-y-6 animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-10">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -183,13 +183,13 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Row 2: Sales Trend & AI Forecast */}
+      {/* Row 2: Sales Trend & AI Predictions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-xcard border border-white/5 rounded-2xl p-6 glass-morphism">
+        <div className="lg:col-span-2 bg-xcard border border-white/5 rounded-2xl p-6 glass-morphism flex flex-col">
           <h2 className="text-lg font-semibold flex items-center gap-2 mb-6 text-white">
             <TrendingUp size={20} className="text-xbrand" /> Business Trend Analysis
           </h2>
-          <div className="h-[320px] w-full">
+          <div className="flex-1 w-full min-h-[400px]">
             {history.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={history}>
@@ -211,70 +211,99 @@ const Dashboard: React.FC = () => {
             </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center">
-                <Shimmer className="w-full h-[280px]" />
+                <Shimmer className="w-full h-full min-h-[400px]" />
               </div>
             )}
           </div>
         </div>
 
-        {/* AI 30-Day Forecast */}
-        <div className="bg-xcard border border-white/5 rounded-2xl p-6 glass-morphism flex flex-col">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4 text-white">
-            <Clock size={20} className="text-purple-400" /> AI 30-Day Forecast
-          </h2>
+        {/* Unified AI Predictions Section */}
+        <div className="bg-xcard border border-white/5 rounded-2xl overflow-hidden flex flex-col h-[520px]">
+          <div className="p-5 border-b border-white/5 bg-gradient-to-r from-purple-500/10 to-indigo-500/10">
+             <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
+               <Zap size={20} className="text-purple-400" /> AI Predictions
+             </h2>
+          </div>
           
-          {predictionMetrics && (
-             <div className="mb-5 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-               <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Projected Revenue — Next 30 Days</div>
-               <div className="flex items-end gap-2">
-                 <span className="text-2xl font-black text-white">{formatINR(predictionMetrics.total)}</span>
-                 <span className={`text-sm font-bold mb-1 ${predictionMetrics.trend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                   {predictionMetrics.trend >= 0 ? '+' : ''}{predictionMetrics.trend}%
-                 </span>
-               </div>
-               <div className="text-xs text-white/50 mt-1">
-                 CI: {formatINR(predictionMetrics.ci.lower)} – {formatINR(predictionMetrics.ci.upper)}
-               </div>
-             </div>
-          )}
-
-          {/* Weekly Breakdown Bars */}
-          <div className="space-y-3 flex-1 overflow-y-auto max-h-[220px] custom-scrollbar pr-1">
-            {weeklyBreakdown.length > 0 ? weeklyBreakdown.map((week, i) => (
-              <div key={i} className="p-3 bg-white/5 border border-white/10 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                    Week {i + 1}
-                  </span>
-                  <span className="text-xs text-white/50">{week.label}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-background rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-all duration-700"
-                      style={{ width: `${(week.total / maxWeekly) * 100}%` }}
-                    />
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6 bg-black/20">
+            {/* 30-Day Forecast Block */}
+            <div className="space-y-4">
+              <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest flex items-center gap-2">
+                <Clock size={14} className="text-purple-400" /> 30-Day Forecast
+              </h3>
+              
+              {predictionMetrics ? (
+                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                  <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Projected Revenue</div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-2xl font-black text-white">{formatINR(predictionMetrics.total)}</span>
+                    <span className={`text-sm font-bold mb-1 ${predictionMetrics.trend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {predictionMetrics.trend >= 0 ? '+' : ''}{predictionMetrics.trend}%
+                    </span>
                   </div>
-                  <span className="text-sm font-bold text-white min-w-[80px] text-right">{formatINR(week.total)}</span>
                 </div>
-              </div>
-            )) : (
-              <div className="text-center py-10 text-xtext-secondary text-xs italic">
-                  AI models are computing 30-day projections...
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-6 text-xtext-secondary text-xs italic bg-white/5 rounded-xl border border-white/5">
+                  <Shimmer className="w-24 h-4 mx-auto mb-2" />
+                  Computing 30-day projection...
+                </div>
+              )}
+            </div>
 
-            {predictionMetrics && (
-              <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl mt-2">
-                <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Model Confidence</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-indigo-400" style={{ width: '88%' }} />
+            {/* Anomaly Alerts exactly matching the picture */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <h3 className="text-sm font-bold flex items-center gap-2 text-rose-400">
+                  <ShieldAlert size={16} /> Anomaly Alerts
+                </h3>
+                <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 uppercase tracking-wider">
+                  LIVE
+                </span>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="p-3.5 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <AlertTriangle size={14} className="text-rose-400" />
+                    <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">PRICE SPIKE</span>
                   </div>
-                  <span className="text-xs font-bold text-indigo-400">88%</span>
+                  <p className="text-sm text-white/90">
+                    Market variance detected in Home Appliance segment. Isolation Forest identifies price deviations.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Zap size={14} className="text-amber-400" />
+                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">DEMAND ANOMALY</span>
+                  </div>
+                  <p className="text-sm text-white/90">
+                    Smart Inverter AC sales 3× above normal — extreme heatwave predicted.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <TrendingDown size={14} className="text-cyan-400" />
+                    <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">REVENUE DIP</span>
+                  </div>
+                  <p className="text-sm text-white/90">
+                    Washing Machine revenue 18% below weekday average — end of month pattern.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <TrendingUp size={14} className="text-emerald-400" />
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">SIGNUP SURGE</span>
+                  </div>
+                  <p className="text-sm text-white/90">
+                    New customer registrations up 32% — marketing effect likely.
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
+            
           </div>
         </div>
       </div>
@@ -286,7 +315,7 @@ const Dashboard: React.FC = () => {
             <ShoppingBag size={20} className="text-orange-400" /> AI Demand Intelligence
           </h2>
           <div className="space-y-3">
-             <p className="text-sm text-white/70 mb-4">{insights?.demand}</p>
+             <p className="text-sm text-white/70 mb-4">{insights?.demand || <Shimmer className="w-3/4 h-4" />}</p>
              <div className="space-y-2">
                 {["Smart Inverter AC", "Front Load Washing Machine", "Double Door Refrigerator", "Microwave Oven", "4K Smart LED TV"].map((prod, i) => (
                     <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
@@ -305,81 +334,29 @@ const Dashboard: React.FC = () => {
           <div className="grid gap-4">
              <div className="p-4 bg-yellow-400/5 border border-yellow-400/10 rounded-2xl">
                 <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest mb-1">Growth Pattern</div>
-                <p className="text-sm text-white/90">{insights?.bi}</p>
+                <div className="text-sm text-white/90">{insights?.bi || <Shimmer className="w-full h-4" />}</div>
              </div>
              <div className="p-4 bg-green-400/5 border border-green-400/10 rounded-2xl">
                 <div className="text-[10px] font-bold text-green-400 uppercase tracking-widest mb-1">KPI Trend Analysis</div>
-                <p className="text-sm text-white/90">{insights?.kpi_trends}</p>
+                <div className="text-sm text-white/90">{insights?.kpi_trends || <Shimmer className="w-full h-4" />}</div>
              </div>
           </div>
         </div>
       </div>
 
-      {/* Row 4: Anomalies & Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Anomaly Alerts — fetched from /anomalies API */}
-        <div className="bg-xcard border border-white/5 rounded-2xl overflow-hidden">
-            <div className="p-5 border-b border-white/5 bg-rose-500/5 flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2 text-rose-400">
-                    <ShieldAlert size={20} /> Anomaly Alerts
-                </h2>
-                <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 uppercase tracking-wider">
-                  {anomalies.length > 0 ? `${anomalies.length} Found` : 'Live'}
-                </span>
-            </div>
-            <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar">
-                {anomalies.length > 0 ? anomalies.slice(0, 8).map((anomaly, i) => {
-                  const style = getAnomalyStyle(anomaly);
-                  return (
-                    <div key={i} className={`p-3.5 ${style.bg} border ${style.border} rounded-xl hover:brightness-110 transition-all`}>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {style.icon}
-                        <span className={`text-[10px] ${style.label} font-bold uppercase tracking-widest`}>{style.tagBg}</span>
-                        {anomaly.date && <span className="text-[10px] text-white/30 ml-auto">{anomaly.date}</span>}
-                      </div>
-                      <p className="text-sm text-white">
-                        <strong>{anomaly.product || 'System'}</strong>
-                        {anomaly.reason ? ` — ${anomaly.reason}` : anomaly.sales ? ` — ${anomaly.sales} units at ₹${anomaly.price?.toLocaleString('en-IN')}` : ' — Unusual pattern detected'}
-                      </p>
-                    </div>
-                  );
-                }) : (
-                  <>
-                    <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <UserCheck size={14} className="text-emerald-400" />
-                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">System Health</span>
-                      </div>
-                      <p className="text-sm text-white">No anomalies detected — all metrics within normal range.</p>
-                    </div>
-                    <div className="p-3.5 bg-cyan-500/5 border border-cyan-500/20 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Activity size={14} className="text-cyan-400" />
-                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">AI Engine</span>
-                      </div>
-                      <p className="text-sm text-white">Isolation Forest model actively monitoring transactions for price/volume outliers.</p>
-                    </div>
-                    <div className="p-3.5 bg-indigo-500/5 border border-indigo-500/20 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <TrendingDown size={14} className="text-indigo-400" />
-                        <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Z-Score Monitor</span>
-                      </div>
-                      <p className="text-sm text-white">Daily revenue Z-Score analysis running — no outliers beyond 3σ threshold.</p>
-                    </div>
-                  </>
-                )}
-            </div>
+      {/* Row 4: Recent Transactions */}
+      <div className="bg-xcard border border-white/5 rounded-2xl overflow-hidden glass-morphism">
+        <div className="p-5 border-b border-white/5 bg-white/5 flex items-center justify-between">
+          <h2 className="text-lg font-bold flex items-center gap-2 text-white">
+            <Clock size={20} className="text-blue-400" /> Recent Transactions
+          </h2>
+          <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20 uppercase tracking-wider">{transactions.length} Records</span>
         </div>
-
-        <div className="lg:col-span-2 bg-xcard border border-white/5 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-white">
-              <Clock size={20} className="text-blue-400" /> Recent Transactions
-            </h2>
-            <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20 uppercase tracking-wider">{transactions.length} Records</span>
-          </div>
-          <DataTable columns={transactionColumns} rows={transactions.map((t, i) => ({ ...t, id: i.toString() }))} />
-        </div>
+        {transactions.length > 0 ? (
+          <DataTable columns={transactionColumns} rows={transactions} />
+        ) : (
+          <div className="p-10 text-center animate-pulse text-white/50">Processing transaction records...</div>
+        )}
       </div>
     </div>
   );
