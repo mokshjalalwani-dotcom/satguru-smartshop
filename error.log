@@ -1,0 +1,14 @@
+Server running on port 5000
+MongoDB Connected...
+Database already has 15 products. Skipping seed.
+Triggering AI service data sync (Attempt 1)...
+AI Sync triggered successfully.
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/health
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/stats
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/history
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/transactions
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/insights
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/predict
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/stats
+[AI-TRY] Internal attempt 1: http://127.0.0.1:10000/history
+^C

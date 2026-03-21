@@ -1,0 +1,33 @@
+C:\Users\moksh\Desktop\satguru-smartshop\ai-service\app.py:82: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [20520]
+INFO:     Waiting for application startup.
+INFO:AI-Service-V2:Startup check: sales_data=True, models=True
+INFO:AI-Service-V2:Intelligence models loaded into memory.
+INFO:AI-Service-V2:Intelligence Service V2.0 Online.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+Starting Live Data Sync from MongoDB...
+Found 15 products and 1000 sales records.
+Saved 15 products to data/inventory.csv
+Saved 1000 sales records to data/sales.csv
+INFO:     127.0.0.1:64461 - "POST /sync HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64522 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65502 - "GET /stats?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65503 - "GET /history?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65504 - "GET /transactions?limit=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65505 - "GET /insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65506 - "GET /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65505 - "GET /history?days=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65506 - "GET /stats?days=30 HTTP/1.1" 200 OK
+forrtl: error (200): program aborting due to control-C event
+Image              PC                Routine            Line        Source             
+libifcoremd.dll    00007FFF50FADF54  Unknown               Unknown  Unknown
+KERNELBASE.dll     00007FF837979DED  Unknown               Unknown  Unknown
+KERNEL32.DLL       00007FF8399FE8D7  Unknown               Unknown  Unknown
+ntdll.dll          00007FF83AFCC48C  Unknown               Unknown  Unknown
