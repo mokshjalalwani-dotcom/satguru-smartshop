@@ -30,24 +30,19 @@ const LiveClock: React.FC<{ showDate?: boolean }> = ({ showDate = true }) => {
   };
 
   return (
-    <div className="flex items-center gap-6">
-      <div className="flex flex-col items-end border-r border-white/10 pr-6">
-        <div className="flex items-center gap-2">
-          <Clock size={14} className="text-xbrand" />
-          <span className="text-lg font-medium tracking-tight text-white tabular-nums">
-            {formatTime(time).split(' ')[0]}
-            <span className="text-xs ml-1 opacity-50 font-normal uppercase">{formatTime(time).split(' ')[1]}</span>
-          </span>
-        </div>
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Clock size={16} className="text-xbrand" />
+        <span className="text-sm font-bold tracking-tight text-white tabular-nums">
+          {formatTime(time)}
+        </span>
       </div>
       {showDate && (
-        <div className="flex flex-col items-start leading-tight">
-          <div className="flex items-center gap-2">
-            <Calendar size={13} className="text-white/40" />
-            <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-              {formatDate(time)}
-            </span>
-          </div>
+        <div className="hidden sm:flex items-center gap-2 border-l border-white/10 pl-4">
+          <Calendar size={14} className="text-white/40" />
+          <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest whitespace-nowrap">
+            {formatDate(time)}
+          </span>
         </div>
       )}
     </div>

@@ -19,7 +19,9 @@ const FestivalAlerts: React.FC = () => {
   const processedEvents = upcomingEvents.map(event => ({
     ...event,
     daysLeft: getDaysUntil(event.date)
-  })).sort((a, b) => a.daysLeft - b.daysLeft);
+  }))
+  .filter(event => event.daysLeft >= 0)
+  .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const fyEndDate = "2026-03-31";
   const daysLedtInFY = getDaysUntil(fyEndDate);
