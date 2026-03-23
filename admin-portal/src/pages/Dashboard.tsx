@@ -119,13 +119,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-bg text-primary selection:bg-accent/30 relative overflow-hidden">
-      {/* Background Depth Layers */}
-      <div className="mesh-blob blob-accent w-[500px] h-[500px] -top-64 -left-64 animate-neon-pulse" />
-      <div className="mesh-blob blob-blue w-[600px] h-[600px] top-1/2 -right-64 opacity-10" />
-      <div className="mesh-blob blob-white w-[400px] h-[400px] -bottom-32 left-1/4 opacity-5" />
-
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-6 font-sans">
+    <div className="relative z-10 selection:bg-accent/30 font-sans">
 
         {/* ── HEADER SHELF ── */}
         <header className="mb-10 p-1 rounded-[24px] border border-white/[0.03] bg-white/[0.01] backdrop-blur-3xl shadow-2xl">
@@ -300,7 +294,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-surface p-6">
+          <div className="rounded-[24px] glass-card p-8">
             <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-white">
               <Lightbulb size={16} className="text-accent" /> Business Strategy
             </h2>
@@ -341,7 +335,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-      </div>
     </div>
   );
 };

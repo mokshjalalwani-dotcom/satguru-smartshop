@@ -18,8 +18,8 @@ export default {
         // ═══════════════════════════════════════
 
         // Semantic Tokens
-        bg:       '#000000',
-        surface:  '#14213d',
+        bg:       '#03050a',
+        surface:  '#0a0f1e',
         accent:   '#fca311',
         primary:  '#ffffff',
         muted:    '#e5e5e5',

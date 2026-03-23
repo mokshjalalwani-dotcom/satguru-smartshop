@@ -11,15 +11,16 @@ const AdminLayout: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen bg-bg text-white relative overflow-hidden">
-      {/* Background Blobs */}
-      <div className="absolute -top-40 -right-40 w-[520px] h-[520px] bg-surface/40 rounded-full filter blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -left-28 w-[420px] h-[420px] bg-accent/5 rounded-full filter blur-[100px] pointer-events-none" />
+    <div className="flex h-screen bg-bg text-white relative overflow-hidden font-sans">
+      {/* Background Depth Layers (Global) */}
+      <div className="mesh-blob blob-accent w-[600px] h-[600px] -top-64 -left-64 opacity-[0.07] animate-neon-pulse" />
+      <div className="mesh-blob blob-blue w-[800px] h-[800px] top-1/2 -right-64 opacity-10" />
+      <div className="mesh-blob blob-white w-[500px] h-[500px] -bottom-32 left-1/4 opacity-[0.03]" />
 
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="h-16 border-b border-white/5 bg-surface/30 backdrop-blur-xl flex items-center justify-between px-8 relative z-20">
+        <header className="h-20 glass-header flex items-center justify-between px-10 relative z-20">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent mr-2">
               Welcome back, {user?.name || 'User'}!

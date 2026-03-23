@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
   BarChart3, 
   ShoppingBag, 
@@ -32,11 +33,12 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-surface border-r border-white/5 flex flex-col transition-all duration-300 relative z-30`}>
+    <aside className={`${collapsed ? "w-20" : "w-64"} bg-[#0a0f1e]/80 backdrop-blur-2xl border-r border-white-[0.03] flex flex-col transition-all duration-500 relative z-30 shadow-2xl`}>
       <div className="p-6 flex-1 flex flex-col">
         <div className={`flex items-center gap-3 mb-10 ${collapsed ? "justify-center" : "px-2"}`}>
-          <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(252,163,17,0.4)] flex-shrink-0">
-            <ShieldCheck size={20} className="text-black" />
+          <div className="w-11 h-11 glass-card rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(252,163,17,0.15)] flex-shrink-0 relative overflow-hidden group-hover:shadow-[0_0_40px_rgba(252,163,17,0.25)] transition-all">
+            <div className="absolute inset-0 bg-accent/10 opacity-50" />
+            <ShieldCheck size={22} className="text-accent relative z-10" />
           </div>
           {!collapsed && (
             <span className="font-bold text-lg tracking-tight whitespace-nowrap text-white">
@@ -60,10 +62,16 @@ const Sidebar: React.FC = () => {
                 } ${collapsed ? "justify-center px-0" : ""}`}
                 title={collapsed ? link.label : ""}
               >
-                <span className={`${isActive ? "text-accent" : "group-hover:text-accent"} transition-colors`}>
+                <span className={`${isActive ? "text-accent" : "group-hover:text-accent"} transition-colors relative z-10`}>
                   {link.icon}
                 </span>
-                {!collapsed && <span className="text-sm font-semibold">{link.label}</span>}
+                {!collapsed && <span className="text-sm font-bold relative z-10 tracking-tight">{link.label}</span>}
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-pill"
+                    className="absolute left-0 w-1 h-1/2 bg-accent rounded-r-full shadow-[0_0_15px_rgba(252,163,17,0.8)]"
+                  />
+                )}
               </Link>
             );
           })}
