@@ -119,24 +119,24 @@ const Dashboard: React.FC = () => {
     <div className="relative z-10 selection:bg-accent/30 font-sans">
 
       {/* ── PERFORMANCE OVERVIEW BAR ── */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/[0.05] rounded-3xl p-3 pr-4 group transition-all hover:bg-white/[0.04]">
-        <div className="flex items-center gap-4 pl-2">
-          <div className="w-10 h-10 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
-            <TrendingUp size={20} />
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/[0.03] border border-white/[0.08] rounded-[32px] p-5 pr-6 group transition-all hover:bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-6 pl-2">
+          <div className="w-14 h-14 rounded-[22px] bg-accent/10 flex items-center justify-center text-accent shadow-inner border border-accent/20">
+            <TrendingUp size={28} />
           </div>
           <div>
-            <h2 className="text-sm font-black text-white flex items-center gap-2 tracking-tight group-hover:text-accent transition-colors">
+            <h2 className="text-lg font-black text-white flex items-center gap-3 tracking-tight group-hover:text-accent transition-colors">
               Performance Overview
-              <span className="flex items-center gap-1.5 ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-                <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="flex items-center gap-2 ml-1 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Live
               </span>
             </h2>
-            <p className="text-[10px] text-muted/30 font-bold uppercase tracking-widest mt-0.5">Real-time Analytics Stream</p>
+            <p className="text-[11px] text-muted/40 font-bold uppercase tracking-[0.25em] mt-1">Real-time Analytics Stream & Strategy</p>
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl self-end sm:self-auto">
+        <div className="inline-flex items-center gap-1.5 p-1.5 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl self-end sm:self-auto">
           {[7, 30, 180].map((d) => (
             <button
               key={d}
