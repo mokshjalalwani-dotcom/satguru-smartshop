@@ -115,12 +115,21 @@ const Dashboard: React.FC = () => {
     { header: "Time", accessor: "date", render: (val) => String(val).replace('T', ' ').split(' ')[1] || "N/A" }
   ];
 
-  return (
-    <div className="relative z-10 selection:bg-accent/30 font-sans">
-      
-      {/* ── TIMEFRAME SELECTION ── */}
-      <div className="mb-6 flex justify-end">
-        <div className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl">
+      {/* ── PERFORMANCE OVERVIEW BAR ── */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-bold text-white flex items-center gap-2 tracking-tight">
+            <TrendingUp size={16} className="text-accent" />
+            Performance Overview
+            <span className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest text-emerald-400">
+              <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+              Live
+            </span>
+          </h2>
+          <p className="text-[10px] text-muted/30 font-bold uppercase tracking-widest mt-0.5">Real-time Analytics Stream</p>
+        </div>
+
+        <div className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl self-end sm:self-auto">
           {[7, 30, 180].map((d) => (
             <button
               key={d}
