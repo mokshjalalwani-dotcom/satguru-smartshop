@@ -32,16 +32,16 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-xcard border-r border-white/5 flex flex-col transition-all duration-300 relative z-30`}>
+    <aside className={`${collapsed ? "w-20" : "w-64"} bg-[#14213d] border-r border-white/5 flex flex-col transition-all duration-300 relative z-30`}>
       <div className="p-6 flex-1 flex flex-col">
         <div className={`flex items-center gap-3 mb-10 ${collapsed ? "justify-center" : "px-2"}`}>
-          <div className="w-9 h-9 bg-xbrand rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.4)] flex-shrink-0">
+          <div className="w-9 h-9 bg-[#fca311] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(252,163,17,0.4)] flex-shrink-0">
             <ShieldCheck size={20} className="text-black" />
           </div>
           {!collapsed && (
-            <span className="font-bold text-lg tracking-tight whitespace-nowrap">
+            <span className="font-bold text-lg tracking-tight whitespace-nowrap text-white">
               Satguru<br/>
-              <span className="text-[10px] text-xtext-secondary -mt-2 block uppercase tracking-widest font-bold">SmartShop</span>
+              <span className="text-[10px] text-[#e5e5e5]/60 -mt-2 block uppercase tracking-widest font-bold">SmartShop</span>
             </span>
           )}
         </div>
@@ -55,12 +55,12 @@ const Sidebar: React.FC = () => {
                 to={link.path}
                 className={`flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-all group border border-transparent ${
                   isActive 
-                    ? "bg-xbrand/10 border-xbrand/20 text-white shadow-[0_0_15px_rgba(0,242,254,0.1)]" 
-                    : "text-xtext-secondary hover:text-white hover:bg-white/5"
+                    ? "bg-[#fca311]/10 border-[#fca311]/20 text-white shadow-[0_0_15px_rgba(252,163,17,0.1)]" 
+                    : "text-[#e5e5e5]/60 hover:text-white hover:bg-white/5"
                 } ${collapsed ? "justify-center px-0" : ""}`}
                 title={collapsed ? link.label : ""}
               >
-                <span className={`${isActive ? "text-xbrand" : "group-hover:text-xbrand"} transition-colors`}>
+                <span className={`${isActive ? "text-[#fca311]" : "group-hover:text-[#fca311]"} transition-colors`}>
                   {link.icon}
                 </span>
                 {!collapsed && <span className="text-sm font-semibold">{link.label}</span>}
@@ -73,7 +73,7 @@ const Sidebar: React.FC = () => {
           {/* Portal Switcher */}
           <Link 
             to="/executive/sales"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-all group border border-emerald-500/20 ${collapsed ? "justify-center px-2" : ""}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#fca311] hover:bg-[#fca311]/10 transition-all group border border-[#fca311]/20 ${collapsed ? "justify-center px-2" : ""}`}
             title={collapsed ? "Switch to Staff Portal" : ""}
           >
             <ArrowRightLeft size={18} />
@@ -82,7 +82,7 @@ const Sidebar: React.FC = () => {
 
           <button 
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xtext-secondary hover:text-white hover:bg-white/5 transition-all group"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#e5e5e5]/60 hover:text-white hover:bg-white/5 transition-all group"
           >
             {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             {!collapsed && <span className="text-sm font-medium">Collapse</span>}
