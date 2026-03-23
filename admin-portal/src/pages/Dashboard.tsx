@@ -145,19 +145,23 @@ const Dashboard: React.FC = () => {
           <p className="text-xtext-secondary text-sm mt-1">Smart Retail Decision Support System powered by AI.</p>
         </div>
         
-        <div className="flex items-center gap-6">
-          <LiveClock />
+        <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-1.5 backdrop-blur-md">
+          <div className="px-4 py-1.5">
+            <LiveClock showDate={true} />
+          </div>
           
-          <div className="flex gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10">
+          <div className="h-8 w-[1px] bg-white/10 mx-2" />
+          
+          <div className="flex gap-1">
             {[7, 30, 180].map((d) => (
               <button
                 key={d}
                 onClick={() => setDuration(d as any)}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
-                  duration === d ? "bg-xbrand text-black shadow-lg shadow-xbrand/40" : "text-white/60 hover:text-white hover:bg-white/5"
+                className={`px-4 py-2 rounded-xl text-[10px] font-bold transition-all ${
+                  duration === d ? "bg-xbrand text-black shadow-lg shadow-xbrand/40" : "text-white/40 hover:text-white hover:bg-white/5"
                 }`}
               >
-                {d === 7 ? "7 Days" : d === 30 ? "30 Days" : "6 Months"}
+                {d === 7 ? "7D" : d === 30 ? "30D" : "6M"}
               </button>
             ))}
           </div>
