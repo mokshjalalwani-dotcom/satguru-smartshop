@@ -21,14 +21,11 @@ const AdminLayout: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="h-20 glass-header flex items-center justify-between px-10 relative z-20">
+        <header className="h-14 glass-header flex items-center justify-between px-8 relative z-20">
           <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em] leading-none mb-1.5 opacity-80">Welcome Back</span>
-              <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-                Welcome back, <span className="text-accent">{user?.name || 'Admin'}</span>
-              </h1>
-            </div>
+            <h1 className="text-xl font-black tracking-tight text-white leading-tight">
+              Welcome back, <span className="text-accent">{user?.name || 'Admin'}</span>
+            </h1>
           </div>
           
           <div className="flex items-center gap-4">
@@ -47,7 +44,7 @@ const AdminLayout: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 relative">
+        <main className="flex-1 overflow-y-auto p-5 relative">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
