@@ -39,7 +39,7 @@ const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'in
 const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'public');
 
 const instance = axios.create({
-  timeout: 25000, // Give Render 25s per attempt to wake the container
+  timeout: 45000, // Increased to 45s to handle Render Free Tier "Cold Starts" which can take ~40s
 });
 
 const cache = new Map();

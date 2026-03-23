@@ -17,13 +17,14 @@ const connectDB = async () => {
         const triggerSync = async (retries = 5) => {
             for (let i = 0; i < retries; i++) {
                 try {
-                    console.log(`Triggering AI service data sync (Attempt ${i + 1})...`);
-                    await axios.post(`${AI_SERVICE_INTERNAL}/sync`, {}, { timeout: 15000 });
-                    console.log('AI Sync triggered successfully.');
+                    console.log(`[DB-SYNC] Triggering AI service data sync (Attempt ${i + 1})...`);
+                    // Use a longer timeout for the sync trigger as it might involve waking the AI container
+                    await axios.post(`${AI_SERVICE_INTERNAL}/sync`, {}, { timeout: 30000 });
+                    console.log('[DB-SYNC] AI Sync triggered successfully.');
                     return;
                 } catch (syncErr) {
-                    console.warn(`AI Sync trigger failed: ${syncErr.message}. Retrying in 10s...`);
-                    await new Promise(r => setTimeout(r, 10000));
+                    console.warn(`[DB-SYNC] AI Sync trigger failed: ${syncErr.message}. Retrying in 12s...`);
+                    await new Promise(r => setTimeout(r, 12000));
                 }
             }
         };

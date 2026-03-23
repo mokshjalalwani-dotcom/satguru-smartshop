@@ -11,6 +11,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: MONGODB_URI
+        sync: false # User must provide this in Render Dashboard
 
   # 2. Main Shop Portal (Node.js/Express + React Frontend)
   - type: web
@@ -28,3 +30,5 @@ services:
           property: host
       - key: AI_SERVICE_INTERNAL_URL
         value: "http://satguru-ai-service:10000"
+      - key: MONGODB_URI
+        sync: false # User must provide this in Render Dashboard

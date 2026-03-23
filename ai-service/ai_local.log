@@ -1,0 +1,24 @@
+C:\Users\moksh\Desktop\satguru-smartshop\ai-service\app.py:82: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [33712]
+INFO:     Waiting for application startup.
+INFO:AI-Service-V2:Startup check: sales_data=True, models=True
+INFO:AI-Service-V2:Intelligence models loaded into memory.
+INFO:AI-Service-V2:Intelligence Service V2.0 Online.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+Starting Live Data Sync from MongoDB...
+Found 15 products and 1000 sales records.
+Saved 15 products to data/inventory.csv
+Saved 1000 sales records to data/sales.csv
+INFO:     127.0.0.1:62557 - "POST /sync HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57701 - "GET /stats?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57704 - "GET /insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /history?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57703 - "GET /transactions?limit=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57705 - "GET /predict HTTP/1.1" 200 OK
