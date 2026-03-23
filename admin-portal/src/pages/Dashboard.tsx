@@ -171,9 +171,9 @@ const Dashboard: React.FC = () => {
           <h2 className="text-lg font-semibold flex items-center gap-2 mb-6 text-white">
             <TrendingUp size={20} className="text-xbrand" /> Business Trend Analysis
           </h2>
-          <div className="flex-1 w-full min-h-[400px]">
+          <div className="flex-1 w-full h-[400px]">
             {history.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minHeight={0}>
               <AreaChart data={history}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
