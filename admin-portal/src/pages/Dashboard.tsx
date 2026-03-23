@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp, Users, IndianRupee, Star, TrendingDown, ShoppingBag, Lightbulb, Clock, AlertTriangle, Zap } from "lucide-react";
 import KPICard from "../ui/KPICard";
-import LiveClock from "../ui/LiveClock";
 import { motion } from "framer-motion";
 import { useDashboard } from "../context/DashboardContext";
 import DataTable, { type Column } from "../ui/DataTable";
@@ -119,28 +118,30 @@ const Dashboard: React.FC = () => {
   return (
     <div className="relative z-10 selection:bg-accent/30 font-sans">
       
-      {/* ── FLOATING TIMEFRAME PILL ── */}
-      <div className="absolute top-0 right-0 z-20 flex items-center gap-2 p-1 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl">
-        {[7, 30, 180].map((d) => (
-          <button
-            key={d}
-            onClick={() => setDuration(d as any)}
-            className={`relative z-10 rounded-full px-5 py-2 text-[10px] font-black tracking-widest transition-all duration-500 overflow-hidden ${
-              duration === d
-                ? 'bg-accent text-black shadow-[0_0_20px_rgba(252,163,17,0.3)]'
-                : 'text-muted/50 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <span className="relative z-10">{d === 7 ? '7D' : d === 30 ? '30D' : '6M'}</span>
-            {duration === d && (
-              <motion.div 
-                layoutId="activeTabPill"
-                className="absolute inset-0 bg-accent"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-          </button>
-        ))}
+      {/* ── TIMEFRAME SELECTION ── */}
+      <div className="mb-6 flex justify-end">
+        <div className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl">
+          {[7, 30, 180].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDuration(d as any)}
+              className={`relative z-10 rounded-full px-5 py-2 text-[10px] font-black tracking-widest transition-all duration-500 overflow-hidden ${
+                duration === d
+                  ? 'bg-accent text-black shadow-[0_0_20px_rgba(252,163,17,0.3)]'
+                  : 'text-muted/50 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="relative z-10">{d === 7 ? '7D' : d === 30 ? '30D' : '6M'}</span>
+              {duration === d && (
+                <motion.div 
+                  layoutId="activeTabPillFinal"
+                  className="absolute inset-0 bg-accent"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
 
