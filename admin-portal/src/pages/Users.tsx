@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Users as UsersIcon, UserPlus, Shield, MoreVertical, Search, Edit3, Trash2, ToggleLeft, ToggleRight, X, Check, ShieldCheck, Zap } from "lucide-react";
+import { Users as UsersIcon, UserPlus, Shield, MoreVertical, Search, Edit3, Trash2, ToggleLeft, ToggleRight, X, Check, ShieldCheck } from "lucide-react";
 import DataTable from "../ui/DataTable";
 import FloatingModal from "../ui/FloatingModal";
 import { useLocalStorage } from "../hooks/useLocalStorage";

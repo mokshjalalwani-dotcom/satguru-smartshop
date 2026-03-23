@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { IndianRupee, Package, CheckCircle, ShieldInfo, Zap } from "lucide-react";
+import { IndianRupee, Package, CheckCircle, Shield, Zap } from "lucide-react";
 import SaleForm from "../components/SaleForm";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
 import api from "../services/api";
@@ -96,7 +96,7 @@ const Sales: React.FC = () => {
         <div className="lg:col-span-2 bg-surface border-2 border-white/5 rounded-[40px] p-8 shadow-2xl relative overflow-hidden h-fit">
            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none" />
            <div className="flex items-center gap-4 mb-8 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-accent"><ShieldInfo size={20} /></div>
+              <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-accent"><Shield size={20} /></div>
               <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Flow Parameters</h3>
            </div>
            <div className="relative z-10">

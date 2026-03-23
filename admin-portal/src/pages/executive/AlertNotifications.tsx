@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, AlertTriangle, Info, CheckCircle2, TrendingUp, X, ShieldAlert, Zap } from "lucide-react";
+import { Bell, AlertTriangle, Info, CheckCircle2, TrendingUp, ShieldAlert, Zap, Clock } from "lucide-react";
 
 interface Notification {
   id: string;

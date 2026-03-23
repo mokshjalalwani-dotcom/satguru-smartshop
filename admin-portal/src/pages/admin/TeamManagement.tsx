@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Users, UserPlus, Clock, CheckCircle2, TrendingUp, MoreVertical, Shield, Edit3, Trash2, X, Check, Award, EyeOff } from "lucide-react";
+import { Users, UserPlus, Clock, CheckCircle2, TrendingUp, MoreVertical, Shield, Edit3, Trash2, X, Check, EyeOff } from "lucide-react";
 import FloatingModal from "../../ui/FloatingModal";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 

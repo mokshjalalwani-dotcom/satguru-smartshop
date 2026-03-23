@@ -4,7 +4,7 @@ import api from "../services/api";
 import type { NewSale } from "../services/api";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
-import { ShoppingCart, CheckCircle, ExternalLink, ShieldCheck, Zap, Receipt } from "lucide-react";
+import { ShoppingCart, ExternalLink, ShieldCheck, Zap, Receipt } from "lucide-react";
 
 interface Product {
   product_id: string;
