@@ -84,30 +84,50 @@ const aiRequest = async (method, path, options = {}) => {
   const cacheKey = `${method}:${path}:${JSON.stringify(options.params || {})}`;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-  const getFromCache = (key, allowStale = false) => {
-    const cached = cache.get(key);
-    if (!cached) return null;
-    const age = Date.now() - cached.timestamp;
-    return (age < CACHE_TTL || (allowStale && age < STALE_TTL)) ? cached.data : null;
+  const getCacheEntry = (key) => {
+    const entry = cache.get(key);
+    if (!entry) return null;
+    const age = Date.now() - entry.timestamp;
+    return {
+      data: entry.data,
+      isStale: age >= CACHE_TTL,
+      isExpired: age >= STALE_TTL
+    };
   };
 
+  // --- SWR STRATEGY ---
   if (method.toUpperCase() === 'GET') {
-    const data = getFromCache(cacheKey);
-    if (data) return { data };
+    const entry = getCacheEntry(cacheKey);
+    if (entry && !entry.isExpired) {
+      // If data is stale but not expired, return it NOW and refresh in background
+      if (entry.isStale) {
+        console.log(`[AI-SWR] Serving STALE data for ${cleanPath}. Refreshing in background...`);
+        // Background refresh (no await)
+        performActualRequest(method, cleanPath, options, cacheKey).catch(e => 
+          console.warn(`[AI-SWR-BG] Background refresh failed for ${cleanPath}: ${e.message}`)
+        );
+      } else {
+        console.log(`[AI-CACHE] Serving FRESH data for ${cleanPath}`);
+      }
+      return { data: entry.data, _fromCache: true, _isStale: entry.isStale };
+    }
   }
 
-  let lastError = null;
+  return performActualRequest(method, cleanPath, options, cacheKey);
+};
+
+// Extracted the actual request logic for SWR background refresh
+const performActualRequest = async (method, cleanPath, options, cacheKey) => {
   let response = null;
   
-  // Try Internal and then Public with Retries
   const targets = [
     { name: 'Internal', url: AI_INTERNAL_URL },
     { name: 'Public', url: AI_PUBLIC_URL }
   ];
 
   for (const target of targets) {
-    let retries = target.name === 'Internal' ? 2 : 1; 
-    let delay = 2000; 
+    let retries = target.name === 'Internal' ? 3 : 2; 
+    let delay = 1500; 
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -120,13 +140,12 @@ const aiRequest = async (method, path, options = {}) => {
         });
         if (response) break;
       } catch (err) {
-        lastError = err;
         const status = err.response?.status;
-        const isNetworkError = !err.response || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET';
+        const isNetworkError = !err.response || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
         
         if ((status === 429 || status === 502 || status === 503 || status === 504 || isNetworkError) && i < retries - 1) {
           await sleep(delay);
-          delay *= 1.5;
+          delay *= 2; // Aggressive backoff for Render cold starts
           continue;
         }
         break; 
@@ -136,20 +155,24 @@ const aiRequest = async (method, path, options = {}) => {
   }
 
   if (!response) {
-    const stale = getFromCache(cacheKey, true);
-    if (stale) return { data: stale, _fallback: 'stale' };
+    // Last ditch: check if we have ANY expired data to show before using static fallback
+    const entry = cache.get(cacheKey);
+    if (entry) {
+      console.warn(`[AI-RECOVERY] Service down. Serving EXPIRED data for ${cleanPath}`);
+      return { data: entry.data, _fallback: 'expired' };
+    }
 
-    // PERMANENT FIX: Never throw 500. Return safe defaults if service is down/warming.
     const fallback = SAFE_FALLBACKS[cleanPath] || (cleanPath.startsWith('/stats') ? SAFE_FALLBACKS['/stats'] : {});
-    console.warn(`[AI-RECOVERY] Serving safe fallback for ${cleanPath}`);
+    console.warn(`[AI-RECOVERY] Serving STATIC fallback for ${cleanPath}`);
     return { data: fallback, _fallback: 'static' };
   }
 
+  const resultData = response.data;
   if (method.toUpperCase() === 'GET') {
-    cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
+    cache.set(cacheKey, { data: resultData, timestamp: Date.now() });
   }
 
-  return response;
+  return { data: resultData };
 };
 
 router.get('/health', async (req, res) => {

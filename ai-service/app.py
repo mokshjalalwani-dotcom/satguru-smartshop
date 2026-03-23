@@ -126,15 +126,7 @@ def get_stats(days: int = Query(7, ge=0)):
         df, inv = load_data()
         
         if df.empty:
-            logger.warning("Sales data empty. Attempting synthetic fallback.")
-            try:
-                from generate_data import generate_enriched_dataset
-                generate_enriched_dataset()
-                df, inv = load_data()
-            except Exception as gen_err:
-                logger.error(f"Fallback generation failed: {gen_err}")
-        
-        if df.empty:
+            logger.warning("Sales data empty. Returning base zero metrics.")
             return {
                 "revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, 
                 "low_stock_count": 0, "profit": 0,
@@ -295,16 +287,20 @@ def get_insights():
         
         # Calculate stats with small range for speed in insights
         try:
-            recent_stats = get_stats(30)
-            rev_trend = recent_stats.get('revenue_change', "+0.0%")
-            prof_trend = recent_stats.get('profit_change', "+0.0%")
-        except:
+            stats_dict = get_stats(30)
+            rev_trend = str(stats_dict.get('revenue_change', "+0.0%"))
+            prof_trend = str(stats_dict.get('profit_change', "+0.0%"))
+        except Exception:
             rev_trend = "+0.0%"
             prof_trend = "+0.0%"
         
+        low_stock_msg = "All stock stable"
+        if isinstance(low_stock, list) and len(low_stock) > 0:
+            low_stock_msg = f"Alert: {', '.join(map(str, low_stock[:2]))}"
+
         return {
             "forecasting": f"Revenue trend ({rev_trend}) suggests growth. {top_prod} remains the high-velocity driver.",
-            "demand": f"Alert: {', '.join(low_stock[:2]) if low_stock else 'All stock stable'}. Reorder recommended soon.",
+            "demand": f"{low_stock_msg}. Reorder recommended soon.",
             "anomalies": "Market variance detected in Home Appliance segment. Isolation Forest identifies price deviations.",
             "bi": "Weekend traffic consistently higher. Peak performance noted during holiday simulations.",
             "kpi_trends": f"Profit margins are healthy. {prof_trend} growth in net profit this period."
