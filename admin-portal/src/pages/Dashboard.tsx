@@ -136,11 +136,15 @@ const Dashboard: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent flex items-center gap-3">
             Strategic Analytics
-            {errorStatus && (
-              <span className="text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20">
+            {errorStatus ? (
+              <span className="text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 animate-pulse">
                 {errorStatus}
               </span>
-            )}
+            ) : (stats as any)?._isFallback ? (
+              <span className="text-xs font-medium bg-xbrand/10 text-xbrand px-3 py-1 rounded-full border border-xbrand/20 animate-pulse flex items-center gap-2">
+                <Zap size={12} /> AI Service Warming Up...
+              </span>
+            ) : null}
           </h1>
           <p className="text-xtext-secondary text-sm mt-1">Smart Retail Decision Support System powered by AI.</p>
         </div>

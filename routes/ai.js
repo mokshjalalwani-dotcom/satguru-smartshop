@@ -53,28 +53,31 @@ const SAFE_FALLBACKS = {
     revenue: 0, orders: 0, aov: 0, active_customers: 0, 
     low_stock_count: 0, profit: 0,
     revenue_change: "+0.0%", profit_change: "+0.0%", 
-    orders_change: "+0.0%", customers_change: "+0.0%"
+    orders_change: "+0.0%", customers_change: "+0.0%",
+    _isFallback: true
   },
   '/history': [],
   '/transactions': [],
   '/product-stats': [],
   '/inventory': [],
-  '/demand': { demand: {} },
+  '/demand': { demand: {}, _isFallback: true },
   '/insights': {
     forecasting: "AI Service is warming up...",
     demand: "Analyzing inventory data...",
     anomalies: "Scanning for market variances...",
     bi: "Processing business intelligence...",
-    kpi_trends: "Calculating historical trends..."
+    kpi_trends: "Calculating historical trends...",
+    _isFallback: true
   },
   '/predict': {
     predictions: [],
     confidence_interval: { lower: 0, upper: 0 },
     predicted_total: 0,
     trend_percent_change: 0,
-    metrics: { mae: 0, rmse: 0 }
+    metrics: { mae: 0, rmse: 0 },
+    _isFallback: true
   },
-  '/anomalies': { anomalies: [] }
+  '/anomalies': { anomalies: [], _isFallback: true }
 };
 
 const aiRequest = async (method, path, options = {}) => {
