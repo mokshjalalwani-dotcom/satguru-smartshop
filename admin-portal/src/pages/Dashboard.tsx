@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown } from "lucide-react";
+import { TrendingUp, Users, IndianRupee, Star, TrendingDown, ShoppingBag, Lightbulb, Clock, AlertTriangle, Zap } from "lucide-react";
 import KPICard from "../ui/KPICard";
-import LiveClock from "../ui/LiveClock";
 import { useDashboard } from "../context/DashboardContext";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
@@ -29,7 +28,6 @@ const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [predictionMetrics, setPredictionMetrics] = useState<{total: number, ci: {lower: number, upper: number}, trend: number} | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   const { duration, setStatus, setErrorMessage } = useDashboard();
 

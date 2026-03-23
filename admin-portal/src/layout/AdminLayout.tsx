@@ -26,43 +26,52 @@ const AdminLayout: React.FC = () => {
         <header className="h-20 glass-header flex items-center justify-between px-10 relative z-20">
           <div className="flex items-center gap-6">
             {location.pathname === '/admin' ? (
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col">
-                  <h1 className="text-xl font-black tracking-tight text-white leading-tight">
-                    Strategic <span className="text-accent">Insights</span>
-                  </h1>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {status === 'error' ? (
-                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-red-400">
-                        <AlertTriangle size={10} /> Disrupted
-                      </div>
-                    ) : status === 'warming' ? (
-                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-accent animate-pulse">
-                        <Zap size={10} /> Warming
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
-                      </div>
-                    )}
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+                    <Zap size={20} className="text-accent" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-bold text-muted/40 uppercase tracking-widest">Welcome back, {user?.name || 'User'}</span>
+                    </div>
+                    <h1 className="text-xl font-black tracking-tight text-white leading-tight">
+                      Strategic <span className="text-accent">Insights</span>
+                    </h1>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  {status === 'error' ? (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-[9px] font-black uppercase tracking-widest text-red-400">
+                      <AlertTriangle size={10} /> Disrupted
+                    </div>
+                  ) : status === 'warming' ? (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-black uppercase tracking-widest text-accent animate-pulse">
+                      <Zap size={10} /> Warming
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
+                    </div>
+                  )}
+                </div>
                 
-                <div className="h-8 w-[1px] bg-white/5 mx-2" />
+                <div className="h-8 w-[1px] bg-white/5 mx-1" />
                 
-                <div className="flex items-center gap-3">
-                  <div className="bg-black/20 rounded-lg px-3 py-1.5 border border-white/5">
+                <div className="flex items-center gap-4">
+                  <div className="bg-black/30 rounded-xl px-4 py-2 border border-white/5 shadow-inner">
                     <LiveClock showDate={false} />
                   </div>
-                  <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
+                  <div className="flex gap-1.5 bg-black/50 p-1.5 rounded-xl border border-white/10 shadow-2xl">
                     {[7, 30, 180].map((d) => (
                       <button
                         key={d}
                         onClick={() => setDuration(d as any)}
-                        className={`rounded-md px-3 py-1 text-[8px] font-black tracking-tighter transition-all duration-300 ${
+                        className={`rounded-lg px-4 py-2 text-[10px] font-black tracking-widest transition-all duration-300 ${
                           duration === d
-                            ? 'bg-accent text-black shadow-lg shadow-accent/20'
-                            : 'text-muted/40 hover:text-white'
+                            ? 'bg-accent text-black shadow-[0_0_20px_rgba(252,163,17,0.3)]'
+                            : 'text-muted/60 hover:text-white hover:bg-white/5'
                         }`}
                       >
                         {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
