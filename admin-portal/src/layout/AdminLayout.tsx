@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { LogOut, User as UserIcon, AlertTriangle, Zap } from "lucide-react";
 import FloatingActionButton from "../ui/FloatingActionButton";
 import { useDashboard } from "../context/DashboardContext";
+import LiveClock from "../ui/LiveClock";
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -69,6 +70,10 @@ const AdminLayout: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-6">
+            <div className="hidden lg:flex items-center bg-black/20 rounded-xl px-4 py-2 border border-white/5 mr-2">
+              <LiveClock showDate={false} />
+            </div>
+            
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold leading-none">{user?.name || 'User'}</p>
