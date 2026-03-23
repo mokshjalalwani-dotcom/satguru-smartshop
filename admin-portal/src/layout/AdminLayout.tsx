@@ -26,15 +26,15 @@ const AdminLayout: React.FC = () => {
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em] leading-none mb-1.5 opacity-80">Welcome Back</span>
               <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-                {user?.name || 'Admin'} <span className="text-white/40 font-medium">Portal</span>
+                Welcome back, <span className="text-accent underline decoration-accent/30 underline-offset-8">{user?.name || 'Admin'}</span>
               </h1>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
 
-            <div className="hidden lg:flex items-center bg-black/20 rounded-xl px-4 py-2 border border-white/5 shadow-inner">
-              <LiveClock showDate={false} />
+            <div className="hidden lg:flex items-center bg-black/20 rounded-2xl px-5 py-2.5 border border-white/5 shadow-inner">
+              <LiveClock showDate={true} />
             </div>
 
             <button 
