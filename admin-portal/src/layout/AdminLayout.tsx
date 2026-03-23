@@ -39,16 +39,6 @@ const AdminLayout: React.FC = () => {
               </div>
             </div>
           </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent mr-2">
-                  Welcome back, {user?.name || 'User'}!
-                </h1>
-                <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-lg text-[10px] font-bold text-accent uppercase tracking-tighter">
-                  {user?.role || 'Guest Access'}
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="flex items-center gap-4">
