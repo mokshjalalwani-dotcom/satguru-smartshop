@@ -55,7 +55,7 @@ const Sidebar: React.FC = () => {
               <Link 
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-all group border border-transparent ${
+                className={`flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-all group border border-transparent relative overflow-hidden ${
                   isActive 
                     ? "bg-accent/10 border-accent/20 text-white shadow-[0_0_15px_rgba(252,163,17,0.1)]" 
                     : "text-muted/60 hover:text-white hover:bg-white/5"
@@ -68,8 +68,9 @@ const Sidebar: React.FC = () => {
                 {!collapsed && <span className="text-sm font-bold relative z-10 tracking-tight">{link.label}</span>}
                 {isActive && (
                   <motion.div 
-                    layoutId="active-pill"
-                    className="absolute left-0 w-1 h-1/2 bg-accent rounded-r-full shadow-[0_0_15px_rgba(252,163,17,0.8)]"
+                    layoutId="active-pill-full"
+                    className="absolute left-0 inset-y-0 w-[3px] bg-accent/80 shadow-[0_0_10px_rgba(252,163,17,0.2)]"
+                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                   />
                 )}
               </Link>
