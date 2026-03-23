@@ -27,16 +27,16 @@ const ExecutiveSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-xcard border-r border-white/5 flex flex-col transition-all duration-300 relative z-30`}>
+    <aside className={`${collapsed ? "w-20" : "w-64"} bg-surface border-r border-white/5 flex flex-col transition-all duration-300 relative z-30`}>
       <div className="p-6 flex-1 flex flex-col">
         <div className={`flex items-center gap-3 mb-10 ${collapsed ? "justify-center" : "px-2"}`}>
-          <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] flex-shrink-0">
+          <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(252,163,17,0.4)] flex-shrink-0">
             <ShieldCheck size={20} className="text-black" />
           </div>
           {!collapsed && (
-            <span className="font-bold text-lg tracking-tight whitespace-nowrap">
+            <span className="font-bold text-lg tracking-tight whitespace-nowrap text-white">
               Satguru<br/>
-              <span className="text-[10px] text-emerald-400 -mt-2 block uppercase tracking-widest font-bold">Staff Portal</span>
+              <span className="text-[10px] text-accent -mt-2 block uppercase tracking-widest font-bold">Staff Portal</span>
             </span>
           )}
         </div>
@@ -50,12 +50,12 @@ const ExecutiveSidebar: React.FC = () => {
                 to={link.path}
                 className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group border border-transparent ${
                   isActive 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
-                    : "text-xtext-secondary hover:text-white hover:bg-white/5"
+                    ? "bg-accent/10 border-accent/20 text-white shadow-[0_0_15px_rgba(252,163,17,0.1)]" 
+                    : "text-muted/60 hover:text-white hover:bg-white/5"
                 } ${collapsed ? "justify-center px-0" : ""}`}
                 title={collapsed ? link.label : ""}
               >
-                <span className={`${isActive ? "text-emerald-400" : "group-hover:text-emerald-400"} transition-colors`}>
+                <span className={`${isActive ? "text-accent" : "group-hover:text-accent"} transition-colors`}>
                   {link.icon}
                 </span>
                 {!collapsed && <span className="text-sm font-semibold">{link.label}</span>}
@@ -65,11 +65,10 @@ const ExecutiveSidebar: React.FC = () => {
         </nav>
 
         <div className="pt-4 border-t border-white/5 space-y-2">
-          {/* Portal Switcher — only show for Admin users */}
           {user?.role === 'Admin' && (
             <Link 
               to="/admin"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xbrand hover:bg-xbrand/10 transition-all group border border-xbrand/20 ${collapsed ? "justify-center px-2" : ""}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-accent hover:bg-accent/10 transition-all group border border-accent/20 ${collapsed ? "justify-center px-2" : ""}`}
               title={collapsed ? "Switch to Boss Dashboard" : ""}
             >
               <ArrowRightLeft size={18} />
@@ -79,7 +78,7 @@ const ExecutiveSidebar: React.FC = () => {
 
           <button 
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xtext-secondary hover:text-white hover:bg-white/5 transition-all group"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted/60 hover:text-white hover:bg-white/5 transition-all group"
           >
             {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             {!collapsed && <span className="text-sm font-medium">Collapse</span>}
@@ -91,4 +90,3 @@ const ExecutiveSidebar: React.FC = () => {
 };
 
 export default ExecutiveSidebar;
-

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Target, TrendingUp, IndianRupee, Users, Edit3, Check, X, Award, BarChart3 } from "lucide-react";
+import { Target, TrendingUp, IndianRupee, Users, Edit3, Check, X, Award, BarChart3, ShieldCheck } from "lucide-react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 const formatINR = (n: number) => "₹" + n.toLocaleString('en-IN');
@@ -45,153 +45,171 @@ const TargetManagement: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-2">Target Management</h1>
-          <p className="text-xtext-secondary text-sm">Set, track, and manage monthly sales targets for your team.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">
+            Target <span className="text-accent">Protocol</span>
+          </h1>
+          <p className="text-muted/60 text-sm">Strategic flow management and team output synchronization.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl text-amber-400 text-sm font-bold flex items-center gap-2">
-            <Target size={16} /> March 2026
+          <div className="bg-accent/10 border border-accent/20 px-6 py-2.5 rounded-[18px] text-accent text-[11px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-accent/5">
+            <Target size={18} /> March 2026 Cycle
           </div>
         </div>
       </div>
 
       {/* Overall Store Target */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="relative group">
-          <div className="absolute -inset-0.5 rounded-3xl opacity-20 group-hover:opacity-40 blur-lg transition duration-500 bg-gradient-to-r from-amber-500 to-orange-500" />
-          <div className="bg-xcard border border-amber-500/20 p-6 rounded-3xl relative z-10">
-            <div className="flex items-center gap-2 mb-4">
-              <IndianRupee size={16} className="text-amber-400" />
-              <span className="text-xs font-bold text-white/60 uppercase tracking-wider">Store Target</span>
+        <div className="group relative bg-surface border border-white/5 p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:border-accent/30">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[60px] pointer-events-none group-hover:bg-accent/10 transition-all" />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+              <IndianRupee size={20} />
             </div>
-            <p className="text-3xl font-black text-white">{formatINR(totalTarget)}</p>
-            <p className="text-xs text-xtext-secondary mt-1">Total monthly target for all staff</p>
+            <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Global Objective</span>
           </div>
+          <p className="text-4xl font-black text-white tabular-nums mb-1">{formatINR(totalTarget)}</p>
+          <p className="text-[11px] font-bold text-muted/30 uppercase tracking-widest">Total Integrated Workflow</p>
         </div>
-        <div className="relative group">
-          <div className="absolute -inset-0.5 rounded-3xl opacity-20 group-hover:opacity-40 blur-lg transition duration-500 bg-gradient-to-r from-emerald-500 to-cyan-500" />
-          <div className="bg-xcard border border-emerald-500/20 p-6 rounded-3xl relative z-10">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={16} className="text-emerald-400" />
-              <span className="text-xs font-bold text-white/60 uppercase tracking-wider">Achieved</span>
+
+        <div className="group relative bg-surface border border-white/10 p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:border-accent/40 shadow-xl shadow-accent/5">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-bl-[60px] pointer-events-none" />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-accent flex items-center justify-center text-black">
+              <TrendingUp size={20} />
             </div>
-            <p className="text-3xl font-black text-emerald-400">{formatINR(totalAchieved)}</p>
-            <p className="text-xs text-xtext-secondary mt-1">{overallPct}% of monthly target</p>
+            <span className="text-[10px] font-black text-accent uppercase tracking-widest">Current Yield</span>
           </div>
+          <p className="text-4xl font-black text-accent tabular-nums mb-1">{formatINR(totalAchieved)}</p>
+          <p className="text-[11px] font-bold text-accent/60 uppercase tracking-widest">{overallPct}% System Efficiency</p>
         </div>
-        <div className="relative group">
-          <div className="absolute -inset-0.5 rounded-3xl opacity-20 group-hover:opacity-40 blur-lg transition duration-500 bg-gradient-to-r from-cyan-500 to-blue-500" />
-          <div className="bg-xcard border border-cyan-500/20 p-6 rounded-3xl relative z-10">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 size={16} className="text-cyan-400" />
-              <span className="text-xs font-bold text-white/60 uppercase tracking-wider">Remaining</span>
+
+        <div className="group relative bg-surface border border-white/5 p-8 rounded-[32px] overflow-hidden transition-all duration-500 hover:border-accent/30">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[60px] pointer-events-none group-hover:bg-accent/10 transition-all" />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-muted/40 group-hover:text-accent transition-colors">
+              <BarChart3 size={20} />
             </div>
-            <p className="text-3xl font-black text-white">{formatINR(totalTarget - totalAchieved)}</p>
-            <div className="w-full h-2 bg-background rounded-full mt-3 overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${overallPct >= 80 ? 'bg-emerald-400' : overallPct >= 50 ? 'bg-amber-400' : 'bg-rose-400'}`} style={{width: `${overallPct}%`}} />
-            </div>
+            <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Flux Remaining</span>
+          </div>
+          <p className="text-4xl font-black text-white/50 tabular-nums mb-4">{formatINR(totalTarget - totalAchieved)}</p>
+          <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+            <div className="h-full bg-accent transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(252,163,17,0.4)]" style={{width: `${overallPct}%`}} />
           </div>
         </div>
       </div>
 
       {/* Employee Target Cards */}
-      <h2 className="text-xl font-bold flex items-center gap-2 border-b border-white/5 pb-3">
-        <Users size={20} className="text-amber-400" /> Individual Targets
-      </h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xl font-bold flex items-center gap-4 text-white">
+          <div className="w-10 h-10 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+            <Users size={22} />
+          </div>
+          Tactical Execution Units
+        </h2>
+        <div className="text-[10px] font-black text-muted/30 uppercase tracking-[0.2em]">Operational Status Monitoring</div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {targets.map(t => {
           const revPct = t.monthlyRevenue > 0 ? Math.round((t.achievedRevenue / t.monthlyRevenue) * 100) : 0;
           const unitPct = t.monthlyUnits > 0 ? Math.round((t.achievedUnits / t.monthlyUnits) * 100) : 0;
           const isEditing = editingId === t.id;
 
           return (
-            <div key={t.id} className="bg-xcard border border-white/5 rounded-3xl p-6 hover:border-amber-500/20 transition-all relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none opacity-0 group-hover:opacity-100 transition-all" />
+            <div key={t.id} className="bg-surface border border-white/5 rounded-[32px] p-8 hover:border-accent/30 transition-all duration-500 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-bl-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-all" />
               
               {/* Header */}
-              <div className="flex justify-between items-start mb-6 relative z-10">
-                <div className="flex items-center gap-4">
+              <div className="flex justify-between items-start mb-10 relative z-10">
+                <div className="flex items-center gap-5">
                   <div className="relative">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center text-xl font-bold text-white shadow-inner">
+                    <div className="w-16 h-16 rounded-[22px] bg-black/40 border border-white/10 flex items-center justify-center text-2xl font-black text-white shadow-xl group-hover:border-accent/40 transition-all">
                       {t.avatar}
                     </div>
                     {revPct >= 100 && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.7)]">
-                        <Award size={10} className="text-black" />
+                      <div className="absolute -top-1.5 -right-1.5 w-7 h-7 bg-accent rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(252,163,17,0.5)] border-4 border-surface">
+                        <Award size={14} className="text-black" />
                       </div>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg leading-tight">{t.name}</h3>
-                    <p className="text-xs text-xtext-secondary font-medium">{t.id} · {t.role}</p>
+                    <h3 className="font-black text-xl text-white group-hover:text-accent transition-colors mb-1">{t.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={12} className="text-accent/60" />
+                      <p className="text-[11px] text-muted/40 font-black uppercase tracking-widest">{t.id} · {t.role}</p>
+                    </div>
                   </div>
                 </div>
                 {!isEditing ? (
-                  <button onClick={() => startEdit(t)} className="p-2 rounded-lg border border-white/10 text-xtext-secondary hover:text-amber-400 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all">
-                    <Edit3 size={16} />
+                  <button onClick={() => startEdit(t)} className="p-3 rounded-2xl border border-white/8 bg-black/30 text-muted/40 hover:text-accent hover:border-accent/40 hover:bg-accent/5 transition-all">
+                    <Edit3 size={18} />
                   </button>
                 ) : (
-                  <div className="flex gap-1">
-                    <button onClick={() => saveEdit(t.id)} className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"><Check size={16} /></button>
-                    <button onClick={cancelEdit} className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all"><X size={16} /></button>
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(t.id)} className="p-3 rounded-2xl bg-accent text-black font-black hover:brightness-110 transition-all"><Check size={18} /></button>
+                    <button onClick={cancelEdit} className="p-3 rounded-2xl bg-black/40 border border-white/10 text-muted/60 hover:text-white transition-all"><X size={18} /></button>
                   </div>
                 )}
               </div>
 
-              {/* Revenue Target */}
-              <div className="mb-5 relative z-10">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
-                    <IndianRupee size={12} /> Revenue Target
-                  </span>
-                  {isEditing ? (
-                    <input 
-                      type="number" value={editValues.revenue} onChange={e => setEditValues(v => ({...v, revenue: +e.target.value}))}
-                      className="w-32 text-right bg-background border border-amber-500/30 rounded-lg px-3 py-1 text-sm font-bold text-amber-400 focus:outline-none"
-                    />
-                  ) : (
-                    <span className="text-sm font-bold text-white">
-                      <span className="text-emerald-400">{formatINR(t.achievedRevenue)}</span>
-                      <span className="text-xtext-secondary"> / {formatINR(t.monthlyRevenue)}</span>
+              {/* Analytics Tracks */}
+              <div className="space-y-8 relative z-10">
+                {/* Revenue Target */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[10px] font-black text-muted/40 uppercase tracking-[0.2em] flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent" /> REVENUE FLOW
                     </span>
-                  )}
+                    {isEditing ? (
+                      <input 
+                        type="number" value={editValues.revenue} onChange={e => setEditValues(v => ({...v, revenue: +e.target.value}))}
+                        className="w-36 text-right bg-black/60 border border-accent/30 rounded-xl px-4 py-2 text-sm font-black text-accent focus:outline-none focus:ring-4 focus:ring-accent/5"
+                      />
+                    ) : (
+                      <span className="text-sm font-black text-white tabular-nums">
+                        <span className="text-accent">{formatINR(t.achievedRevenue)}</span>
+                        <span className="text-muted/20"> / </span>
+                        <span className="text-muted/60">{formatINR(t.monthlyRevenue)}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                    <div className={`h-full rounded-full transition-all duration-1000 ease-out ${revPct >= 100 ? 'bg-accent shadow-[0_0_15px_rgba(252,163,17,0.5)]' : 'bg-accent/40'}`} style={{width: `${Math.min(100, revPct)}%`}} />
+                  </div>
+                  <div className="flex justify-between mt-3">
+                    <span className="text-[10px] font-black text-accent/60 uppercase tracking-widest">{revPct}% MISSION STATUS</span>
+                    <span className="text-[10px] font-black text-muted/30 uppercase tracking-widest">{formatINR(Math.max(0, t.monthlyRevenue - t.achievedRevenue))} REMAINDER</span>
+                  </div>
                 </div>
-                <div className="w-full h-2.5 bg-background rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${revPct >= 100 ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' : revPct >= 70 ? 'bg-cyan-400' : revPct >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`} style={{width: `${Math.min(100, revPct)}%`}} />
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-[10px] text-xtext-secondary">{revPct}% achieved</span>
-                  <span className="text-[10px] text-xtext-secondary">{formatINR(Math.max(0, t.monthlyRevenue - t.achievedRevenue))} remaining</span>
-                </div>
-              </div>
 
-              {/* Units Target */}
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
-                    <Target size={12} /> Units Target
-                  </span>
-                  {isEditing ? (
-                    <input 
-                      type="number" value={editValues.units} onChange={e => setEditValues(v => ({...v, units: +e.target.value}))}
-                      className="w-24 text-right bg-background border border-amber-500/30 rounded-lg px-3 py-1 text-sm font-bold text-amber-400 focus:outline-none"
-                    />
-                  ) : (
-                    <span className="text-sm font-bold text-white">
-                      <span className="text-cyan-400">{t.achievedUnits}</span>
-                      <span className="text-xtext-secondary"> / {t.monthlyUnits} units</span>
+                {/* Units Target */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[10px] font-black text-muted/40 uppercase tracking-[0.2em] flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-muted/20" /> UNIT VELOCITY
                     </span>
-                  )}
-                </div>
-                <div className="w-full h-2.5 bg-background rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${unitPct >= 100 ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' : unitPct >= 70 ? 'bg-cyan-400' : unitPct >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`} style={{width: `${Math.min(100, unitPct)}%`}} />
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-[10px] text-xtext-secondary">{unitPct}% achieved</span>
-                  <span className="text-[10px] text-xtext-secondary">{Math.max(0, t.monthlyUnits - t.achievedUnits)} units remaining</span>
+                    {isEditing ? (
+                      <input 
+                        type="number" value={editValues.units} onChange={e => setEditValues(v => ({...v, units: +e.target.value}))}
+                        className="w-28 text-right bg-black/60 border border-accent/30 rounded-xl px-4 py-2 text-sm font-black text-accent focus:outline-none focus:ring-4 focus:ring-accent/5"
+                      />
+                    ) : (
+                      <span className="text-sm font-black text-white tabular-nums">
+                        <span className="text-white/80">{t.achievedUnits}</span>
+                        <span className="text-muted/20"> / </span>
+                        <span className="text-muted/60">{t.monthlyUnits} UNITS</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                    <div className={`h-full rounded-full transition-all duration-1000 ease-out ${unitPct >= 100 ? 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-white/10'}`} style={{width: `${Math.min(100, unitPct)}%`}} />
+                  </div>
+                  <div className="flex justify-between mt-3">
+                    <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest">{unitPct}% VELOCITY</span>
+                    <span className="text-[10px] font-black text-muted/30 uppercase tracking-widest">{Math.max(0, t.monthlyUnits - t.achievedUnits)} UNITS REMAINING</span>
+                  </div>
                 </div>
               </div>
             </div>

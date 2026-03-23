@@ -1,4 +1,4 @@
-// DataTable.tsx — Futuristic enterprise table (glass + subtle neon accents)
+// DataTable.tsx — Strict 5-color enterprise table
 import React from "react";
 
 export interface Column<T> {
@@ -27,17 +27,17 @@ function DataTable<T extends { id: string | number }>({
   return (
     <div className={`overflow-x-auto ${className}`}>
       <div
-        className="min-w-full rounded-2xl bg-white/5 backdrop-blur-md border border-white/8 shadow-[0_8px_30px_rgba(2,6,23,0.6)] overflow-hidden"
+        className="min-w-full rounded-2xl bg-surface/40 border border-white/5 overflow-hidden"
         role="region"
         aria-label="Data table"
       >
-        <table className="min-w-full w-full text-sm text-gray-200">
+        <table className="min-w-full w-full text-sm text-muted">
           <thead className="bg-white/3">
             <tr>
               {columns.map((col) => (
                 <th
                   key={String(col.accessor)}
-                  className="px-4 py-3 text-left font-medium text-gray-300 tracking-tight"
+                  className="px-4 py-4 text-left font-bold text-muted/40 tracking-wider uppercase text-[10px]"
                   scope="col"
                 >
                   {col.header}
@@ -45,7 +45,7 @@ function DataTable<T extends { id: string | number }>({
               ))}
               {showActions && (
                 <th
-                  className="px-4 py-3 text-left font-medium text-gray-300 tracking-tight"
+                  className="px-4 py-4 text-left font-bold text-muted/40 tracking-wider uppercase text-[10px]"
                   scope="col"
                 >
                   Actions
@@ -54,10 +54,10 @@ function DataTable<T extends { id: string | number }>({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-white/6">
+          <tbody className="divide-y divide-white/5">
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-center text-gray-400" colSpan={columns.length + (showActions ? 1 : 0)}>
+                <td className="px-4 py-12 text-center text-muted/20 font-bold uppercase tracking-widest text-[10px]" colSpan={columns.length + (showActions ? 1 : 0)}>
                   No records found
                 </td>
               </tr>
@@ -65,30 +65,30 @@ function DataTable<T extends { id: string | number }>({
               rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="group hover:bg-white/5 transition-colors cursor-default"
+                  className="group hover:bg-white/3 transition-colors cursor-default"
                 >
                   {columns.map((col) => (
-                    <td key={String(col.accessor)} className="px-4 py-3 align-top">
+                    <td key={String(col.accessor)} className="px-4 py-4 align-middle text-white/80 font-medium">
                       {col.render ? col.render(row[col.accessor], row) : String(row[col.accessor])}
                     </td>
                   ))}
 
                   {showActions && (
-                    <td className="px-4 py-3 flex gap-2 items-center">
+                    <td className="px-4 py-4 flex gap-2 items-center">
                       <button
                         onClick={() => onEdit?.(row)}
-                        className="px-3 py-1 rounded-full text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-cyan-400 hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition"
+                        className="px-3 py-1 rounded-lg text-[11px] font-bold text-black bg-accent hover:brightness-110 transition shadow-lg shadow-accent/10"
                         aria-label={`Edit row ${row.id}`}
                       >
-                        Edit
+                        EDIT
                       </button>
 
                       <button
                         onClick={() => onDelete?.(row)}
-                        className="px-3 py-1 rounded-full text-sm font-medium text-red-300 bg-red-900/30 hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
+                        className="px-3 py-1 rounded-lg text-[11px] font-bold text-muted hover:text-white border border-white/10 hover:border-white/20 transition"
                         aria-label={`Delete row ${row.id}`}
                       >
-                        Delete
+                        REMOVE
                       </button>
                     </td>
                   )}

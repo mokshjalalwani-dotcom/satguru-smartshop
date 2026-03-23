@@ -33,23 +33,19 @@ const Dashboard: React.FC = () => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
-  // Sequentialize API calls to prevent "Cold Start" memory spikes on Render Free Tier
   useEffect(() => {
     let isMounted = true;
     setErrorStatus(null);
 
     const loadDashboardData = async () => {
       try {
-        // 1. Stats (Priority 1)
         const statsData = await aiService.getStats(duration);
         if (!isMounted) return;
         setStats(statsData);
         setInitialLoad(false);
 
-        // Small pauses (600ms+) between calls prevent parallel CPU/RAM spikes
         await new Promise(r => setTimeout(r, 600));
 
-        // 2. History & Transactions (Priority 2)
         const [historyData, transData] = await Promise.all([
           aiService.getHistory(duration),
           aiService.getTransactions(10)
@@ -60,13 +56,11 @@ const Dashboard: React.FC = () => {
 
         await new Promise(r => setTimeout(r, 1000));
 
-        // 3. Insights (Non-critical)
         const insightsData = await aiService.getInsights();
         if (isMounted) setInsights(insightsData);
 
         await new Promise(r => setTimeout(r, 1500));
 
-        // 4. Predictions (The heavy ML step - do last)
         const predData = await aiService.getPrediction();
         if (isMounted) {
           setPredictionMetrics({
@@ -76,7 +70,6 @@ const Dashboard: React.FC = () => {
           });
         }
         
-        // 5. Anomalies (Can fail silently)
         await aiService.getAnomalies().catch(() => {});
 
       } catch (err: any) {
@@ -89,22 +82,19 @@ const Dashboard: React.FC = () => {
     };
 
     loadDashboardData();
-
     return () => { isMounted = false; };
   }, [duration]);
 
-  // Show full skeleton only on very first load — after that sections render independently
   if (initialLoad && !stats) return <LoadingSkeleton />;
-
 
   const formatINR = (n: number) => "₹" + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
 
   const kpis = [
-    { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "₹0", icon: <IndianRupee />, accent: "text-emerald-400", delta: stats?.revenue_change },
-    { title: "Net Profit", value: stats ? formatINR(stats.profit) : "₹0", icon: <TrendingUp />, accent: "text-amber-400", delta: stats?.profit_change },
-    { title: "Total Orders", value: stats?.orders.toLocaleString('en-IN') || "0", icon: <ShoppingBag />, accent: "text-cyan-400", delta: stats?.orders_change },
-    { title: "Avg Order Value", value: stats ? formatINR(Math.round(stats.aov)) : "₹0", icon: <Star />, accent: "text-purple-400" },
-    { title: "Active Customers", value: stats?.active_customers.toLocaleString('en-IN') || "0", icon: <Users />, accent: "text-blue-400", delta: stats?.customers_change },
+    { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "₹0", icon: <IndianRupee />, delta: stats?.revenue_change },
+    { title: "Net Profit", value: stats ? formatINR(stats.profit) : "₹0", icon: <TrendingUp />, delta: stats?.profit_change },
+    { title: "Total Orders", value: stats?.orders.toLocaleString('en-IN') || "0", icon: <ShoppingBag />, delta: stats?.orders_change },
+    { title: "Avg Order Value", value: stats ? formatINR(Math.round(stats.aov)) : "₹0", icon: <Star /> },
+    { title: "Active Customers", value: stats?.active_customers.toLocaleString('en-IN') || "0", icon: <Users />, delta: stats?.customers_change },
   ];
 
   const transactionColumns: Column<TransactionRow>[] = [
@@ -116,7 +106,11 @@ const Dashboard: React.FC = () => {
       header: "Status", 
       accessor: "payment_status",
       render: (val) => (
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase ${val === 'Completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase ${
+          val === 'Completed' 
+            ? 'bg-accent/10 text-accent' 
+            : 'bg-white/5 text-muted/50'
+        }`}>
           {val}
         </span>
       )
@@ -125,43 +119,43 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-amber-400/30">
+    <div className="min-h-screen bg-bg text-primary selection:bg-accent/30">
       <div className="mx-auto max-w-[1400px] px-6 py-6">
 
         {/* ── HEADER ── */}
         <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-black tracking-tight text-white">
-              Strategic <span className="text-[#fca311]">Insights</span>
+              Strategic <span className="text-accent">Insights</span>
             </h1>
             {errorStatus ? (
-              <div className="flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-rose-400">
-                <AlertTriangle size={10} /> {errorStatus}
+              <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-muted/60">
+                <AlertTriangle size={10} /> Error
               </div>
             ) : (stats as any)?._isFallback ? (
-              <div className="flex items-center gap-1.5 rounded-full border border-[#fca311]/20 bg-[#fca311]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#fca311] animate-pulse">
-                <Zap size={10} /> AI Warming Up
+              <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-accent animate-pulse">
+                <Zap size={10} /> Warming Up
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+              <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> Live
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#14213d] px-4 py-2">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-surface px-4 py-2">
               <LiveClock showDate={true} />
             </div>
-            <div className="flex gap-1 rounded-2xl border border-white/5 bg-[#14213d] p-1">
+            <div className="flex gap-1 rounded-2xl border border-white/5 bg-surface p-1">
               {[7, 30, 180].map((d) => (
                 <button
                   key={d}
                   onClick={() => setDuration(d as any)}
                   className={`rounded-xl px-3.5 py-1.5 text-[10px] font-bold transition-all duration-300 ${
                     duration === d
-                      ? 'bg-[#fca311] text-black shadow-lg shadow-[#fca311]/20'
-                      : 'text-[#e5e5e5]/50 hover:bg-white/5 hover:text-white'
+                      ? 'bg-accent text-black shadow-lg shadow-accent/20'
+                      : 'text-muted/50 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
@@ -182,16 +176,16 @@ const Dashboard: React.FC = () => {
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
 
           {/* Chart */}
-          <div className="xl:col-span-8 rounded-2xl border border-white/5 bg-[#14213d] p-6">
+          <div className="xl:col-span-8 rounded-2xl border border-white/5 bg-surface p-6">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-                <TrendingUp size={16} className="text-[#fca311]" />
+                <TrendingUp size={16} className="text-accent" />
                 Performance Horizon
-                <span className="ml-2 text-[9px] font-bold text-[#e5e5e5]/30 uppercase tracking-widest">Live</span>
+                <span className="ml-2 text-[9px] font-bold text-muted/30 uppercase tracking-widest">Live</span>
               </h2>
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#fca311]" />
-                <span className="text-[9px] font-bold text-[#e5e5e5]/40 uppercase tracking-wider">Revenue</span>
+                <span className="h-2 w-2 rounded-full bg-accent" />
+                <span className="text-[9px] font-bold text-muted/40 uppercase tracking-wider">Revenue</span>
               </div>
             </div>
             <div className="h-[320px] w-full">
@@ -200,7 +194,7 @@ const Dashboard: React.FC = () => {
                   <AreaChart data={history}>
                     <defs>
                       <linearGradient id="proRev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#fca311" stopOpacity={0.3} />
+                        <stop offset="0%" stopColor="#fca311" stopOpacity={0.25} />
                         <stop offset="100%" stopColor="#fca311" stopOpacity={0} />
                       </linearGradient>
                     </defs>
@@ -208,7 +202,7 @@ const Dashboard: React.FC = () => {
                     <XAxis dataKey="name" stroke="rgba(229,229,229,0.15)" fontSize={9} tickLine={false} axisLine={false} dy={8} />
                     <YAxis stroke="rgba(229,229,229,0.15)" fontSize={9} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
                     <Tooltip
-                      cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+                      cursor={{ stroke: 'rgba(252,163,17,0.15)', strokeWidth: 1 }}
                       contentStyle={{ backgroundColor: '#14213d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '10px', fontSize: '11px' }}
                       itemStyle={{ color: '#fca311', fontWeight: 600 }}
                     />
@@ -221,21 +215,21 @@ const Dashboard: React.FC = () => {
 
           {/* Intel Sidebar */}
           <div className="xl:col-span-4 flex flex-col gap-4">
-            <div className="flex-1 rounded-2xl border border-white/5 bg-[#14213d] flex flex-col overflow-hidden">
-              <div className="border-b border-white/5 bg-gradient-to-r from-[#fca311]/10 to-transparent px-5 py-4">
+            <div className="flex-1 rounded-2xl border border-white/5 bg-surface flex flex-col overflow-hidden">
+              <div className="border-b border-white/5 bg-gradient-to-r from-accent/10 to-transparent px-5 py-4">
                 <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-                  <Zap size={14} className="text-[#fca311]" /> AI Prediction Hub
+                  <Zap size={14} className="text-accent" /> AI Prediction Hub
                 </h2>
               </div>
               <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 <div>
-                  <p className="mb-3 text-[9px] font-bold text-[#e5e5e5]/30 uppercase tracking-widest">30-Day Projection</p>
+                  <p className="mb-3 text-[9px] font-bold text-muted/30 uppercase tracking-widest">30-Day Projection</p>
                   {predictionMetrics ? (
                     <div className="relative rounded-xl bg-black/30 border border-white/5 p-4 overflow-hidden">
-                      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[#fca311]/10 blur-2xl" />
+                      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent/10 blur-2xl" />
                       <div className="relative z-10">
                         <div className="text-2xl font-black text-white mb-1">{formatINR(predictionMetrics.total)}</div>
-                        <div className={`flex items-center gap-1.5 text-[10px] font-bold ${predictionMetrics.trend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`flex items-center gap-1.5 text-[10px] font-bold ${predictionMetrics.trend >= 0 ? 'text-accent' : 'text-muted/50'}`}>
                           {predictionMetrics.trend >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                           {predictionMetrics.trend >= 0 ? '+' : ''}{predictionMetrics.trend}% Trend
                         </div>
@@ -245,20 +239,20 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <p className="mb-3 text-[9px] font-bold text-[#e5e5e5]/30 uppercase tracking-widest">Live Anomalies</p>
+                  <p className="mb-3 text-[9px] font-bold text-muted/30 uppercase tracking-widest">Live Anomalies</p>
                   <div className="space-y-3">
-                    <div className="flex gap-3 rounded-xl bg-rose-500/5 border border-rose-500/10 p-3 hover:bg-rose-500/10 transition-colors">
-                      <AlertTriangle className="text-rose-400 shrink-0 mt-0.5" size={14} />
+                    <div className="flex gap-3 rounded-xl bg-white/3 border border-white/5 p-3 hover:bg-white/5 transition-colors">
+                      <AlertTriangle className="text-accent shrink-0 mt-0.5" size={14} />
                       <div>
-                        <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider mb-0.5">Price Variance</p>
-                        <p className="text-[11px] text-[#e5e5e5]/60 leading-relaxed">Market variance in Home Appliances detected.</p>
+                        <p className="text-[9px] font-bold text-accent uppercase tracking-wider mb-0.5">Price Variance</p>
+                        <p className="text-[11px] text-muted/60 leading-relaxed">Market variance in Home Appliances detected.</p>
                       </div>
                     </div>
-                    <div className="flex gap-3 rounded-xl bg-[#fca311]/5 border border-[#fca311]/10 p-3 hover:bg-[#fca311]/10 transition-colors">
-                      <Zap className="text-[#fca311] shrink-0 mt-0.5" size={14} />
+                    <div className="flex gap-3 rounded-xl bg-accent/5 border border-accent/10 p-3 hover:bg-accent/8 transition-colors">
+                      <Zap className="text-accent shrink-0 mt-0.5" size={14} />
                       <div>
-                        <p className="text-[9px] font-bold text-[#fca311] uppercase tracking-wider mb-0.5">Demand Surge</p>
-                        <p className="text-[11px] text-[#e5e5e5]/60 leading-relaxed">AC sales 3× above normal—heatwave predicted.</p>
+                        <p className="text-[9px] font-bold text-accent uppercase tracking-wider mb-0.5">Demand Surge</p>
+                        <p className="text-[11px] text-muted/60 leading-relaxed">AC sales 3× above normal—heatwave predicted.</p>
                       </div>
                     </div>
                   </div>
@@ -270,55 +264,55 @@ const Dashboard: React.FC = () => {
 
         {/* ── INTELLIGENCE GRID ── */}
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/5 bg-[#14213d] p-6">
+          <div className="rounded-2xl border border-white/5 bg-surface p-6">
             <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-white">
-              <ShoppingBag size={16} className="text-[#fca311]" /> Demand Intelligence
+              <ShoppingBag size={16} className="text-accent" /> Demand Intelligence
             </h2>
-            <p className="mb-4 border-l-2 border-[#fca311]/30 pl-3 text-xs text-[#e5e5e5]/50 italic leading-relaxed">
+            <p className="mb-4 border-l-2 border-accent/30 pl-3 text-xs text-muted/50 italic leading-relaxed">
               {insights?.demand || "Aggregating demand patterns..."}
             </p>
             <div className="grid grid-cols-2 gap-3">
               {["Smart Inverter AC", "Front Load Washer", "4K Smart LED TV", "Microwave Pro"].map((prod, i) => (
                 <div key={i} className="group flex flex-col gap-1 rounded-xl bg-black/20 border border-white/5 p-3 hover:bg-black/30 transition-colors">
-                  <span className="text-[11px] font-bold text-white group-hover:text-[#fca311] transition-colors">{prod}</span>
+                  <span className="text-[11px] font-bold text-white group-hover:text-accent transition-colors">{prod}</span>
                   <div className="flex items-center gap-2">
                     <div className="h-1 flex-1 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full w-3/4 rounded-full bg-[#fca311]" />
+                      <div className="h-full w-3/4 rounded-full bg-accent" />
                     </div>
-                    <span className="text-[8px] font-bold text-[#e5e5e5]/30 uppercase">High</span>
+                    <span className="text-[8px] font-bold text-muted/30 uppercase">High</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-[#14213d] p-6">
+          <div className="rounded-2xl border border-white/5 bg-surface p-6">
             <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-white">
-              <Lightbulb size={16} className="text-[#fca311]" /> Business Strategy
+              <Lightbulb size={16} className="text-accent" /> Business Strategy
             </h2>
             <div className="space-y-4">
-              <div className="rounded-xl bg-[#fca311]/5 border border-[#fca311]/10 p-4 hover:bg-[#fca311]/10 transition-colors">
-                <p className="mb-1 text-[9px] font-bold text-[#fca311] uppercase tracking-wider">Growth Vector</p>
-                <p className="text-xs text-[#e5e5e5]/70 leading-relaxed">{insights?.bi || "Determining strategic growth patterns..."}</p>
+              <div className="rounded-xl bg-accent/5 border border-accent/10 p-4 hover:bg-accent/8 transition-colors">
+                <p className="mb-1 text-[9px] font-bold text-accent uppercase tracking-wider">Growth Vector</p>
+                <p className="text-xs text-muted/70 leading-relaxed">{insights?.bi || "Determining strategic growth patterns..."}</p>
               </div>
-              <div className="rounded-xl bg-emerald-400/5 border border-emerald-400/10 p-4 hover:bg-emerald-400/10 transition-colors">
-                <p className="mb-1 text-[9px] font-bold text-emerald-400 uppercase tracking-wider">KPI Projection</p>
-                <p className="text-xs text-[#e5e5e5]/70 leading-relaxed">{insights?.kpi_trends || "Calculating profit margin trajectories..."}</p>
+              <div className="rounded-xl bg-white/3 border border-white/5 p-4 hover:bg-white/5 transition-colors">
+                <p className="mb-1 text-[9px] font-bold text-muted/70 uppercase tracking-wider">KPI Projection</p>
+                <p className="text-xs text-muted/70 leading-relaxed">{insights?.kpi_trends || "Calculating profit margin trajectories..."}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── TRANSACTIONS ── */}
-        <div className="rounded-2xl border border-white/5 bg-[#14213d] overflow-hidden">
+        <div className="rounded-2xl border border-white/5 bg-surface overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-6 py-4">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-                <Clock size={16} className="text-[#fca311]" /> Ledger Stream
+                <Clock size={16} className="text-accent" /> Ledger Stream
               </h2>
-              <p className="mt-0.5 text-[9px] font-bold text-[#e5e5e5]/30 uppercase tracking-wider">Latest Events</p>
+              <p className="mt-0.5 text-[9px] font-bold text-muted/30 uppercase tracking-wider">Latest Events</p>
             </div>
-            <div className="rounded-lg bg-[#fca311]/10 border border-[#fca311]/20 px-3 py-1 text-[9px] font-bold text-[#fca311] uppercase tracking-wider">
+            <div className="rounded-lg bg-accent/10 border border-accent/20 px-3 py-1 text-[9px] font-bold text-accent uppercase tracking-wider">
               {transactions.length} Records
             </div>
           </div>
@@ -326,7 +320,7 @@ const Dashboard: React.FC = () => {
             {transactions.length > 0 ? (
               <DataTable columns={transactionColumns} rows={transactions} />
             ) : (
-              <div className="py-12 text-center text-[10px] font-bold text-[#e5e5e5]/20 uppercase tracking-[0.3em] animate-pulse">
+              <div className="py-12 text-center text-[10px] font-bold text-muted/20 uppercase tracking-[0.3em] animate-pulse">
                 Synchronizing Ledger Data...
               </div>
             )}

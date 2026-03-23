@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Clock, UploadCloud, Play } from "lucide-react";
+import { CheckCircle2, Clock, UploadCloud, Play, ShieldCheck, Box } from "lucide-react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 interface Task {
@@ -12,7 +12,7 @@ interface Task {
 }
 
 const initialTasks: Task[] = [
-  { id: "T-01", title: "Restock Smart TVs", description: "Move 5 units of OLED 55\\\" from warehouse to main display.", priority: "High", status: "Pending", deadline: "Today, 2:00 PM" },
+  { id: "T-01", title: "Restock Smart TVs", description: "Move 5 units of OLED 55\" from warehouse to main display.", priority: "High", status: "Pending", deadline: "Today, 2:00 PM" },
   { id: "T-02", title: "Audit Laptop Inventory", description: "Physically count Dell and HP stock to match system.", priority: "Medium", status: "In Progress", deadline: "Today, 5:00 PM" },
   { id: "T-03", title: "Setup Promo Display", description: "Assemble the new Diwali tech promo booth near entrance.", priority: "Low", status: "Pending", deadline: "Tomorrow, 10:00 AM" },
 ];
@@ -31,85 +31,110 @@ const TaskExecution: React.FC = () => {
     }));
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityStyle = (priority: string) => {
     switch(priority) {
-      case 'High': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      case 'Medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-      case 'Low': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+      case 'High': return 'text-accent border-accent/20 bg-accent/5 shadow-[0_0_15px_rgba(252,163,17,0.1)]';
+      case 'Medium': return 'text-white border-white/10 bg-white/5';
+      case 'Low': return 'text-muted/40 border-white/5 bg-transparent';
       default: return 'text-white/70 bg-white/5 border-white/10';
     }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">Task Execution</h1>
-          <p className="text-xtext-secondary text-sm">Manage your daily operational tasks and upload proof of completion.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
+            Task <span className="text-accent">Execution</span>
+          </h1>
+          <p className="text-muted/60 text-sm font-medium">Daily operational mission management and proof of completion registry.</p>
         </div>
         <div className="flex gap-4">
-          <div className="px-4 py-2 rounded-xl bg-xcard border border-white/5 flex items-center gap-2">
-            <span className="text-sm text-xtext-secondary">Pending:</span>
-            <span className="font-bold text-white">{tasks.filter(t => t.status !== 'Completed').length}</span>
+          <div className="px-6 py-3 rounded-2xl bg-black/40 border border-white/8 flex items-center gap-4 shadow-xl">
+            <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Active:</span>
+            <span className="font-black text-white tabular-nums">{tasks.filter(t => t.status !== 'Completed').length} UNITS</span>
           </div>
-          <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2 text-emerald-400">
+          <div className="px-6 py-3 rounded-2xl bg-accent/10 border border-accent/20 flex items-center gap-4 text-accent shadow-xl shadow-accent/5">
             <CheckCircle2 size={18} />
-            <span className="font-bold">{tasks.filter(t => t.status === 'Completed').length} completed</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{tasks.filter(t => t.status === 'Completed').length} FINALIZED</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {tasks.map(task => {
           const isCompleted = task.status === "Completed";
+          const isInProgress = task.status === "In Progress";
+          
           return (
             <div 
               key={task.id} 
-              className={`p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${
+              className={`p-8 rounded-[32px] border transition-all duration-500 relative overflow-hidden group shadow-2xl flex flex-col ${
                 isCompleted 
-                ? 'bg-[#1a232c]/50 border-emerald-500/20 opacity-70' 
-                : 'bg-xcard border-white/5 hover:border-emerald-500/40 hover:shadow-[0_10px_30px_rgba(16,185,129,0.1)] hover:-translate-y-1'
+                ? 'bg-black/20 border-white/5 opacity-40' 
+                : 'bg-surface border-white/5 hover:border-accent/40 hover:shadow-accent/5 hover:-translate-y-2'
               }`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${getPriorityColor(task.priority)}`}>
-                  {task.priority} Priority
+               {!isCompleted && (
+                 <div className={`absolute top-0 left-0 w-full h-1 transition-all duration-500 ${isInProgress ? 'bg-accent shadow-[0_0_15px_rgba(252,163,17,0.5)]' : 'bg-white/10'}`} />
+               )}
+               
+              <div className="flex justify-between items-start mb-8 relative z-10">
+                <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${getPriorityStyle(task.priority)}`}>
+                  {task.priority} PROTOCOL
                 </span>
-                <span className="text-xs font-medium text-xtext-secondary flex items-center gap-1">
-                  <Clock size={12} /> {task.deadline}
+                <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest flex items-center gap-2">
+                  <Clock size={12} className="text-accent/40" /> {task.deadline}
                 </span>
               </div>
               
-              <h3 className={`text-lg font-bold mb-2 ${isCompleted ? 'text-white/50 line-through' : 'text-white'}`}>
-                {task.title}
-              </h3>
-              <p className={`text-sm mb-6 line-clamp-2 ${isCompleted ? 'text-white/40' : 'text-xtext-secondary'}`}>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                 <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-muted/20 group-hover:text-accent transition-colors">
+                    <Box size={18} />
+                 </div>
+                 <h3 className={`text-lg font-black tracking-tight uppercase ${isCompleted ? 'text-muted/40 line-through' : 'text-white'}`}>
+                   {task.title}
+                 </h3>
+              </div>
+              
+              <p className={`text-xs leading-relaxed mb-10 font-medium h-12 line-clamp-2 relative z-10 ${isCompleted ? 'text-muted/30' : 'text-muted/60'}`}>
                 {task.description}
               </p>
               
-              <div className="flex items-center justify-between mt-auto">
+              <div className="flex items-center justify-between mt-auto relative z-10 pt-6 border-t border-white/5">
                 <button 
                   onClick={() => cycleTaskStatus(task.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex items-center gap-3 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     isCompleted 
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                    : task.status === 'In Progress'
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                    : 'bg-white/5 hover:bg-white/10 text-white border border-transparent'
+                    ? 'bg-accent/10 text-accent border border-accent/20' 
+                    : isInProgress
+                    ? 'bg-accent text-black shadow-lg shadow-accent/20 border-accent'
+                    : 'bg-black/40 hover:bg-white/5 text-white/60 hover:text-white border border-white/5 hover:border-white/20'
                   }`}
                 >
-                  {isCompleted ? <CheckCircle2 size={16} /> : task.status === 'In Progress' ? <Play size={16} /> : <CheckCircle2 size={16} className="text-white/40 group-hover:text-emerald-400 transition-colors" />}
-                  {isCompleted ? 'Completed' : task.status === 'In Progress' ? 'In Progress' : 'Start Task'}
+                  {isCompleted ? <CheckCircle2 size={16} /> : isInProgress ? <Play size={16} /> : <CheckCircle2 size={16} className="text-muted/40 group-hover:text-accent transition-colors" />}
+                  {isCompleted ? 'Finalized' : isInProgress ? 'In Progress' : 'Initialize'}
                 </button>
                 
-                <button className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-xtext-secondary hover:text-cyan-400 transition-colors rounded-lg hover:bg-cyan-400/10">
-                  <UploadCloud size={16} />
-                  Proof
+                <button className="flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-muted/20 hover:text-white transition-all rounded-xl border border-transparent hover:bg-white/5 hover:border-white/10">
+                  <UploadCloud size={14} />
+                  Registry Proof
                 </button>
               </div>
             </div>
           );
         })}
+      </div>
+      
+      <div className="bg-black/40 border border-white/5 rounded-[32px] p-8 flex items-center justify-between shadow-inner mt-10">
+         <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-center text-accent"><ShieldCheck size={24} /></div>
+            <div>
+              <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Operational Protocol Verification: <span className="text-accent">ENFORCED</span></p>
+              <p className="text-[9px] font-black text-muted/20 uppercase tracking-[0.2em] mt-1">Proof-of-work synchronization active</p>
+            </div>
+         </div>
+         <div className="text-[9px] font-black text-muted/10 uppercase tracking-[0.5em]">Entity Task Terminal</div>
       </div>
     </div>
   );

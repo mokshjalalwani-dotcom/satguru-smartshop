@@ -48,20 +48,17 @@ const CalendarIntegration: React.FC = () => {
   );
   const [events, setEvents] = useLocalStorage<Record<string, CalEvent[]>>("ss_calendar_events", defaultEvents);
 
-  // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalEvent | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CalEvent | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Form state
   const [formTitle, setFormTitle] = useState("");
   const [formTime, setFormTime] = useState("");
   const [formType, setFormType] = useState("Internal");
   const [formLocation, setFormLocation] = useState("");
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
-
   const resetForm = () => { setFormTitle(""); setFormTime(""); setFormType("Internal"); setFormLocation(""); };
 
   const nextId = () => {
@@ -86,15 +83,7 @@ const CalendarIntegration: React.FC = () => {
     });
     setShowAddModal(false);
     resetForm();
-    showToast(`✅ "${evt.title}" added to ${selectedDate}`);
-  };
-
-  const openEditModal = (evt: CalEvent) => {
-    setEditingEvent(evt);
-    setFormTitle(evt.title);
-    setFormTime(evt.time);
-    setFormType(evt.type);
-    setFormLocation(evt.location);
+    showToast(`Event "${evt.title}" registered!`);
   };
 
   const handleEditEvent = () => {
@@ -108,7 +97,7 @@ const CalendarIntegration: React.FC = () => {
     });
     setEditingEvent(null);
     resetForm();
-    showToast(`✅ Event updated!`);
+    showToast(`Event profile synchronized!`);
   };
 
   const handleDeleteEvent = (evt: CalEvent) => {
@@ -119,7 +108,7 @@ const CalendarIntegration: React.FC = () => {
       return copy;
     });
     setDeleteConfirm(null);
-    showToast(`🗑️ "${evt.title}" deleted.`);
+    showToast(`Event purged from registry.`);
   };
 
   const calendarData = useMemo(() => {
@@ -136,51 +125,45 @@ const CalendarIntegration: React.FC = () => {
     if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
     else setViewMonth(viewMonth + 1);
   };
-  const goToday = () => {
-    setViewMonth(today.getMonth());
-    setViewYear(today.getFullYear());
-    setSelectedDate(`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`);
-  };
 
-  const getTypeColors = (type: string) => {
+  const getTypeStyle = (type: string) => {
     switch(type) {
-      case 'Vendor': return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-      case 'Promo': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'Delivery': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'Internal': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
-      case 'Meeting': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      default: return 'bg-white/5 text-white/70 border-white/10';
+      case 'Vendor': return 'text-accent border-accent/20 bg-accent/5';
+      case 'Promo': return 'text-white border-white/20 bg-white/5';
+      case 'Delivery': return 'text-accent/60 border-accent/10 bg-accent/5';
+      case 'Internal': return 'text-muted/60 border-white/5 bg-black/20';
+      case 'Meeting': return 'text-white/80 border-white/10 bg-white/5';
+      default: return 'text-muted/40 bg-white/5 border-white/5';
     }
   };
 
   const selectedEvents = events[selectedDate] || [];
 
-  // --- Form JSX reused for Add and Edit ---
   const renderEventForm = (onSubmit: () => void, onCancel: () => void, submitLabel: string) => (
-    <div className="space-y-4">
+    <div className="space-y-5 p-2">
       <div>
-        <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Event Title</label>
-        <input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="e.g. Supplier Meeting" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+        <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Event Objective</label>
+        <input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="ENTER TITLE..." className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Time</label>
-          <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="e.g. 10:00 AM - 12:00 PM" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+          <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Time Window</label>
+          <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="E.G. 10:00 AM" className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
         </div>
         <div>
-          <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Type</label>
-          <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all">
+          <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Classification</label>
+          <select value={formType} onChange={e => setFormType(e.target.value)} className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 transition-all uppercase appearance-none cursor-pointer">
             {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
       </div>
       <div>
-        <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Location</label>
-        <input value={formLocation} onChange={e => setFormLocation(e.target.value)} placeholder="e.g. Conference Room" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+        <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Deployment Location</label>
+        <input value={formLocation} onChange={e => setFormLocation(e.target.value)} placeholder="E.G. WAREHOUSE A" className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
       </div>
-      <div className="flex gap-3 pt-2">
-        <button onClick={onSubmit} className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 text-black py-2.5 rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2"><Check size={16} /> {submitLabel}</button>
-        <button onClick={onCancel} className="px-5 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 text-sm font-medium transition-all">Cancel</button>
+      <div className="flex gap-3 pt-4">
+        <button onClick={onSubmit} className="flex-1 bg-accent text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:brightness-110 shadow-xl shadow-accent/10 transition-all flex items-center justify-center gap-3"><Check size={18} /> {submitLabel}</button>
+        <button onClick={onCancel} className="px-6 py-4 rounded-2xl border border-white/10 text-muted/60 hover:text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest transition-all">ABORT</button>
       </div>
     </div>
   );
@@ -189,44 +172,50 @@ const CalendarIntegration: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-20 right-6 z-50 bg-xcard border border-white/10 rounded-2xl px-5 py-3 text-sm text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] animate-in slide-in-from-right-5 flex items-center gap-3">
+        <div className="fixed top-24 right-8 z-50 bg-surface border border-accent/20 rounded-2xl px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl animate-in slide-in-from-right-8 flex items-center gap-4">
+          <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
           {toast}
-          <button onClick={() => setToast(null)} className="text-white/40 hover:text-white"><X size={14} /></button>
+          <button onClick={() => setToast(null)} className="text-muted/30 hover:text-white transition-colors"><X size={14} /></button>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">Calendar Integration</h1>
-          <p className="text-xtext-secondary text-sm">Manage store operations, vendor meetings, and staff schedules.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">
+            Temporal <span className="text-accent">Registry</span>
+          </h1>
+          <p className="text-muted/60 text-sm">Strategic operational scheduling and vendor synchronization protocol.</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-extrabold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
+          className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-accent text-black font-black text-xs uppercase tracking-widest hover:brightness-110 shadow-xl shadow-accent/10 transition-all"
         >
-          <Plus size={18} /> New Event
+          <Plus size={18} /> Log Event
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Calendar Grid */}
-        <div className="lg:col-span-2 bg-xcard border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-bl-[100px] pointer-events-none" />
+        <div className="lg:col-span-2 bg-surface border border-white/5 rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-bl-[120px] pointer-events-none" />
 
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h2 className="text-2xl font-bold">{MONTH_NAMES[viewMonth]} {viewYear}</h2>
-            <div className="flex items-center gap-2">
-              <button onClick={prevMonth} className="p-2 rounded-lg bg-background border border-white/10 hover:bg-white/10 transition-colors"><ChevronLeft size={20} /></button>
-              <button onClick={goToday} className="px-4 py-2 rounded-lg bg-background border border-white/10 font-bold hover:bg-white/10 transition-colors text-sm text-xtext-secondary">Today</button>
-              <button onClick={nextMonth} className="p-2 rounded-lg bg-background border border-white/10 hover:bg-white/10 transition-colors"><ChevronRight size={20} /></button>
+          <div className="flex items-center justify-between mb-10 relative z-10">
+            <div>
+              <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{MONTH_NAMES[viewMonth]}</h2>
+              <p className="text-[10px] text-accent font-black tracking-[0.3em] mt-1">{viewYear} OPERATIONAL CYCLE</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={prevMonth} className="p-3 rounded-2xl bg-black/40 border border-white/10 hover:border-accent/40 text-muted/40 hover:text-white transition-all"><ChevronLeft size={22} /></button>
+              <button onClick={() => {setViewMonth(today.getMonth()); setViewYear(today.getFullYear());}} className="px-6 py-3 rounded-2xl bg-black/40 border border-white/10 font-black text-[10px] uppercase tracking-widest text-muted/40 hover:text-white hover:border-white/20 transition-all">Today</button>
+              <button onClick={nextMonth} className="p-3 rounded-2xl bg-black/40 border border-white/10 hover:border-accent/40 text-muted/40 hover:text-white transition-all"><ChevronRight size={22} /></button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-xtext-secondary uppercase tracking-wider relative z-10">
-            {DAY_NAMES.map(day => <div key={day}>{day}</div>)}
+          <div className="grid grid-cols-7 gap-3 mb-6 relative z-10">
+            {DAY_NAMES.map(day => <div key={day} className="text-center text-[10px] font-black text-muted/20 uppercase tracking-[0.2em]">{day}</div>)}
           </div>
 
-          <div className="grid grid-cols-7 gap-2 relative z-10">
+          <div className="grid grid-cols-7 gap-3 relative z-10">
             {Array.from({length: calendarData.firstDay}).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({length: calendarData.daysInMonth}).map((_, i) => {
               const date = i + 1;
@@ -240,18 +229,25 @@ const CalendarIntegration: React.FC = () => {
                 <div
                   key={date}
                   onClick={() => setSelectedDate(dateKey)}
-                  className={`aspect-square p-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer border ${
-                    isToday ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-bold shadow-[0_0_15px_rgba(16,185,129,0.2)]' :
-                    isSelected ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400 font-bold' :
-                    hasEvents ? 'bg-white/5 border-white/10 text-white font-bold hover:bg-white/10' :
-                    'bg-transparent border-transparent hover:border-white/10 text-xtext-secondary'
+                  className={`aspect-square p-2 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer border-2 relative group ${
+                    isToday ? 'bg-accent border-accent text-black font-black shadow-xl shadow-accent/20' :
+                    isSelected ? 'bg-black/60 border-accent/40 text-white font-black' :
+                    hasEvents ? 'bg-black/40 border-white/10 text-white/90 font-black hover:border-accent/30' :
+                    'bg-transparent border-transparent hover:border-white/10 text-muted/40'
                   }`}
                 >
-                  <span className="text-sm">{date}</span>
-                  {hasEvents && (
-                    <div className="flex gap-0.5 mt-0.5">
+                  <span className="text-sm tabular-nums">{date}</span>
+                  {hasEvents && !isToday && (
+                    <div className="absolute bottom-2 flex gap-1">
                       {dayEvents.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`w-1 h-1 rounded-full ${isToday ? 'bg-white' : 'bg-cyan-400'}`} />
+                        <div key={idx} className="w-1 h-1 rounded-full bg-accent" />
+                      ))}
+                    </div>
+                  )}
+                  {isToday && hasEvents && (
+                    <div className="absolute bottom-2 flex gap-1">
+                      {dayEvents.slice(0, 3).map((_, idx) => (
+                        <div key={idx} className="w-1 h-1 rounded-full bg-black/20" />
                       ))}
                     </div>
                   )}
@@ -262,53 +258,54 @@ const CalendarIntegration: React.FC = () => {
         </div>
 
         {/* Day Schedule Sidebar */}
-        <div className="bg-background border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col h-full">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20"><Calendar size={20} /></div>
+        <div className="bg-surface border border-white/5 rounded-[32px] p-8 shadow-2xl flex flex-col h-full relative overflow-hidden">
+          <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center justify-between mb-8 relative z-10 border-b border-white/5 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent"><Calendar size={22} /></div>
               <div>
-                <h2 className="text-xl font-bold">
-                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <h2 className="text-xl font-black text-white tracking-widest">
+                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }).toUpperCase()}
                 </h2>
-                <p className="text-sm text-xtext-secondary">{selectedEvents.length} event{selectedEvents.length !== 1 ? 's' : ''}</p>
+                <p className="text-[10px] text-muted/40 font-black uppercase tracking-widest mt-1">{selectedEvents.length} ACTIVE LOGS</p>
               </div>
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
-              title="Add event on this date"
+              className="p-3 rounded-2xl bg-accent/5 text-accent border border-accent/10 hover:bg-accent/10 transition-all shadow-lg shadow-accent/5"
             >
-              <Plus size={18} />
+              <Plus size={20} />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar relative z-10">
             {selectedEvents.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-xtext-secondary text-sm py-12 opacity-50">
-                <Calendar size={32} className="mb-3 opacity-30" />
-                No events scheduled
-                <button onClick={() => setShowAddModal(true)} className="mt-3 text-cyan-400 text-xs font-bold hover:underline">+ Add one</button>
+              <div className="flex-1 flex flex-col items-center justify-center text-muted/20 text-[10px] font-black uppercase tracking-[0.3em] py-20">
+                <Calendar size={48} className="mb-6 opacity-10" />
+                No entries detected
+                <button onClick={() => setShowAddModal(true)} className="mt-4 text-accent text-[10px] font-black uppercase tracking-widest border-b border-transparent hover:border-accent transition-all">+ Initialize Log</button>
               </div>
             ) : (
               selectedEvents.map(event => (
-                <div key={event.id} className="p-4 bg-xcard border border-white/5 rounded-2xl hover:border-white/10 transition-colors group cursor-pointer relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1 h-full bg-white/10 group-hover:bg-cyan-500/50 transition-colors" />
-                  <div className="flex justify-between items-start mb-2 pl-2">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${getTypeColors(event.type)}`}>
+                <div key={event.id} className="p-6 bg-black/20 border border-white/5 rounded-[22px] hover:border-accent/40 transition-all group relative overflow-hidden">
+                  <div className="absolute left-0 top-0 w-1.5 h-full bg-white/5 group-hover:bg-accent shadow-[0_0_15px_rgba(252,163,17,0.4)] transition-all" />
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${getTypeStyle(event.type)}`}>
                       {event.type}
                     </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEditModal(event)} className="p-1.5 rounded-lg hover:bg-white/10 text-xtext-secondary hover:text-cyan-400 transition-colors" title="Edit"><Edit3 size={13} /></button>
-                      <button onClick={() => setDeleteConfirm(event)} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-xtext-secondary hover:text-rose-400 transition-colors" title="Delete"><Trash2 size={13} /></button>
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                      <button onClick={() => { setEditingEvent(event); setFormTitle(event.title); setFormTime(event.time); setFormType(event.type); setFormLocation(event.location); }} className="p-2 rounded-xl border border-white/5 text-muted/40 hover:text-white transition-all" title="Edit"><Edit3 size={14} /></button>
+                      <button onClick={() => setDeleteConfirm(event)} className="p-2 rounded-xl border border-white/5 text-muted/40 hover:text-rose-500 transition-all" title="Delete"><Trash2 size={14} /></button>
                     </div>
                   </div>
-                  <h3 className="font-bold text-white mb-3 pl-2 leading-tight">{event.title}</h3>
-                  <div className="space-y-1.5 pl-2">
-                    <div className="flex items-center gap-2 text-xs text-xtext-secondary">
-                      <Clock size={12} className="text-cyan-400/70" /> {event.time}
+                  <h3 className="text-sm font-black text-white mb-4 leading-tight group-hover:text-accent transition-colors uppercase tracking-wide">{event.title}</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-[10px] font-black text-muted/40 uppercase tracking-widest">
+                      <Clock size={14} className="text-accent/40" /> {event.time}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-xtext-secondary">
-                      <MapPin size={12} className="text-cyan-400/70" /> {event.location}
+                    <div className="flex items-center gap-3 text-[10px] font-black text-muted/40 uppercase tracking-widest">
+                      <MapPin size={14} className="text-accent/40" /> {event.location}
                     </div>
                   </div>
                 </div>
@@ -318,23 +315,27 @@ const CalendarIntegration: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Event Modal */}
-      <FloatingModal isOpen={showAddModal} onClose={() => { setShowAddModal(false); resetForm(); }} title={`New Event — ${selectedDate}`}>
-        {renderEventForm(handleAddEvent, () => { setShowAddModal(false); resetForm(); }, "Add Event")}
+      {/* Modals */}
+      <FloatingModal isOpen={showAddModal} onClose={() => { setShowAddModal(false); resetForm(); }} title="Deployment Log">
+        {renderEventForm(handleAddEvent, () => { setShowAddModal(false); resetForm(); }, "Commit Log")}
       </FloatingModal>
 
-      {/* Edit Event Modal */}
-      <FloatingModal isOpen={!!editingEvent} onClose={() => { setEditingEvent(null); resetForm(); }} title="Edit Event">
-        {renderEventForm(handleEditEvent, () => { setEditingEvent(null); resetForm(); }, "Save Changes")}
+      <FloatingModal isOpen={!!editingEvent} onClose={() => { setEditingEvent(null); resetForm(); }} title="Entry Synchronization">
+        {renderEventForm(handleEditEvent, () => { setEditingEvent(null); resetForm(); }, "Sync Changes")}
       </FloatingModal>
 
-      {/* Delete Confirmation Modal */}
-      <FloatingModal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Event">
-        <div className="text-center space-y-4">
-          <p className="text-sm text-white/70">Delete <strong>"{deleteConfirm?.title}"</strong> from this day?</p>
-          <div className="flex gap-3 justify-center">
-            <button onClick={() => deleteConfirm && handleDeleteEvent(deleteConfirm)} className="px-6 py-2.5 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-all">Delete</button>
-            <button onClick={() => setDeleteConfirm(null)} className="px-6 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 text-sm font-medium transition-all">Cancel</button>
+      <FloatingModal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Entry Purge">
+        <div className="text-center space-y-8 p-4">
+          <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 mx-auto">
+            <Trash2 size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-black text-white mb-2 uppercase tracking-widest">Confirm Deletion</p>
+            <p className="text-[11px] text-muted/40 leading-relaxed uppercase tracking-widest">Permanently remove registry log <br/><strong className="text-white">"{deleteConfirm?.title}"</strong>?</p>
+          </div>
+          <div className="flex gap-4 justify-center">
+            <button onClick={() => deleteConfirm && handleDeleteEvent(deleteConfirm)} className="px-10 py-3.5 bg-rose-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/10">PURGE</button>
+            <button onClick={() => setDeleteConfirm(null)} className="px-10 py-3.5 rounded-2xl border border-white/10 text-muted/60 hover:text-white hover:bg-white/5 text-[11px] font-black uppercase tracking-widest transition-all">ABORT</button>
           </div>
         </div>
       </FloatingModal>

@@ -32,7 +32,7 @@ const LiveClock: React.FC<{ showDate?: boolean }> = ({ showDate = true }) => {
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-2">
-        <Clock size={16} className="text-amber-400" />
+        <Clock size={16} className="text-accent" />
         <span className="text-sm font-bold tracking-tight text-white tabular-nums">
           {formatTime(time)}
         </span>

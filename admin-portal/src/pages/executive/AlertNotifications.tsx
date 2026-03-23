@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, AlertTriangle, Info, CheckCircle2, TrendingUp } from "lucide-react";
+import { Bell, AlertTriangle, Info, CheckCircle2, TrendingUp, X, ShieldAlert, Zap } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -30,20 +30,20 @@ const AlertNotifications: React.FC = () => {
 
   const getIcon = (type: string) => {
     switch(type) {
-      case 'urgent': return <AlertTriangle size={20} className="text-rose-400" />;
-      case 'warning': return <TrendingUp size={20} className="text-amber-400" />;
-      case 'success': return <CheckCircle2 size={20} className="text-emerald-400" />;
-      case 'info': default: return <Info size={20} className="text-cyan-400" />;
+      case 'urgent': return <AlertTriangle size={20} className="text-rose-500" />;
+      case 'warning': return <TrendingUp size={20} className="text-white" />;
+      case 'success': return <CheckCircle2 size={20} className="text-accent" />;
+      case 'info': default: return <Info size={20} className="text-muted/40" />;
     }
   };
 
   const getBgStyle = (type: string, read: boolean) => {
-    if (read) return "bg-white/5 border-white/5 opacity-60";
+    if (read) return "bg-black/20 border-white/5 opacity-40";
     switch(type) {
-      case 'urgent': return "bg-rose-500/10 border-rose-500/20 shadow-[0_5px_20px_rgba(244,63,94,0.1)]";
-      case 'warning': return "bg-amber-500/10 border-amber-500/20 shadow-[0_5px_20px_rgba(245,158,11,0.1)]";
-      case 'success': return "bg-emerald-500/10 border-emerald-500/20 shadow-[0_5px_20px_rgba(16,185,129,0.1)]";
-      case 'info': default: return "bg-cyan-500/10 border-cyan-500/20 shadow-[0_5px_20px_rgba(6,182,212,0.1)]";
+      case 'urgent': return "bg-rose-500/10 border-rose-500/20 shadow-[0_5px_30px_rgba(244,63,94,0.1)]";
+      case 'warning': return "bg-white/5 border-white/10 shadow-[0_5px_30px_rgba(255,255,255,0.05)]";
+      case 'success': return "bg-accent/10 border-accent/20 shadow-[0_5px_30px_rgba(252,163,17,0.1)]";
+      case 'info': default: return "bg-black/40 border-white/5";
     }
   };
 
@@ -51,57 +51,86 @@ const AlertNotifications: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">Alert Notifications</h1>
-          <p className="text-xtext-secondary text-sm">Stay updated with AI-driven operational alerts and store announcements.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
+            Operational <span className="text-accent">Alerts</span>
+          </h1>
+          <p className="text-muted/60 text-sm font-medium">Real-time AI-driven tactical notifications and store intelligence.</p>
         </div>
         <button 
           onClick={markAllAsRead}
           disabled={unreadCount === 0}
-          className="px-4 py-2 text-sm font-bold text-xtext-secondary hover:text-white bg-xcard border border-white/10 rounded-xl hover:bg-white/5 transition-all disabled:opacity-50"
+          className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted/40 hover:text-white bg-black/40 border border-white/10 rounded-2xl hover:border-white/20 transition-all disabled:opacity-20 disabled:grayscale"
         >
-          Mark all as read
+          Dismiss All
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {notifications.map(notif => (
           <div 
             key={notif.id}
-            className={`p-6 rounded-2xl border flex gap-5 transition-all duration-300 relative group overflow-hidden ${getBgStyle(notif.type, notif.read)}`}
+            className={`p-8 rounded-[32px] border flex gap-6 transition-all duration-500 relative group overflow-hidden ${getBgStyle(notif.type, notif.read)}`}
           >
             {!notif.read && (
-              <div className={`absolute top-0 left-0 w-1 h-full ${notif.type === 'urgent' ? 'bg-rose-500' : notif.type === 'warning' ? 'bg-amber-500' : notif.type === 'success' ? 'bg-emerald-500' : 'bg-cyan-500'}`} />
+              <div className={`absolute top-0 left-0 w-1.5 h-full ${notif.type === 'urgent' ? 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]' : notif.type === 'warning' ? 'bg-white' : notif.type === 'success' ? 'bg-accent shadow-[0_0_20px_rgba(252,163,17,0.5)]' : 'bg-muted/40'}`} />
             )}
             
             <div className="mt-1">
-              <div className="w-10 h-10 rounded-full bg-background/50 flex items-center justify-center border border-white/5 backdrop-blur-md">
+              <div className="w-14 h-14 rounded-2xl bg-black/60 flex items-center justify-center border border-white/8 shadow-xl">
                 {getIcon(notif.type)}
               </div>
             </div>
             
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-1">
-                <h3 className={`font-bold text-lg ${notif.read ? 'text-white/70' : 'text-white'}`}>{notif.title}</h3>
-                {!notif.read && <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">New</span>}
+              <div className="flex items-center gap-4 mb-2">
+                <h3 className={`font-black text-lg uppercase tracking-tight ${notif.read ? 'text-muted/40' : 'text-white'}`}>{notif.title}</h3>
+                {!notif.read && (
+                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
+                      <span className="text-[9px] font-black text-accent uppercase tracking-widest">New Priority</span>
+                   </div>
+                )}
               </div>
-              <p className={`text-sm mb-2 ${notif.read ? 'text-xtext-secondary' : 'text-white/80'}`}>{notif.message}</p>
-              <span className="text-xs font-medium text-xtext-secondary flex items-center gap-1.5 opacity-70">
-                <Bell size={12} /> {notif.time}
-              </span>
+              <p className={`text-sm leading-relaxed mb-4 font-medium ${notif.read ? 'text-muted/30' : 'text-white/80'}`}>{notif.message}</p>
+              <div className="flex items-center gap-6">
+                <span className="text-[10px] font-black text-muted/20 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Clock size={12} className="text-accent/40" /> {notif.time}
+                </span>
+                {notif.type === 'urgent' && !notif.read && (
+                   <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] flex items-center gap-2 animate-pulse">
+                      <ShieldAlert size={12} /> Action Required
+                   </span>
+                )}
+              </div>
             </div>
 
             {!notif.read && (
               <button 
                 onClick={() => markAsRead(notif.id)}
-                className="self-center px-4 py-2 rounded-xl text-sm font-medium border border-white/10 text-white hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 hidden sm:block"
+                className="self-center px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-black/40 border border-white/5 text-muted/40 hover:text-accent hover:border-accent/40 transition-all opacity-0 group-hover:opacity-100 hidden sm:flex items-center gap-2"
               >
-                Got it
+                <CheckCircle2 size={14} /> Acknowledge
               </button>
             )}
           </div>
         ))}
+        
+        {notifications.length === 0 && (
+          <div className="py-32 text-center">
+             <Bell size={64} className="mx-auto mb-6 opacity-5" />
+             <p className="text-[10px] font-black text-muted/20 uppercase tracking-[0.4em]">Operational Stream Clear</p>
+          </div>
+        )}
+      </div>
+      
+      <div className="bg-surface border border-white/5 rounded-[32px] p-8 flex items-center justify-between shadow-inner">
+         <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-center text-accent"><Zap size={20} /></div>
+            <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">AI Intelligence Engine: <span className="text-accent">Active Synchronized</span></p>
+         </div>
+         <div className="text-[9px] font-black text-muted/10 uppercase tracking-[0.4em]">Satguru SmartShop • v2.0.4</div>
       </div>
     </div>
   );

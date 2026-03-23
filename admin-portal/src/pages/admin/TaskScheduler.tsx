@@ -26,7 +26,6 @@ const TaskScheduler: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Create task form
   const [newTitle, setNewTitle] = useState("");
   const [newAssignee, setNewAssignee] = useState("");
   const [newPriority, setNewPriority] = useState<GlobalTask["priority"]>("Medium");
@@ -47,7 +46,7 @@ const TaskScheduler: React.FC = () => {
     setTasks(prev => [task, ...prev]);
     setShowCreateModal(false);
     setNewTitle(""); setNewAssignee(""); setNewPriority("Medium"); setNewDeadline("");
-    showToast(`✅ Task "${task.title}" created!`);
+    showToast(`Task "${task.title}" created!`);
   };
 
   const cycleStatus = (id: string) => {
@@ -64,24 +63,24 @@ const TaskScheduler: React.FC = () => {
     const name = tasks.find(t => t.id === id)?.title;
     setTasks(prev => prev.filter(t => t.id !== id));
     setActiveMenu(null);
-    showToast(`🗑️ "${name}" deleted.`);
+    showToast(`"${name}" deleted.`);
   };
 
   const getPriorityStyle = (priority: string) => {
     switch(priority) {
-      case 'High': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      case 'Medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-      case 'Low': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+      case 'High': return 'text-accent border-accent/20 bg-accent/5';
+      case 'Medium': return 'text-white/80 border-white/10 bg-white/5';
+      case 'Low': return 'text-muted/40 border-white/5 bg-transparent';
       default: return 'text-white/70 bg-white/5 border-white/10';
     }
   };
 
   const getStatusStyle = (status: string) => {
     switch(status) {
-      case 'Completed': return 'text-emerald-400 border-emerald-500/30';
-      case 'In Progress': return 'text-cyan-400 border-cyan-500/30';
+      case 'Completed': return 'text-muted/20 border-white/5 line-through';
+      case 'In Progress': return 'text-accent border-accent/30 bg-accent/5';
       case 'Pending': return 'text-white/80 border-white/10';
-      case 'Overdue': return 'text-rose-400 border-rose-500/30';
+      case 'Overdue': return 'text-rose-500 border-rose-500/20 bg-rose-500/5';
       default: return '';
     }
   };
@@ -92,56 +91,56 @@ const TaskScheduler: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-20 right-6 z-50 bg-xcard border border-white/10 rounded-2xl px-5 py-3 text-sm text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] animate-in slide-in-from-right-5 flex items-center gap-3">
+        <div className="fixed top-24 right-8 z-50 bg-surface border border-accent/20 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest text-white shadow-2xl animate-in slide-in-from-right-8 flex items-center gap-4">
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
           {toast}
-          <button onClick={() => setToast(null)} className="text-white/40 hover:text-white"><X size={14} /></button>
+          <button onClick={() => setToast(null)} className="text-muted/30 hover:text-white transition-colors"><X size={14} /></button>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">Task Scheduler</h1>
-          <p className="text-xtext-secondary text-sm">Assign, track, and manage all staff operational tasks.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">
+            Task <span className="text-accent">Scheduler</span>
+          </h1>
+          <p className="text-muted/60 text-sm">Strategic operational flow and team task orchestration.</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-extrabold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
+          className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-accent text-black font-black text-xs uppercase tracking-widest hover:brightness-110 shadow-xl shadow-accent/10 transition-all"
         >
-          <Plus size={18} /> Create Task
+          <Plus size={18} /> Create Mission
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-xcard border border-white/5 p-5 rounded-2xl flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-20 h-20 bg-emerald-500/10 rounded-bl-full pointer-events-none group-hover:bg-emerald-500/20 transition-all" />
-          <div><p className="text-sm text-xtext-secondary mb-1">Total Tasks</p><p className="text-3xl font-bold">{tasks.length}</p></div>
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><CheckSquare size={20} /></div>
-        </div>
-        <div className="bg-xcard border border-white/5 p-5 rounded-2xl flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-20 h-20 bg-cyan-500/10 rounded-bl-full pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
-          <div><p className="text-sm text-xtext-secondary mb-1">In Progress</p><p className="text-3xl font-bold">{tasks.filter(t => t.status === 'In Progress').length}</p></div>
-          <div className="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400"><Clock size={20} /></div>
-        </div>
-        <div className="bg-xcard border border-white/5 p-5 rounded-2xl flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-20 h-20 bg-rose-500/10 rounded-bl-full pointer-events-none group-hover:bg-rose-500/20 transition-all" />
-          <div><p className="text-sm text-xtext-secondary mb-1">Overdue</p><p className="text-3xl font-bold">{tasks.filter(t => t.status === 'Overdue').length}</p></div>
-          <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400"><AlertTriangle size={20} /></div>
-        </div>
-        <div className="bg-xcard border border-white/5 p-5 rounded-2xl flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-20 h-20 bg-indigo-500/10 rounded-bl-full pointer-events-none group-hover:bg-indigo-500/20 transition-all" />
-          <div><p className="text-sm text-xtext-secondary mb-1">Completed</p><p className="text-3xl font-bold">{tasks.filter(t => t.status === 'Completed').length}</p></div>
-          <div className="w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400"><CalendarIcon size={20} /></div>
-        </div>
+        {[
+          { label: "Active Nodes", count: tasks.length, icon: <CheckSquare size={20} />, color: "accent" },
+          { label: "In Flight", count: tasks.filter(t => t.status === 'In Progress').length, icon: <Clock size={20} />, color: "white" },
+          { label: "Delayed", count: tasks.filter(t => t.status === 'Overdue').length, icon: <AlertTriangle size={20} />, color: "rose-500" },
+          { label: "Finalized", count: tasks.filter(t => t.status === 'Completed').length, icon: <CalendarIcon size={20} />, color: "muted" },
+        ].map((stat, i) => (
+          <div key={i} className="bg-surface border border-white/5 p-6 rounded-[28px] flex items-center justify-between group overflow-hidden relative transition-all hover:border-accent/20">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-accent/5 rounded-bl-[40px] pointer-events-none group-hover:bg-accent/10 transition-all" />
+            <div>
+              <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest mb-1">{stat.label}</p>
+              <p className="text-3xl font-black text-white tabular-nums">{stat.count}</p>
+            </div>
+            <div className={`w-12 h-12 rounded-2xl bg-${stat.color === 'accent' ? 'accent/10' : 'black/40'} border border-white/5 flex items-center justify-center ${stat.color === 'accent' ? 'text-accent' : stat.color === 'rose-500' ? 'text-rose-500' : 'text-muted/40'}`}>
+              {stat.icon}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-xcard border border-white/5 rounded-3xl overflow-hidden mt-6 shadow-xl">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-          <div className="flex gap-2">
+      <div className="bg-surface border border-white/5 rounded-[32px] overflow-hidden mt-6 shadow-2xl">
+        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
+          <div className="flex gap-1.5">
             {['All', 'Pending', 'In Progress', 'Completed', 'Overdue'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f ? 'bg-emerald-500/20 text-emerald-400' : 'text-xtext-secondary hover:text-white hover:bg-white/10'}`}
+                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-accent text-black shadow-lg shadow-accent/10' : 'text-muted/40 hover:text-white hover:bg-white/5'}`}
               >
                 {f}
               </button>
@@ -151,51 +150,51 @@ const TaskScheduler: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead className="bg-background/50 border-b border-white/5 text-xs uppercase tracking-wider text-xtext-secondary">
+            <thead className="bg-black/40 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-muted/40">
               <tr>
-                <th className="p-4 pl-6 font-medium">Task</th>
-                <th className="p-4 font-medium">Assignee</th>
-                <th className="p-4 font-medium">Priority</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Deadline</th>
-                <th className="p-4 pr-6 text-right font-medium">Actions</th>
+                <th className="p-6 pl-8 font-black">Mission Objective</th>
+                <th className="p-6 font-black">Assignee</th>
+                <th className="p-6 font-black text-center">Priority</th>
+                <th className="p-6 font-black text-center">Status</th>
+                <th className="p-6 font-black text-center">Deadline</th>
+                <th className="p-6 pr-8 text-right font-black">Protocol</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {filteredTasks.map(task => (
-                <tr key={task.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                  <td className="p-4 pl-6">
-                    <div className={`font-bold text-white mb-0.5 ${task.status === 'Completed' ? 'line-through opacity-50' : ''}`}>{task.title}</div>
-                    <div className="text-xs text-xtext-secondary">{task.id}</div>
+                <tr key={task.id} className="hover:bg-white/3 transition-colors group">
+                  <td className="p-6 pl-8">
+                    <div className={`font-black text-sm tracking-wide transition-all ${task.status === 'Completed' ? 'text-muted/20 line-through' : 'text-white'}`}>{task.title}</div>
+                    <div className="text-[10px] text-muted/30 font-bold uppercase mt-1">{task.id}</div>
                   </td>
-                  <td className="p-4 text-sm font-medium text-white/90">{task.assignee}</td>
-                  <td className="p-4">
-                    <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-bold border ${getPriorityStyle(task.priority)}`}>
+                  <td className="p-6 text-xs font-bold text-white/80 uppercase tracking-widest">{task.assignee}</td>
+                  <td className="p-6 text-center">
+                    <span className={`inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${getPriorityStyle(task.priority)}`}>
                       {task.priority}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border border-t-0 border-r-0 border-l-0 border-b-2 bg-white/5 ${getStatusStyle(task.status)}`}>
-                      {task.status === 'Completed' && <CheckSquare size={12} />}
-                      {task.status === 'Overdue' && <AlertTriangle size={12} />}
+                  <td className="p-6 text-center">
+                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-t-0 border-r-0 border-l-0 border-b-2 bg-black/40 transition-all ${getStatusStyle(task.status)}`}>
+                      {task.status === 'Completed' && <CheckSquare size={13} />}
+                      {task.status === 'Overdue' && <AlertTriangle size={13} />}
                       {task.status}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-xtext-secondary">{task.deadline}</td>
-                  <td className="p-4 pr-6 text-right relative">
+                  <td className="p-6 text-[10px] font-bold text-muted/40 uppercase tracking-widest text-center">{task.deadline}</td>
+                  <td className="p-6 pr-8 text-right relative">
                     <button
                       onClick={() => setActiveMenu(activeMenu === task.id ? null : task.id)}
-                      className="p-1.5 rounded-lg hover:bg-white/10 text-xtext-secondary hover:text-white transition-colors"
+                      className="p-3 rounded-2xl hover:bg-white/5 text-muted/30 hover:text-white transition-all border border-transparent hover:border-white/5"
                     >
-                      <MoreVertical size={16} />
+                      <MoreVertical size={18} />
                     </button>
                     {activeMenu === task.id && (
-                      <div className="absolute right-6 top-12 w-44 bg-xcard border border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.4)] z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                        <button onClick={() => cycleStatus(task.id)} className="w-full text-left px-3 py-2.5 text-xs font-medium text-cyan-400 hover:bg-cyan-500/5 flex items-center gap-2 transition-colors">
-                          <ArrowRight size={13} /> Advance Status
+                      <div className="absolute right-8 top-16 w-52 bg-surface border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 p-1.5">
+                        <button onClick={() => cycleStatus(task.id)} className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-accent hover:bg-accent/10 rounded-xl flex items-center gap-3 transition-all">
+                          <ArrowRight size={14} /> Update Flow
                         </button>
-                        <button onClick={() => deleteTask(task.id)} className="w-full text-left px-3 py-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/5 flex items-center gap-2 transition-colors">
-                          <Trash2 size={13} /> Delete Task
+                        <button onClick={() => deleteTask(task.id)} className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-rose-500 hover:bg-rose-500/10 rounded-xl flex items-center gap-3 transition-all">
+                          <Trash2 size={14} /> Terminate
                         </button>
                       </div>
                     )}
@@ -203,41 +202,42 @@ const TaskScheduler: React.FC = () => {
                 </tr>
               ))}
               {filteredTasks.length === 0 && (
-                <tr><td colSpan={6} className="text-center py-10 text-xtext-secondary text-sm italic">No tasks found for this filter.</td></tr>
+                <tr><td colSpan={6} className="text-center py-20 text-muted/20 uppercase text-[10px] font-black tracking-[0.3em] italic">No missions detected.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Create Task Modal */}
-      <FloatingModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create New Task">
-        <div className="space-y-4">
+      <FloatingModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Mission Deployment">
+        <div className="space-y-5 p-2">
           <div>
-            <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Task Title</label>
-            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Restock Refrigerators" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+            <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Objective Title</label>
+            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="ENTER OBJECTIVE..." className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
           </div>
           <div>
-            <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Assignee</label>
-            <input value={newAssignee} onChange={e => setNewAssignee(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+            <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Assignee Entity</label>
+            <input value={newAssignee} onChange={e => setNewAssignee(e.target.value)} placeholder="ENTER ENTITY NAME..." className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Priority</label>
-              <select value={newPriority} onChange={e => setNewPriority(e.target.value as GlobalTask["priority"])} className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all">
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
+              <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Priority Rank</label>
+              <div className="relative">
+                <select value={newPriority} onChange={e => setNewPriority(e.target.value as GlobalTask["priority"])} className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 transition-all uppercase appearance-none cursor-pointer">
+                  <option value="High">HIGH CLASSIFIED</option>
+                  <option value="Medium">MEDIUM STANDARD</option>
+                  <option value="Low">LOW MINIMAL</option>
+                </select>
+              </div>
             </div>
             <div>
-              <label className="text-[10px] text-xtext-secondary uppercase tracking-widest font-bold mb-1.5 block">Deadline</label>
-              <input value={newDeadline} onChange={e => setNewDeadline(e.target.value)} placeholder="e.g. Today, 5:00 PM" className="w-full bg-[#0d1117] border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-xbrand/40 transition-all" />
+              <label className="text-[10px] text-muted/40 uppercase tracking-[0.2em] font-black mb-2 block">Deadline Window</label>
+              <input value={newDeadline} onChange={e => setNewDeadline(e.target.value)} placeholder="ENTER TIMEFRAME..." className="w-full bg-black/40 border border-white/8 rounded-2xl py-3.5 px-5 text-xs font-bold text-white focus:outline-none focus:border-accent/40 focus:ring-4 focus:ring-accent/5 transition-all uppercase tracking-widest" />
             </div>
           </div>
-          <div className="flex gap-3 pt-2">
-            <button onClick={handleCreateTask} className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 text-black py-2.5 rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2"><Check size={16} /> Create Task</button>
-            <button onClick={() => setShowCreateModal(false)} className="px-5 py-2.5 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 text-sm font-medium transition-all">Cancel</button>
+          <div className="flex gap-3 pt-4">
+            <button onClick={handleCreateTask} className="flex-1 bg-accent text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:brightness-110 shadow-xl shadow-accent/10 transition-all flex items-center justify-center gap-3"><Check size={18} /> DEPLOY MISSION</button>
+            <button onClick={() => setShowCreateModal(false)} className="px-6 py-4 rounded-2xl border border-white/10 text-muted/60 hover:text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest transition-all">ABORT</button>
           </div>
         </div>
       </FloatingModal>

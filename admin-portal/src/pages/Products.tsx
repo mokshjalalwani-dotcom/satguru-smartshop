@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ProductList from "../components/ProductList";
 import { type Product } from "../components/ProductList";
-import { Package, CheckCircle, X } from "lucide-react";
+import { Package, CheckCircle, X, Plus } from "lucide-react";
 import FloatingModal from "../ui/FloatingModal";
 import AddProductForm from "../ui/AddProductForm";
 import api from "../services/api.ts";
@@ -25,56 +25,64 @@ const Products: React.FC = () => {
       });
       setShowAddModal(false);
       setRefreshKey(k => k + 1); // trigger ProductList to refetch
-      setToast(`✅ "${data.name}" added successfully!`);
+      setToast(`Product "${data.name}" added to inventory.`);
       setTimeout(() => setToast(null), 3000);
     } catch (err) {
-      setToast("❌ Failed to add product. Try again.");
+      setToast("Security alert: Failed to register product.");
       setTimeout(() => setToast(null), 3000);
     }
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold text-xtext flex items-center gap-2">
-            <Package size={22} className="text-xblue" />
-            Products
-          </h2>
-          <p className="text-[14px] text-xtext-secondary mt-0.5">Manage your product inventory</p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-xblue hover:bg-xblue-hover text-white text-[14px] px-5 py-2 rounded-full transition-colors font-bold"
-        >
-          + Add Product
-        </button>
-      </div>
-
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Toast notification */}
       {toast && (
-        <div className="fixed top-20 right-6 z-50 bg-xcard border border-white/10 rounded-2xl px-5 py-3 text-sm text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] animate-in slide-in-from-right-5 flex items-center gap-3">
+        <div className="fixed top-24 right-8 z-[100] bg-surface border border-accent/20 rounded-2xl px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl animate-in slide-in-from-right-8 flex items-center gap-4">
+          <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
           {toast}
-          <button onClick={() => setToast(null)} className="text-white/40 hover:text-white"><X size={14} /></button>
+          <button onClick={() => setToast(null)} className="text-muted/30 hover:text-white transition-colors"><X size={14} /></button>
         </div>
       )}
 
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-white/5 pb-8">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-white mb-2 uppercase flex items-center gap-4">
+            <Package size={32} className="text-accent" />
+            Product <span className="text-accent">Registry</span>
+          </h2>
+          <p className="text-muted/60 text-sm font-medium">Strategic asset management and inventory categorization terminal.</p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-accent text-black font-black text-xs uppercase tracking-widest hover:brightness-110 shadow-xl shadow-accent/10 transition-all"
+        >
+          <Plus size={18} /> Integrate Asset
+        </button>
+      </div>
+
       {/* Selected product preview */}
       {selectedProduct && (
-        <div className="border border-xblue/30 bg-xblue-faded text-xblue text-[14px] rounded-xl px-4 py-3 flex items-center gap-2">
-          <CheckCircle size={16} />
-          Selected: <span className="font-bold">{selectedProduct.name}</span>
-          <span className="text-xtext-secondary ml-1">— ₹{selectedProduct.price.toLocaleString("en-IN")}</span>
-          <button onClick={() => setSelectedProduct(null)} className="ml-auto text-white/40 hover:text-white"><X size={14} /></button>
+        <div className="bg-accent/5 border border-accent/20 rounded-2xl px-6 py-4 flex items-center gap-4 animate-in slide-in-from-top-4">
+          <CheckCircle size={20} className="text-accent" />
+          <div className="flex flex-col">
+            <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest leading-none mb-1">Active Selection</p>
+            <p className="text-sm font-black text-white uppercase tracking-wide">
+              {selectedProduct.name} <span className="mx-2 text-muted/20">|</span> <span className="text-accent">₹{selectedProduct.price.toLocaleString("en-IN")}</span>
+            </p>
+          </div>
+          <button onClick={() => setSelectedProduct(null)} className="ml-auto p-2 rounded-xl hover:bg-white/5 text-muted/30 hover:text-white transition-all"><X size={16} /></button>
         </div>
       )}
 
       {/* Product List */}
-      <ProductList key={refreshKey} onSelect={handleSelectProduct} />
+      <div className="bg-surface border border-white/5 rounded-[40px] p-2 overflow-hidden shadow-2xl relative">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+        <ProductList key={refreshKey} onSelect={handleSelectProduct} />
+      </div>
 
       {/* Add Product Modal */}
-      <FloatingModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Product">
+      <FloatingModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Asset Integration Protocol">
         <AddProductForm onSubmit={handleAddProduct} onCancel={() => setShowAddModal(false)} />
       </FloatingModal>
     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ShieldCheck } from "lucide-react";
 
 interface FloatingModalProps {
   isOpen: boolean;
@@ -17,7 +17,6 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  // focus the panel when opened for accessibility
   useEffect(() => {
     if (isOpen) {
       const t = setTimeout(() => panelRef.current?.focus(), 50);
@@ -25,7 +24,6 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
     }
   }, [isOpen]);
 
-  // close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -44,20 +42,20 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md"
             aria-hidden
           />
 
           {/* Modal Panel */}
           <motion.div
             key="modal"
-            initial={{ opacity: 0, scale: 0.98, y: 6 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: 6 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-6 pointer-events-none"
             aria-hidden={!isOpen}
           >
             <div
@@ -66,40 +64,53 @@ const FloatingModal: React.FC<FloatingModalProps> = ({
               aria-modal="true"
               aria-labelledby={title ? "modal-title" : undefined}
               tabIndex={-1}
-              onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
-              className="pointer-events-auto w-full max-w-lg rounded-2xl p-6
-                         bg-white/5 backdrop-blur-lg border border-white/8
-                         shadow-[0_8px_30px_rgba(2,6,23,0.6)]"
-              style={{
-                boxShadow:
-                  "0 10px 30px rgba(2,6,23,0.6), 0 2px 8px rgba(99,102,241,0.06)",
-                outline: "none",
-              }}
+              onClick={(e) => e.stopPropagation()}
+              className="pointer-events-auto w-full max-w-lg rounded-[40px] p-10
+                         bg-surface border border-white/10 shadow-2xl relative overflow-hidden"
+              style={{ outline: "none" }}
             >
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-accent shadow-[0_0_20px_rgba(252,163,17,0.3)]" />
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none" />
+
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                  {title && (
-                    <h2
-                      id="modal-title"
-                      className="text-center text-[16px] font-semibold text-white"
-                    >
-                      {title}
-                    </h2>
-                  )}
+              <div className="flex items-center justify-between mb-8 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-center text-accent">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    {title && (
+                      <h2
+                        id="modal-title"
+                        className="text-lg font-black text-white uppercase tracking-tight"
+                      >
+                        {title}
+                      </h2>
+                    )}
+                    <p className="text-[10px] font-black text-muted/40 uppercase tracking-[0.2em] mt-0.5">Secure Protocol Terminal</p>
+                  </div>
                 </div>
 
                 <button
                   onClick={onClose}
                   aria-label="Close modal"
-                  className="ml-4 p-1 rounded-full text-gray-300 hover:text-white hover:bg-white/6 transition-colors"
+                  className="p-2 rounded-xl text-muted/30 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
 
               {/* Content */}
-              <div className="space-y-4 text-sm text-gray-200">{children}</div>
+              <div className="relative z-10">{children}</div>
+              
+              <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/5 relative z-10">
+                  <div className="text-[9px] font-black text-muted/10 uppercase tracking-[0.4em]">Satguru Master Logic</div>
+                  <div className="flex gap-1">
+                      <div className="w-1 h-1 rounded-full bg-accent/20" />
+                      <div className="w-1 h-1 rounded-full bg-accent/40" />
+                      <div className="w-1 h-1 rounded-full bg-accent/60" />
+                  </div>
+              </div>
             </div>
           </motion.div>
         </>

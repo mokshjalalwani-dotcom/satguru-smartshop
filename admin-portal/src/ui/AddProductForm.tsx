@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Input from "./Input";
 import Button from "./Button";
+import { ShieldPlus, Zap } from "lucide-react";
 
 interface ProductFormData {
   name: string;
@@ -32,12 +33,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit, onCancel }) =
 
   const validate = (): boolean => {
     const newErrors: Errors = {};
-    if (!form.name.trim()) newErrors.name = "Product name is required.";
-    if (!form.price.trim()) newErrors.price = "Price is required.";
+    if (!form.name.trim()) newErrors.name = "Entity identifier is required.";
+    if (!form.price.trim()) newErrors.price = "Valuation is required.";
     else if (isNaN(Number(form.price)) || Number(form.price) <= 0)
-      newErrors.price = "Enter a valid positive price.";
-    if (!form.category.trim()) newErrors.category = "Category is required.";
-    if (!form.description.trim()) newErrors.description = "Description is required.";
+      newErrors.price = "Enter a valid positive valuation.";
+    if (!form.category.trim()) newErrors.category = "Classification is required.";
+    if (!form.description.trim()) newErrors.description = "Operational details required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -52,45 +53,56 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSubmit, onCancel }) =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Product Name"
-        value={form.name}
-        onChange={set("name")}
-        placeholder="e.g. Wireless Headphones"
-        error={errors.name}
-      />
-      <Input
-        label="Price (₹)"
-        value={form.price}
-        onChange={set("price")}
-        type="number"
-        placeholder="e.g. 2999"
-        error={errors.price}
-      />
-      <Input
-        label="Category"
-        value={form.category}
-        onChange={set("category")}
-        placeholder="e.g. Electronics"
-        error={errors.category}
-      />
-      <Input
-        label="Description"
-        value={form.description}
-        onChange={set("description")}
-        placeholder="Short product description..."
-        multiline
-        error={errors.description}
-      />
+    <form onSubmit={handleSubmit} className="space-y-6">
+       <div className="bg-black/20 border border-white/5 rounded-3xl p-6 mb-2">
+         <div className="flex items-center gap-3 mb-6">
+            <Zap size={14} className="text-accent" />
+            <span className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Initialization Parameters</span>
+         </div>
+          <div className="space-y-4">
+            <Input
+              label="Entity Identifier"
+              value={form.name}
+              onChange={set("name")}
+              placeholder="ENTER PRODUCT NAME..."
+              error={errors.name}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Valuation (₹)"
+                value={form.price}
+                onChange={set("price")}
+                type="number"
+                placeholder="0.00"
+                error={errors.price}
+              />
+              <Input
+                label="Classification"
+                value={form.category}
+                onChange={set("category")}
+                placeholder="E.G. ELECTRONICS"
+                error={errors.category}
+              />
+            </div>
+            <Input
+              label="Operational Description"
+              value={form.description}
+              onChange={set("description")}
+              placeholder="SPECIFY ASSET CAPABILITIES..."
+              multiline
+              error={errors.description}
+            />
+          </div>
+       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-4 pt-4 border-t border-white/5">
         <Button type="submit" variant="primary">
-          Add Product
+          <ShieldPlus size={18} className="mr-2" />
+          Authorize Integration
         </Button>
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
+            Abort Protocol
           </Button>
         )}
       </div>
