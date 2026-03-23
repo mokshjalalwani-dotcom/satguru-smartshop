@@ -6,11 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { LogOut, User as UserIcon, AlertTriangle, Zap } from "lucide-react";
 import FloatingActionButton from "../ui/FloatingActionButton";
 import { useDashboard } from "../context/DashboardContext";
-import LiveClock from "../ui/LiveClock";
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
-  const { duration, setDuration, status } = useDashboard();
+  const { status } = useDashboard();
   const location = useLocation();
 
   return (
@@ -55,29 +54,6 @@ const AdminLayout: React.FC = () => {
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
                     </div>
                   )}
-                </div>
-                
-                <div className="h-8 w-[1px] bg-white/5 mx-1" />
-                
-                <div className="flex items-center gap-4">
-                  <div className="bg-black/30 rounded-xl px-4 py-2 border border-white/5 shadow-inner">
-                    <LiveClock showDate={false} />
-                  </div>
-                  <div className="flex gap-1.5 bg-black/50 p-1.5 rounded-xl border border-white/10 shadow-2xl">
-                    {[7, 30, 180].map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => setDuration(d as any)}
-                        className={`rounded-lg px-4 py-2 text-[10px] font-black tracking-widest transition-all duration-300 ${
-                          duration === d
-                            ? 'bg-accent text-black shadow-[0_0_20px_rgba(252,163,17,0.3)]'
-                            : 'text-muted/60 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             ) : (
