@@ -17,19 +17,19 @@ const KPICard: React.FC<KPICardProps> = ({
   const deltaIsPositive = typeof delta === "string" && delta.startsWith("+");
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-surface p-5 transition-all duration-500 hover:border-accent/20 hover:shadow-xl hover:shadow-accent/5">
-      <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full blur-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-accent" />
+    <div className="group relative overflow-hidden rounded-[24px] glass-card p-6 transition-all duration-500 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/5">
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-accent" />
       
-      <div className="relative z-10 flex flex-col gap-3">
+      <div className="relative z-10 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-black/30 text-accent">
-            {icon ? React.cloneElement(icon as any, { size: 18 }) : null}
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/5 bg-black/20 text-accent shadow-inner backdrop-blur-md">
+            {icon ? React.cloneElement(icon as any, { size: 20, strokeWidth: 2.5 }) : null}
           </div>
           {delta && (
-            <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase border ${
+            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black tracking-widest uppercase border ${
               deltaIsPositive 
-                ? 'bg-accent/10 text-accent border-accent/20' 
-                : 'bg-white/5 text-muted/50 border-white/10'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                : 'bg-red-500/10 text-red-400 border-red-500/20'
             }`}>
               {delta}
             </div>
@@ -37,12 +37,14 @@ const KPICard: React.FC<KPICardProps> = ({
         </div>
 
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted/40 mb-0.5">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted/30 mb-1 leading-none">
             {title}
           </p>
-          <p className="text-xl font-bold tracking-tight text-white tabular-nums">
-            {value}
-          </p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-2xl font-black tracking-tighter text-white tabular-nums">
+              {value}
+            </p>
+          </div>
         </div>
       </div>
     </div>

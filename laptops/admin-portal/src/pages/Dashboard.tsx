@@ -119,62 +119,48 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-bg text-primary selection:bg-accent/30 relative overflow-hidden">
-      {/* Background Depth Layers */}
-      <div className="mesh-blob blob-accent w-[500px] h-[500px] -top-64 -left-64 animate-neon-pulse" />
-      <div className="mesh-blob blob-blue w-[600px] h-[600px] top-1/2 -right-64 opacity-10" />
-      <div className="mesh-blob blob-white w-[400px] h-[400px] -bottom-32 left-1/4 opacity-5" />
+    <div className="min-h-screen bg-bg text-primary selection:bg-accent/30">
+      <div className="mx-auto max-w-[1400px] px-6 py-6">
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-6 font-sans">
-
-        {/* ── HEADER SHELF ── */}
-        <header className="mb-10 p-1 rounded-[24px] border border-white/[0.03] bg-white/[0.01] backdrop-blur-3xl shadow-2xl">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-6 py-5 rounded-[20px] glass-card">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-                  Strategic <span className="text-accent">Insights</span>
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  {errorStatus ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-red-400">
-                      <AlertTriangle size={10} /> System Disrupted
-                    </div>
-                  ) : (stats as any)?._isFallback ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-accent animate-pulse">
-                      <Zap size={10} /> Synapse Warming
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
-                    </div>
-                  )}
-                </div>
+        {/* ── HEADER ── */}
+        <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-black tracking-tight text-white">
+              Strategic <span className="text-accent">Insights</span>
+            </h1>
+            {errorStatus ? (
+              <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-muted/60">
+                <AlertTriangle size={10} /> Error
               </div>
+            ) : (stats as any)?._isFallback ? (
+              <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-accent animate-pulse">
+                <Zap size={10} /> Warming Up
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> Live
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-surface px-4 py-2">
+              <LiveClock showDate={true} />
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-[1px] bg-white/5 hidden md:block" />
-              <div className="flex items-center gap-4">
-                <div className="bg-black/20 rounded-xl px-4 py-2 border border-white/5">
-                  <LiveClock showDate={true} />
-                </div>
-                <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                  {[7, 30, 180].map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setDuration(d as any)}
-                      className={`rounded-lg px-4 py-1.5 text-[9px] font-black tracking-tighter transition-all duration-300 ${
-                        duration === d
-                          ? 'bg-accent text-black shadow-xl shadow-accent/20'
-                          : 'text-muted/40 hover:text-white'
-                      }`}
-                    >
-                      {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="flex gap-1 rounded-2xl border border-white/5 bg-surface p-1">
+              {[7, 30, 180].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDuration(d as any)}
+                  className={`rounded-xl px-3.5 py-1.5 text-[10px] font-bold transition-all duration-300 ${
+                    duration === d
+                      ? 'bg-accent text-black shadow-lg shadow-accent/20'
+                      : 'text-muted/50 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
+                </button>
+              ))}
             </div>
           </div>
         </header>
@@ -190,7 +176,7 @@ const Dashboard: React.FC = () => {
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
 
           {/* Chart */}
-          <div className="xl:col-span-8 rounded-[24px] glass-card p-8">
+          <div className="xl:col-span-8 rounded-2xl border border-white/5 bg-surface p-6">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold text-white">
                 <TrendingUp size={16} className="text-accent" />
@@ -228,8 +214,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Intel Sidebar */}
-          <div className="xl:col-span-4 flex flex-col gap-6">
-            <div className="flex-1 rounded-[24px] glass-card flex flex-col overflow-hidden">
+          <div className="xl:col-span-4 flex flex-col gap-4">
+            <div className="flex-1 rounded-2xl border border-white/5 bg-surface flex flex-col overflow-hidden">
               <div className="border-b border-white/5 bg-gradient-to-r from-accent/10 to-transparent px-5 py-4">
                 <h2 className="flex items-center gap-2 text-sm font-bold text-white">
                   <Zap size={14} className="text-accent" /> AI Prediction Hub
@@ -277,8 +263,8 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* ── INTELLIGENCE GRID ── */}
-        <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="rounded-[24px] glass-card p-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/5 bg-surface p-6">
             <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-white">
               <ShoppingBag size={16} className="text-accent" /> Demand Intelligence
             </h2>
@@ -318,7 +304,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* ── TRANSACTIONS ── */}
-        <div className="rounded-[24px] glass-card overflow-hidden">
+        <div className="rounded-2xl border border-white/5 bg-surface overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-6 py-4">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-bold text-white">
