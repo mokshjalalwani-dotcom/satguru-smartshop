@@ -25,38 +25,20 @@ const AdminLayout: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         <header className="h-20 glass-header flex items-center justify-between px-10 relative z-20">
           <div className="flex items-center gap-6">
-            {location.pathname === '/admin' ? (
-              <div className="flex items-center gap-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
-                    <Zap size={20} className="text-accent" />
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                       <span className="text-[10px] font-bold text-muted/40 uppercase tracking-widest">Welcome back, {user?.name || 'User'}</span>
-                    </div>
-                    <h1 className="text-xl font-black tracking-tight text-white leading-tight">
-                      Strategic <span className="text-accent">Insights</span>
-                    </h1>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {status === 'error' ? (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-[9px] font-black uppercase tracking-widest text-red-400">
-                      <AlertTriangle size={10} /> Disrupted
-                    </div>
-                  ) : status === 'warming' ? (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-black uppercase tracking-widest text-accent animate-pulse">
-                      <Zap size={10} /> Warming
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
-                    </div>
-                  )}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-accent p-0.5 shadow-[0_4px_20px_rgba(252,163,17,0.2)]">
+                <div className="w-full h-full bg-bg rounded-[10px] flex items-center justify-center text-accent">
+                  <UserIcon size={20} />
                 </div>
               </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-muted/40 uppercase tracking-widest leading-none mb-1">Welcome back</span>
+                <h1 className="text-xl font-black tracking-tight text-white leading-tight">
+                  {user?.name || 'Admin'} <span className="text-accent underline decoration-accent/30 underline-offset-4">Portal</span>
+                </h1>
+              </div>
+            </div>
+          </div>
             ) : (
               <div className="flex items-center gap-4">
                 <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent mr-2">
@@ -69,25 +51,32 @@ const AdminLayout: React.FC = () => {
             )}
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center bg-black/20 rounded-xl px-4 py-2 border border-white/5 mr-2">
+          <div className="flex items-center gap-4">
+            {location.pathname === '/admin' && (
+              <div className="flex items-center gap-2 mr-4">
+                {status === 'error' ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-[9px] font-black uppercase tracking-widest text-red-400">
+                    <AlertTriangle size={10} /> Disrupted
+                  </div>
+                ) : status === 'warming' ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-black uppercase tracking-widest text-accent animate-pulse">
+                    <Zap size={10} /> Warming
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="hidden lg:flex items-center bg-black/20 rounded-xl px-4 py-2 border border-white/5 shadow-inner">
               <LiveClock showDate={false} />
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold leading-none">{user?.name || 'User'}</p>
-                <p className="text-[10px] text-muted/60 mt-1 uppercase font-bold tracking-widest">{user?.role}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-accent p-0.5 shadow-[0_4px_20px_rgba(252,163,17,0.2)]">
-                <div className="w-full h-full bg-bg rounded-[10px] flex items-center justify-center">
-                  <UserIcon size={20} className="text-accent" />
-                </div>
-              </div>
-            </div>
+
             <button 
               onClick={logout}
-              className="p-2.5 rounded-xl hover:bg-white/5 text-muted/60 hover:text-white transition-all border border-transparent hover:border-white/10"
+              className="p-2.5 rounded-xl hover:bg-white/5 text-muted/60 hover:text-white transition-all border border-transparent hover:border-white/10 ml-2"
               title="Logout"
             >
               <LogOut size={20} />

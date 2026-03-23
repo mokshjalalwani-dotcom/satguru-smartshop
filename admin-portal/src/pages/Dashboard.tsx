@@ -115,6 +115,9 @@ const Dashboard: React.FC = () => {
     { header: "Time", accessor: "date", render: (val) => String(val).replace('T', ' ').split(' ')[1] || "N/A" }
   ];
 
+  return (
+    <div className="relative z-10 selection:bg-accent/30 font-sans">
+
       {/* ── PERFORMANCE OVERVIEW BAR ── */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
