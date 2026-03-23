@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./layout/AdminLayout";
 import ExecutiveLayout from "./layout/ExecutiveLayout";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { DashboardProvider } from "./context/DashboardContext";
 import SmartAlertSystem from "./components/SmartAlertSystem";
 
 // Auth & Shared
@@ -74,7 +75,9 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <DashboardProvider>
+          <AppRoutes />
+        </DashboardProvider>
       </AuthProvider>
     </BrowserRouter>
   );

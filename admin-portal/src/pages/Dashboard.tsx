@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown } from "lucide-react";
 import KPICard from "../ui/KPICard";
 import LiveClock from "../ui/LiveClock";
+import { useDashboard } from "../context/DashboardContext";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
 import { 
@@ -21,21 +22,20 @@ type TransactionRow = Transaction & { id: string };
 const Shimmer = ({ className = "" }: { className?: string }) => (
   <div className={`animate-pulse bg-white/5 rounded-xl ${className}`} />
 );
-
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<AIStats | null>(null);
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [predictionMetrics, setPredictionMetrics] = useState<{total: number, ci: {lower: number, upper: number}, trend: number} | null>(null);
-
-  const [duration, setDuration] = useState<7 | 30 | 180>(7);
   const [initialLoad, setInitialLoad] = useState(true);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
+  const { duration, setStatus, setErrorMessage } = useDashboard();
+
   useEffect(() => {
     let isMounted = true;
-    setErrorStatus(null);
+    setStatus('live'); 
 
     const loadDashboardData = async () => {
       try {
@@ -44,7 +44,8 @@ const Dashboard: React.FC = () => {
         setStats(statsData);
         setInitialLoad(false);
 
-        await new Promise(r => setTimeout(r, 600));
+        if ((statsData as any)?._isFallback) setStatus('warming');
+        else setStatus('live');
 
         const [historyData, transData] = await Promise.all([
           aiService.getHistory(duration),
@@ -54,12 +55,8 @@ const Dashboard: React.FC = () => {
         setHistory(historyData);
         setTransactions(transData.map((t, i) => ({ ...t, id: i.toString() })));
 
-        await new Promise(r => setTimeout(r, 1000));
-
         const insightsData = await aiService.getInsights();
         if (isMounted) setInsights(insightsData);
-
-        await new Promise(r => setTimeout(r, 1500));
 
         const predData = await aiService.getPrediction();
         if (isMounted) {
@@ -76,14 +73,15 @@ const Dashboard: React.FC = () => {
         if (isMounted) {
           console.error("Dashboard Load Error:", err);
           setInitialLoad(false);
-          setErrorStatus(`AI Gateway Error: ${err.response?.data?.details || err.message}`);
+          setStatus('error');
+          setErrorMessage(`AI Gateway Error: ${err.response?.data?.details || err.message}`);
         }
       }
     };
 
     loadDashboardData();
     return () => { isMounted = false; };
-  }, [duration]);
+  }, [duration, setStatus, setErrorMessage]);
 
   if (initialLoad && !stats) return <LoadingSkeleton />;
 
@@ -121,57 +119,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="relative z-10 selection:bg-accent/30 font-sans">
 
-        {/* ── HEADER SHELF ── */}
-        <header className="mb-10 p-1 rounded-[24px] border border-white/[0.03] bg-white/[0.01] backdrop-blur-3xl shadow-2xl">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-6 py-5 rounded-[20px] glass-card">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-                  Strategic <span className="text-accent">Insights</span>
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  {errorStatus ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-red-400">
-                      <AlertTriangle size={10} /> System Disrupted
-                    </div>
-                  ) : (stats as any)?._isFallback ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-accent animate-pulse">
-                      <Zap size={10} /> Synapse Warming
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" /> Live Stream
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-[1px] bg-white/5 hidden md:block" />
-              <div className="flex items-center gap-4">
-                <div className="bg-black/20 rounded-xl px-4 py-2 border border-white/5">
-                  <LiveClock showDate={true} />
-                </div>
-                <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                  {[7, 30, 180].map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setDuration(d as any)}
-                      className={`rounded-lg px-4 py-1.5 text-[9px] font-black tracking-tighter transition-all duration-300 ${
-                        duration === d
-                          ? 'bg-accent text-black shadow-xl shadow-accent/20'
-                          : 'text-muted/40 hover:text-white'
-                      }`}
-                    >
-                      {d === 7 ? '7D' : d === 30 ? '30D' : '6M'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
 
         {/* ── KPI ROW ── */}
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
