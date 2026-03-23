@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp, AlertTriangle, Lightbulb, ShoppingBag, Users, IndianRupee, Clock, Star, Zap, TrendingDown } from "lucide-react";
 import KPICard from "../ui/KPICard";
+import LiveClock from "../ui/LiveClock";
 import DataTable, { type Column } from "../ui/DataTable";
 import LoadingSkeleton from "../ui/LoadingSkeleton";
 import { 
@@ -131,7 +132,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-10">
       {/* Header */}
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-center bg-xcard/30 backdrop-blur-xl p-6 rounded-3xl border border-white/5 mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent flex items-center gap-3">
             Strategic Analytics
@@ -143,18 +144,23 @@ const Dashboard: React.FC = () => {
           </h1>
           <p className="text-xtext-secondary text-sm mt-1">Smart Retail Decision Support System powered by AI.</p>
         </div>
-        <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/5">
-          {[7, 30, 180].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDuration(d as any)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                duration === d ? "bg-xbrand text-black shadow-lg shadow-xbrand/20" : "text-white/60 hover:text-white"
-              }`}
-            >
-              {d === 7 ? "7 Days" : d === 30 ? "30 Days" : "6 Months"}
-            </button>
-          ))}
+        
+        <div className="flex items-center gap-6">
+          <LiveClock />
+          
+          <div className="flex gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10">
+            {[7, 30, 180].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDuration(d as any)}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  duration === d ? "bg-xbrand text-black shadow-lg shadow-xbrand/40" : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {d === 7 ? "7 Days" : d === 30 ? "30 Days" : "6 Months"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

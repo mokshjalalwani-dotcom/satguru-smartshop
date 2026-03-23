@@ -1,26 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, X, TrendingUp, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
-const alerts = [
-  {
-    title: "Holi Festival Sale in 4 days",
-    message: "Suggested: Stock up on LED Strip Lights, Smart Speakers, and Party Audio Systems",
-    icon: <Calendar size={20} strokeWidth={2.5} />,
-    type: "festival",
-  },
-  {
-    title: "FY 2025-26 closes in 21 days",
-    message: "Corporate bulk orders expected. Prepare Printer Supplies, UPS Systems, and Laptops",
-    icon: <TrendingUp size={20} strokeWidth={2.5} />,
-    type: "financial",
-  },
-  {
+import { upcomingEvents } from "../data/events";
+import { getDaysUntil } from "../utils/dateUtils";
+
+// Filter events for the next 45 days and format them for the alert system
+const getActiveAlerts = () => {
+  const eventAlerts = upcomingEvents
+    .map(event => {
+      const daysLeft = getDaysUntil(event.date);
+      return {
+        ...event,
+        daysLeft
+      };
+    })
+    // Show events starting 30 days before they happen, up until the day of
+    .filter(event => event.daysLeft >= 0 && event.daysLeft <= 30)
+    .map(event => ({
+      title: `${event.name} ${event.daysLeft === 0 ? 'is Today!' : `in ${event.daysLeft} days`}`,
+      message: event.message || event.insight,
+      icon: event.type === 'financial' ? <TrendingUp size={20} /> : <Calendar size={20} />,
+      type: event.type
+    }));
+
+  // Add a generic inventory alert as a placeholder if no festivals are near
+  const inventoryAlert = {
     title: "Low Stock: Wireless Earbuds G2",
     message: "Only 12 units remaining. AI predicts 50 units demand this week. Reorder now!",
     icon: <AlertTriangle size={20} strokeWidth={2.5} />,
     type: "inventory",
-  },
-];
+  };
+
+  return [...eventAlerts, inventoryAlert];
+};
+
+const alerts = getActiveAlerts();
 
 const SmartAlertSystem: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);

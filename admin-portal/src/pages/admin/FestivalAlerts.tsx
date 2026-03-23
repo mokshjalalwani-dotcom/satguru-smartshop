@@ -12,69 +12,28 @@ import { Sparkles, TrendingUp, CalendarCheck, Package, Bell, BarChart3, IndianRu
   - Historical demand surge data
 */
 
-const upcomingEvents = [
-  {
-    id: "EVT-1",
-    name: "Holi Festival Sale",
-    date: "Mar 14, 2026",
-    daysLeft: 4,
-    expectedSurge: "+85%",
-    tag: "Regional Festival",
-    color: "from-pink-500 to-purple-500",
-    bgGlow: "bg-pink-500",
-    suggestions: ["LED Strip Lights", "Smart Speakers", "Party Audio Systems"],
-    insight: "Last year Holi week sales were ₹3.2L, highest in Q4 FY24-25."
-  },
-  {
-    id: "EVT-2",
-    name: "Ugadi / Gudi Padwa",
-    date: "Mar 25, 2026",
-    daysLeft: 15,
-    expectedSurge: "+45%",
-    tag: "New Year Festival",
-    color: "from-amber-500 to-orange-500",
-    bgGlow: "bg-amber-500",
-    suggestions: ["Home Appliances", "Ceiling Fans", "Water Purifiers"],
-    insight: "Regional new year drives 35-50% lift in home appliance sales."
-  },
-  {
-    id: "EVT-3",
-    name: "FY 2025-26 Closing",
-    date: "Mar 31, 2026",
-    daysLeft: 21,
-    expectedSurge: "+120%",
-    tag: "Financial Year End",
-    color: "from-cyan-500 to-blue-500",
-    bgGlow: "bg-cyan-500",
-    suggestions: ["Bulk Corporate Orders", "Printer Supplies", "UPS Systems"],
-    insight: "FY-end corporate procurement spikes. Last year March contributed 18% of annual revenue."
-  },
-  {
-    id: "EVT-4",
-    name: "Akshaya Tritiya",
-    date: "Apr 21, 2026",
-    daysLeft: 42,
-    expectedSurge: "+60%",
-    tag: "Auspicious Purchase Day",
-    color: "from-yellow-500 to-amber-500",
-    bgGlow: "bg-yellow-500",
-    suggestions: ["Smart Watches", "Premium Electronics", "Gold-finish Gadgets"],
-    insight: "Traditionally drives high-value electronic purchases. Stock premium items."
-  },
-];
-
-const fyAnalytics = {
-  peakMonths: [
-    { month: "October", reason: "Diwali + Navratri", revenue: "₹18.5L" },
-    { month: "March", reason: "FY-End Rush", revenue: "₹12.8L" },
-    { month: "August", reason: "Independence Day + Rakhi", revenue: "₹9.4L" },
-  ],
-  ytdRevenue: "₹72.4L",
-  targetRemaining: "₹12.6L",
-  daysLeftInFY: 21,
-};
+import { upcomingEvents } from "../../data/events";
+import { getDaysUntil, formatDate } from "../../utils/dateUtils";
 
 const FestivalAlerts: React.FC = () => {
+  const processedEvents = upcomingEvents.map(event => ({
+    ...event,
+    daysLeft: getDaysUntil(event.date)
+  })).sort((a, b) => a.daysLeft - b.daysLeft);
+
+  const fyEndDate = "2026-03-31";
+  const daysLedtInFY = getDaysUntil(fyEndDate);
+
+  const fyAnalytics = {
+    peakMonths: [
+      { month: "October", reason: "Diwali + Navratri", revenue: "₹18.5L" },
+      { month: "March", reason: "FY-End Rush", revenue: "₹12.8L" },
+      { month: "August", reason: "Independence Day + Rakhi", revenue: "₹9.4L" },
+    ],
+    ytdRevenue: "₹72.4L",
+    targetRemaining: "₹12.6L",
+    daysLeftInFY: daysLedtInFY > 0 ? daysLedtInFY : 0,
+  };
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col justify-between items-start border-b border-white/5 pb-6">
@@ -115,7 +74,7 @@ const FestivalAlerts: React.FC = () => {
 
       {/* Upcoming Events Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {upcomingEvents.map((event) => (
+        {processedEvents.map((event) => (
           <div key={event.id} className="relative group">
             <div className={`absolute -inset-0.5 rounded-3xl opacity-10 group-hover:opacity-20 blur-lg transition duration-500 bg-gradient-to-r ${event.color}`} />
             
@@ -129,13 +88,13 @@ const FestivalAlerts: React.FC = () => {
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-background border border-white/10 flex flex-col items-center justify-center shadow-inner flex-shrink-0">
                   <span className="text-[10px] font-bold text-xtext-secondary uppercase">In</span>
-                  <span className="text-lg font-black text-white leading-none">{event.daysLeft}</span>
+                  <span className="text-lg font-black text-white leading-none">{event.daysLeft > 0 ? event.daysLeft : 0}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-xtext-secondary mb-4">
                 <CalendarCheck size={16} className="text-white/40" />
-                {event.date}
+                {formatDate(event.date)}
               </div>
 
               <div className="bg-background border border-white/5 rounded-xl p-3 mb-4 relative overflow-hidden">
