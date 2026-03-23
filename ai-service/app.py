@@ -109,206 +109,321 @@ def health():
         "engine": "RandomForest-V2"
     }
 
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"GLOBAL EXCEPTION: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal AI Service Error", "details": str(exc)}
+    )
+
 @app.get("/stats")
 def get_stats(days: int = Query(7, ge=0)):
-    df, inv = load_data()
-    if df.empty:
-        return {"revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, "low_stock_count": 0, "profit": 0}
-    
-    last_date = df['date'].max()
-    start_date = last_date - timedelta(days=days) if days > 0 else last_date.replace(hour=0, minute=0, second=0)
-    
-    filtered = df[df['date'] >= start_date]
-    
-    # Previous period for trend calculation
-    prev_start = start_date - timedelta(days=days)
-    prev_filtered = df[(df['date'] >= prev_start) & (df['date'] < start_date)]
-    
-    revenue = float(filtered['price'].sum()) if not filtered.empty else 0.0
-    orders = len(filtered)
-    
-    prev_revenue = float(prev_filtered['price'].sum()) if not prev_filtered.empty else 0.0
-    prev_orders = len(prev_filtered)
-    
-    if 'cost' in filtered.columns and not filtered.empty:
-        profit = float((filtered['price'] - filtered['cost']).sum())
-    else:
-        profit = revenue * 0.22 # Fallback margin
+    try:
+        df, inv = load_data()
         
-    if 'cost' in prev_filtered.columns and not prev_filtered.empty:
-        prev_profit = float((prev_filtered['price'] - prev_filtered['cost']).sum())
-    else:
-        prev_profit = prev_revenue * 0.22
+        if df.empty:
+            logger.warning("Sales data empty. Attempting synthetic fallback.")
+            try:
+                from generate_data import generate_enriched_dataset
+                generate_enriched_dataset()
+                df, inv = load_data()
+            except Exception as gen_err:
+                logger.error(f"Fallback generation failed: {gen_err}")
+        
+        if df.empty:
+            return {
+                "revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, 
+                "low_stock_count": 0, "profit": 0,
+                "revenue_change": "+0.0%", "profit_change": "+0.0%", 
+                "orders_change": "+0.0%", "customers_change": "+0.0%"
+            }
+    
+    except Exception as e:
+        logger.error(f"Error in get_stats data preparation: {e}")
+        return {
+            "revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, 
+            "low_stock_count": 0, "profit": 0,
+            "revenue_change": "+0.0%", "profit_change": "+0.0%", 
+            "orders_change": "+0.0%", "customers_change": "+0.0%"
+        }
 
-    def calc_change(curr, prev):
-        if prev == 0: return "+0.0%"
-        change = ((curr - prev) / prev) * 100
-        return f"{'+' if change >= 0 else ''}{round(change, 1)}%"
+    try:
+        last_date = df['date'].max()
+        start_date = last_date - timedelta(days=days) if days > 0 else last_date.replace(hour=0, minute=0, second=0)
+        
+        filtered = df[df['date'] >= start_date]
+        prev_start = start_date - timedelta(days=days)
+        prev_filtered = df[(df['date'] >= prev_start) & (df['date'] < start_date)]
+        
+        revenue = float(filtered['price'].sum()) if not filtered.empty and 'price' in filtered.columns else 0.0
+        orders = len(filtered)
+        
+        prev_revenue = float(prev_filtered['price'].sum()) if not prev_filtered.empty and 'price' in prev_filtered.columns else 0.0
+        prev_orders = len(prev_filtered)
+        
+        # Profit matching logic
+        if not filtered.empty and 'price' in filtered.columns and 'cost' in filtered.columns:
+            profit = float((filtered['price'] - filtered['cost']).sum())
+        else:
+            profit = revenue * 0.22
+            
+        if not prev_filtered.empty and 'price' in prev_filtered.columns and 'cost' in prev_filtered.columns:
+            prev_profit = float((prev_filtered['price'] - prev_filtered['cost']).sum())
+        else:
+            prev_profit = prev_revenue * 0.22
 
-    return {
-        "revenue": round(float(revenue), 2),
-        "orders": int(orders),
-        "aov": round(float(revenue/orders), 2) if orders > 0 else 0.0,
-        "active_customers": int(filtered['customer_id'].nunique()) if not filtered.empty else 0,
-        "low_stock_count": int(len(inv[inv['stock'] <= inv['threshold']])) if not inv.empty else 0,
-        "profit": round(float(profit), 2),
-        "revenue_change": calc_change(revenue, prev_revenue),
-        "profit_change": calc_change(profit, prev_profit),
-        "orders_change": calc_change(orders, prev_orders),
-        "customers_change": calc_change(int(filtered['customer_id'].nunique()) if not filtered.empty else 0, 
-                                       int(prev_filtered['customer_id'].nunique()) if not prev_filtered.empty else 0)
-    }
+        def calc_change(curr, prev):
+            if prev == 0: return "+0.0%"
+            change = ((curr - prev) / prev) * 100
+            return f"{'+' if change >= 0 else ''}{round(change, 1)}%"
+
+        active_cust = int(filtered['customer_id'].nunique()) if not filtered.empty and 'customer_id' in filtered.columns else 0
+        prev_active_cust = int(prev_filtered['customer_id'].nunique()) if not prev_filtered.empty and 'customer_id' in prev_filtered.columns else 0
+
+        low_stock = 0
+        if not inv.empty and 'stock' in inv.columns and 'threshold' in inv.columns:
+            low_stock = int(len(inv[inv['stock'] <= inv['threshold']]))
+
+        return {
+            "revenue": round(float(revenue), 2),
+            "orders": int(orders),
+            "aov": round(float(revenue/orders), 2) if orders > 0 else 0.0,
+            "active_customers": active_cust,
+            "low_stock_count": low_stock,
+            "profit": round(float(profit), 2),
+            "revenue_change": calc_change(revenue, prev_revenue),
+            "profit_change": calc_change(profit, prev_profit),
+            "orders_change": calc_change(orders, prev_orders),
+            "customers_change": calc_change(active_cust, prev_active_cust)
+        }
+    except Exception as e:
+        logger.error(f"Critical error in get_stats calculation: {e}", exc_info=True)
+        return {
+            "revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, 
+            "low_stock_count": 0, "profit": 0,
+            "revenue_change": "+0.0%", "profit_change": "+0.0%", 
+            "orders_change": "+0.0%", "customers_change": "+0.0%"
+        }
 
 @app.get("/product-stats")
 def get_product_stats(days: int = 7):
-    df, _ = load_data()
-    if df.empty: return []
-    
-    end_date = df['date'].max()
-    start_date = end_date - timedelta(days=days)
-    prev_start = start_date - timedelta(days=days)
-    
-    curr_df = df[df['date'] >= start_date]
-    prev_df = df[(df['date'] >= prev_start) & (df['date'] < start_date)]
-    
-    stats = []
-    for product in df['product'].unique():
-        p_curr = curr_df[curr_df['product'] == product]
-        p_prev = prev_df[prev_df['product'] == product]
+    try:
+        df, _ = load_data()
+        if df.empty: return []
         
-        rev = float(p_curr['price'].sum())
-        if 'cost' in p_curr.columns:
-            profit = float((p_curr['price'] - p_curr['cost']).sum())
-        else:
-            profit = rev * 0.22
+        if 'date' not in df.columns or 'product' not in df.columns:
+            return []
+
+        end_date = df['date'].max()
+        start_date = end_date - timedelta(days=days)
+        prev_start = start_date - timedelta(days=days)
+        
+        curr_df = df[df['date'] >= start_date]
+        prev_df = df[(df['date'] >= prev_start) & (df['date'] < start_date)]
+        
+        stats = []
+        for product in df['product'].unique():
+            p_curr = curr_df[curr_df['product'] == product]
+            p_prev = prev_df[prev_df['product'] == product]
             
-        prev_rev = float(p_prev['price'].sum())
-        trend = ((rev - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
+            rev = float(p_curr['price'].sum()) if 'price' in p_curr.columns else 0.0
+            p_margin = 0.22
+            
+            if not p_curr.empty and 'price' in p_curr.columns and 'cost' in p_curr.columns:
+                profit = float((p_curr['price'] - p_curr['cost']).sum())
+            else:
+                profit = rev * p_margin
+                
+            prev_rev = float(p_prev['price'].sum()) if 'price' in p_prev.columns else 0.0
+            
+            change = 0.0
+            if prev_rev > 0:
+                change = ((rev - prev_rev) / prev_rev) * 100
+                
+            stats.append({
+                "product": str(product),
+                "revenue": round(rev, 2),
+                "profit": round(profit, 2),
+                "orders": len(p_curr),
+                "growth": round(change, 1)
+            })
         
-        stats.append({
-            "name": product,
-            "sales": int(len(p_curr)),
-            "revenue": round(rev, 2),
-            "profit": round(profit, 2),
-            "trend": f"{'+' if trend >= 0 else ''}{round(trend, 1)}%"
-        })
-    
-    return sorted(stats, key=lambda x: x['revenue'], reverse=True)
+        return sorted(stats, key=lambda x: x['revenue'], reverse=True)
+    except Exception as e:
+        logger.error(f"Error in get_product_stats: {e}", exc_info=True)
+        return []
 
 @app.get("/history")
 def get_history(days: int = 7):
-    df, _ = load_data()
-    if df.empty: return []
-    
-    start_date = df['date'].max() - timedelta(days=days)
-    filtered = df[df['date'] >= start_date]
-    
-    if filtered.empty: return []
-    
-    daily = filtered.groupby(filtered['date'].dt.date)['price'].sum().reset_index()
-    daily.columns = ['name', 'revenue']
-    daily['name'] = daily['name'].apply(lambda x: x.strftime("%b %d"))
-    return daily.to_dict('records')
+    try:
+        df, _ = load_data()
+        if df.empty or 'date' not in df.columns or 'price' not in df.columns:
+            return []
+        
+        start_date = df['date'].max() - timedelta(days=days)
+        filtered = df[df['date'] >= start_date]
+        
+        if filtered.empty: return []
+        
+        daily = filtered.groupby(filtered['date'].dt.date)['price'].sum().reset_index()
+        daily.columns = ['name', 'revenue']
+        daily['name'] = daily['name'].apply(lambda x: x.strftime("%b %d"))
+        return daily.to_dict('records')
+    except Exception as e:
+        logger.error(f"Error in get_history: {e}")
+        return []
 
 @app.get("/insights")
 def get_insights():
-    df, inv = load_data()
-    if df.empty: return {"forecasting": "N/A", "demand": "N/A", "anomalies": "N/A", "bi": "N/A", "kpi_trends": "N/A"}
-    
-    top_prod = df.groupby('product')['price'].sum().idxmax()
-    low_stock = inv[inv['stock'] <= inv['threshold']]['product'].tolist()
-    
-    # Calculate more dynamic insights
-    recent_stats = get_stats(30)
-    rev_trend = recent_stats['revenue_change']
-    
-    return {
-        "forecasting": f"Revenue trend ({rev_trend}) suggests growth. {top_prod} remains the high-velocity driver.",
-        "demand": f"Alert: {', '.join(low_stock[:2]) if low_stock else 'All stock stable'}. Reorder recommended soon.",
-        "anomalies": "Market variance detected in Home Appliance segment. Isolation Forest identifies price deviations.",
-        "bi": "Weekend traffic consistently higher. Peak performance noted during holiday simulations.",
-        "kpi_trends": f"Profit margins are healthy. {recent_stats['profit_change']} growth in net profit this period."
-    }
+    try:
+        df, inv = load_data()
+        fallback_insights = {"forecasting": "N/A", "demand": "N/A", "anomalies": "N/A", "bi": "N/A", "kpi_trends": "N/A"}
+        
+        if df.empty: return fallback_insights
+        
+        top_prod = "N/A"
+        if 'product' in df.columns and 'price' in df.columns:
+            top_prod = df.groupby('product')['price'].sum().idxmax()
+            
+        low_stock = []
+        if not inv.empty and 'product' in inv.columns and 'stock' in inv.columns and 'threshold' in inv.columns:
+            low_stock = inv[inv['stock'] <= inv['threshold']]['product'].tolist()
+        
+        # Calculate stats with small range for speed in insights
+        try:
+            recent_stats = get_stats(30)
+            rev_trend = recent_stats.get('revenue_change', "+0.0%")
+            prof_trend = recent_stats.get('profit_change', "+0.0%")
+        except:
+            rev_trend = "+0.0%"
+            prof_trend = "+0.0%"
+        
+        return {
+            "forecasting": f"Revenue trend ({rev_trend}) suggests growth. {top_prod} remains the high-velocity driver.",
+            "demand": f"Alert: {', '.join(low_stock[:2]) if low_stock else 'All stock stable'}. Reorder recommended soon.",
+            "anomalies": "Market variance detected in Home Appliance segment. Isolation Forest identifies price deviations.",
+            "bi": "Weekend traffic consistently higher. Peak performance noted during holiday simulations.",
+            "kpi_trends": f"Profit margins are healthy. {prof_trend} growth in net profit this period."
+        }
+    except Exception as e:
+        logger.error(f"Error in get_insights: {e}")
+        return {"forecasting": "N/A", "demand": "N/A", "anomalies": "N/A", "bi": "N/A", "kpi_trends": "N/A"}
 
 @app.get("/predict")
 def predict_next_30_days():
-    df, _ = load_data()
-    from forecast_engine import forecast_next_period
-    
-    if df.empty: return {"predictions": []}
-    
-    # Aggregate daily revenue
-    daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
-    daily_revenue.columns = ['date', 'revenue']
-    
-    # Use the new ML engine for the forecast
-    forecast_data = forecast_next_period(daily_revenue, days_to_predict=30)
-    
-    # Map back to what frontend currently expects while adding new fields
-    return {
-        "predictions": forecast_data["daily_forecasts"],
-        "confidence_interval": forecast_data["confidence_interval"],
-        "predicted_total": forecast_data["predicted_total"],
-        "trend_percent_change": forecast_data["trend_percent_change"],
-        "metrics": forecast_data["metrics"]
-    }
+    try:
+        df, _ = load_data()
+        if df.empty or 'date' not in df.columns or 'price' not in df.columns:
+            return {"predictions": [], "confidence_interval": {"lower": 0, "upper": 0}, "predicted_total": 0, "trend_percent_change": 0, "metrics": {"mae": 0, "rmse": 0}}
+        
+        from forecast_engine import forecast_next_period
+        
+        # Aggregate daily revenue
+        daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
+        daily_revenue.columns = ['date', 'revenue']
+        
+        # Use the new ML engine for the forecast
+        forecast_data = forecast_next_period(daily_revenue, days_to_predict=30)
+        
+        return {
+            "predictions": forecast_data.get("daily_forecasts", []),
+            "confidence_interval": forecast_data.get("confidence_interval", {"lower": 0, "upper": 0}),
+            "predicted_total": forecast_data.get("predicted_total", 0),
+            "trend_percent_change": forecast_data.get("trend_percent_change", 0),
+            "metrics": forecast_data.get("metrics", {"mae": 0, "rmse": 0})
+        }
+    except Exception as e:
+        logger.error(f"Error in predict_next_30_days: {e}", exc_info=True)
+        return {"predictions": [], "confidence_interval": {"lower": 0, "upper": 0}, "predicted_total": 0, "trend_percent_change": 0, "metrics": {"mae": 0, "rmse": 0}}
 
 @app.get("/inventory")
 def get_inventory():
-    df, inv = load_data()
-    from forecast_engine import calculate_stockout_risk
-    if inv.empty: return []
-    
-    recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))] if not df.empty else pd.DataFrame()
-    
-    # Use the new ML engine
-    risk_results = calculate_stockout_risk(inv, recent)
-    
-    items = []
-    for row in risk_results:
-        items.append({
-            "id": row["product_id"],
-            "product": row["product_name"],
-            "stock": row["current_stock"],
-            "threshold": row["threshold"],
-            # Calculate demanded qty over next 7 days based on velocity
-            "predictedDemand": int(row["sales_velocity_per_day"] * 7),
-            "status": row["status"],
-            "reorderSuggestion": f"Order {row['suggested_reorder_qty']} units" if row["status"] != "Healthy" else "Not Needed",
-            "trend": row["trend"],
-            "price": row["price"],
-            "lead_time": row["lead_time_days"],
-            # Exposing extra fields for updated UI (days_to_stockout)
-            "days_to_stockout": row["days_to_stockout"],
-            "urgent_flag": row["urgent_flag"]
-        })
-    return items
+    try:
+        df, inv = load_data()
+        if inv.empty: return []
+        
+        from forecast_engine import calculate_stockout_risk
+        
+        # Safe last_date calculation
+        last_date = None
+        if not df.empty and 'date' in df.columns:
+            last_date = df['date'].max()
+            
+        recent = pd.DataFrame()
+        if last_date:
+            recent = df[df['date'] >= (last_date - timedelta(days=30))]
+        
+        # Use the ML engine
+        risk_results = calculate_stockout_risk(inv, recent)
+        
+        items = []
+        for row in risk_results:
+            items.append({
+                "id": str(row.get("product_id", "P-UNK")),
+                "product": str(row.get("product_name", "Unknown")),
+                "stock": int(row.get("current_stock", 0)),
+                "threshold": int(row.get("threshold", 10)),
+                "predictedDemand": int(row.get("sales_velocity_per_day", 0.1) * 7),
+                "status": str(row.get("status", "Healthy")),
+                "reorderSuggestion": str(row.get("reorderSuggestion", "Not Needed")),
+                "trend": str(row.get("trend", "0%")),
+                "price": float(row.get("price", 0)),
+                "lead_time": int(row.get("lead_time_days", 7)),
+                "days_to_stockout": int(row.get("days_to_stockout", 30)),
+                "urgent_flag": bool(row.get("urgent_flag", False))
+            })
+        return items
+    except Exception as e:
+        logger.error(f"Error in get_inventory: {e}", exc_info=True)
+        return []
 
 @app.get("/transactions")
 def get_transactions(limit: int = 10):
-    df, _ = load_data()
-    if df.empty: return []
-    return df.sort_values('date', ascending=False).head(limit).to_dict('records')
+    try:
+        df, _ = load_data()
+        if df.empty: return []
+        if 'date' not in df.columns:
+            return df.head(limit).to_dict('records')
+        return df.sort_values('date', ascending=False).head(limit).to_dict('records')
+    except Exception as e:
+        logger.error(f"Error in get_transactions: {e}")
+        return []
 
 @app.get("/demand")
 def get_demand():
-    df, _ = load_data()
-    if df.empty: return {"demand": {}}
-    recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))]
-    demand = recent.groupby('product')['sales'].mean().to_dict()
-    return {"demand": {k: round(float(v), 2) for k, v in demand.items()}}
+    try:
+        df, _ = load_data()
+        if df.empty or 'date' not in df.columns or 'product' not in df.columns or 'sales' not in df.columns:
+            return {"demand": {}}
+            
+        recent = df[df['date'] >= (df['date'].max() - timedelta(days=30))]
+        if recent.empty: return {"demand": {}}
+        
+        demand = recent.groupby('product')['sales'].mean().to_dict()
+        return {"demand": {str(k): round(float(v), 2) for k, v in demand.items()}}
+    except Exception as e:
+        logger.error(f"Error in get_demand: {e}")
+        return {"demand": {}}
 
 @app.get("/anomalies")
 def get_anomalies():
-    from forecast_engine import detect_point_anomalies, detect_multivariate_anomalies
-    df, _ = load_data()
-    if df.empty: return {"anomalies": []}
-    
     try:
+        from forecast_engine import detect_point_anomalies, detect_multivariate_anomalies
+        df, _ = load_data()
+        if df.empty or 'date' not in df.columns:
+            return {"anomalies": []}
+        
         # 1. Point Anomalies on Daily Revenue
-        daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
-        daily_revenue.columns = ['date', 'revenue']
-        point_anomalies = detect_point_anomalies(daily_revenue)
+        if 'price' in df.columns:
+            daily_revenue = df.groupby(df['date'].dt.date)['price'].sum().reset_index()
+            daily_revenue.columns = ['date', 'revenue']
+            point_anomalies = detect_point_anomalies(daily_revenue)
+        else:
+            point_anomalies = []
         
         # 2. Multivariate Isolation Forest Anomalies
         multi_anomalies = detect_multivariate_anomalies(df)
@@ -316,31 +431,31 @@ def get_anomalies():
         results = []
         for anom in point_anomalies:
             results.append({
-                "date": anom["date"],
+                "date": str(anom["date"]),
                 "product": "Overall",
                 "sales": 0,
-                "price": anom["actual_value"],
-                "anomaly": anom["actual_value"] - anom["expected_value"],
-                "reason": f"Revenue anomaly: {anom['features'][0]}",
-                "severity": anom["severity"],
-                "type": anom["type"]
+                "price": float(anom["actual_value"]),
+                "anomaly": float(anom["actual_value"] - anom["expected_value"]),
+                "reason": f"Revenue anomaly: {anom.get('features', [''])[0]}",
+                "severity": str(anom.get("severity", "WARNING")),
+                "type": str(anom.get("type", "point_anomaly"))
             })
             
         for anom in multi_anomalies:
             results.append({
                 "date": df['date'].max().strftime("%Y-%m-%d"),
-                "product": anom["product_name"],
-                "sales": int(anom["actual_value"]),
+                "product": str(anom.get("product_name", "Unknown")),
+                "sales": int(anom.get("actual_value", 0)),
                 "price": 0,
                 "anomaly": -1,
-                "reason": anom["likely_cause"],
-                "severity": anom["severity"],
-                "type": anom["type"]
+                "reason": str(anom.get("likely_cause", "Outlier detected")),
+                "severity": str(anom.get("severity", "WARNING")),
+                "type": str(anom.get("type", "multivariate_anomaly"))
             })
             
         return {"anomalies": results[:20]}
     except Exception as e:
-        logger.error(f"Anomaly detection error: {e}")
+        logger.error(f"Anomaly detection error: {e}", exc_info=True)
         return {"anomalies": []}
 
 @app.post("/sync")
