@@ -26,7 +26,7 @@ const AdminLayout: React.FC = () => {
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em] leading-none mb-1.5 opacity-80">Welcome Back</span>
               <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-                Welcome back, <span className="text-accent underline decoration-accent/30 underline-offset-8">{user?.name || 'Admin'}</span>
+                Welcome back, <span className="text-accent">{user?.name || 'Admin'}</span>
               </h1>
             </div>
           </div>
