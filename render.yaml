@@ -23,6 +23,8 @@ services:
     buildCommand: "npm install && cd backend-api && npm install && cd .. && cd admin-portal && npm install && npm run build"
     startCommand: "node server.js"
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: AI_SERVICE_URL
         fromService:
           type: web

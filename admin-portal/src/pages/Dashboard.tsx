@@ -84,7 +84,10 @@ const Dashboard: React.FC = () => {
 
   if (initialLoad && !stats) return <LoadingSkeleton />;
 
-  const formatINR = (n: number) => "₹" + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const formatINR = (n: any) => {
+    if (n === undefined || n === null || isNaN(Number(n))) return "₹0";
+    return "₹" + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  };
 
   const kpis = [
     { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "₹0", icon: <IndianRupee />, delta: stats?.revenue_change },
@@ -127,8 +130,15 @@ const Dashboard: React.FC = () => {
           <div>
             <h2 className="text-sm font-black text-white flex items-center gap-2 tracking-tight group-hover:text-accent transition-colors">
               Performance Overview
+              {(stats as any)?._isFallback && (
+                <span className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-md bg-accent/20 text-accent border border-accent/30 animate-pulse ml-2">
+                  WARMING ENGINE
+                </span>
+              )}
             </h2>
-            <p className="text-[9px] text-muted/40 font-bold uppercase tracking-widest mt-0.5 opacity-60">Real-time Analytics Stream & Strategy</p>
+            <p className="text-[9px] text-muted/40 font-bold uppercase tracking-widest mt-0.5 opacity-60">
+              {(stats as any)?._isFallback ? (stats as any)._message : "Real-time Analytics Stream & Strategy"}
+            </p>
           </div>
         </div>
 

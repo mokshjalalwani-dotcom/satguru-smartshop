@@ -4,18 +4,24 @@ const router = express.Router();
 
 // Helper to sanitize and validate base URLs
 const sanitizeBaseUrl = (url, type = 'public') => {
-  const isProd = process.env.NODE_ENV === 'production';
+  // Enhanced detection for Render/Production environments
+  const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
   const defaultInternal = isProd ? 'http://satguru-ai-service:10000' : 'http://127.0.0.1:10000';
   const defaultPublic = 'https://satguru-ai-service.onrender.com';
   
   if (!url || typeof url !== 'string' || url.trim() === '') {
+    console.log(`[AI-CONFIG] Using default ${type} URL: ${type === 'internal' ? defaultInternal : defaultPublic}`);
     return type === 'internal' ? defaultInternal : defaultPublic;
   }
 
   let sanitized = url.trim().replace(/\/+$/, '');
   
-  // 1. Handle localhost/local dev
+  // 1. Handle localhost/local dev - ensure we don't accidentally use loopback in production
   if (sanitized.includes('localhost') || sanitized.includes('127.0.0.1')) {
+    if (isProd && type === 'internal') {
+       console.warn(`[AI-CONFIG] WARNING: Detected local address in production internal URL. Overriding to ${defaultInternal}`);
+       return defaultInternal;
+    }
     if (!sanitized.startsWith('http')) sanitized = `http://${sanitized}`;
     return sanitized;
   }
@@ -27,11 +33,11 @@ const sanitizeBaseUrl = (url, type = 'public') => {
 
   // 3. Ensure Protocol
   if (!/^https?:\/\//i.test(sanitized)) {
-    // Internal Render hostnames use http, public usually https
     const isInternal = !sanitized.includes('.') || sanitized.includes('onrender.com') === false;
     sanitized = isInternal ? `http://${sanitized}` : `https://${sanitized}`;
   }
   
+  console.log(`[AI-CONFIG] Final ${type} URL: ${sanitized}`);
   return sanitized;
 };
 
@@ -39,7 +45,7 @@ const AI_INTERNAL_URL = sanitizeBaseUrl(process.env.AI_SERVICE_INTERNAL_URL, 'in
 const AI_PUBLIC_URL = sanitizeBaseUrl(process.env.AI_SERVICE_URL, 'public');
 
 const instance = axios.create({
-  timeout: 45000, // Increased to 45s to handle Render Free Tier "Cold Starts" which can take ~40s
+  timeout: 60000, // Increased to 60s to handle extreme Render Free Tier "Cold Starts"
 });
 
 const cache = new Map();

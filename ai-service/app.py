@@ -81,24 +81,19 @@ def load_data():
 
 @app.on_event("startup")
 def startup():
-    """Initializes service dependencies."""
+    """Initializes service dependencies without blocking."""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
     
-    # Check if data exists - handled by build command usually
+    # Check if data exists
     has_sales = os.path.exists(SALES_PATH)
     has_model = os.path.exists(os.path.join(MODEL_DIR, "model.pkl"))
     
     logger.info(f"Startup check: sales_data={has_sales}, models={has_model}")
     
-    # Pre-warm resources lazily
-    try:
-        load_data()
-        get_ml_resources()
-    except Exception as e:
-        logger.error(f"Pre-warm failed: {e}")
-        
-    logger.info("Intelligence Service V2.0 Online.")
+    # Pre-warm resources in background if possible, or just let first request handle it
+    # We don't want to block the port binding which can cause Render to kill the process
+    logger.info("Intelligence Service V2.0 Online (Async Warming).")
 
 @app.get("/health")
 def health():
@@ -128,10 +123,12 @@ def get_stats(days: int = Query(7, ge=0)):
         if df.empty:
             logger.warning("Sales data empty. Returning base zero metrics.")
             return {
-                "revenue": 0, "orders": 0, "aov": 0, "active_customers": 0, 
-                "low_stock_count": 0, "profit": 0,
+                "revenue": 0.0, "orders": 0, "aov": 0.0, "active_customers": 0, 
+                "low_stock_count": 0, "profit": 0.0,
                 "revenue_change": "+0.0%", "profit_change": "+0.0%", 
-                "orders_change": "+0.0%", "customers_change": "+0.0%"
+                "orders_change": "+0.0%", "customers_change": "+0.0%",
+                "_isFallback": True,
+                "_message": "Data stream initializing..."
             }
     
     except Exception as e:
