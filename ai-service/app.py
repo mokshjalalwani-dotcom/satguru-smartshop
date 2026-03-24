@@ -8,6 +8,7 @@ import random
 import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
+import asyncio
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -80,20 +81,30 @@ def load_data():
         return pd.DataFrame(), pd.DataFrame()
 
 @app.on_event("startup")
-def startup():
+async def startup():
     """Initializes service dependencies without blocking."""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
     
-    # Check if data exists
-    has_sales = os.path.exists(SALES_PATH)
-    has_model = os.path.exists(os.path.join(MODEL_DIR, "model.pkl"))
+    # Trigger background sync from MongoDB
+    try:
+        from sync_data import sync
+        asyncio.create_task(run_background_sync(sync))
+    except ImportError:
+        logger.error("sync_data.py not found. Background sync disabled.")
     
-    logger.info(f"Startup check: sales_data={has_sales}, models={has_model}")
-    
-    # Pre-warm resources in background if possible, or just let first request handle it
-    # We don't want to block the port binding which can cause Render to kill the process
     logger.info("Intelligence Service V2.0 Online (Async Warming).")
+
+async def run_background_sync(sync_func):
+    """Executes the sync process in a separate thread to avoid blocking."""
+    try:
+        logger.info("Starting background data synchronization...")
+        await asyncio.to_thread(sync_func)
+        # Clear cache to force reload on next request
+        _CACHE["df"] = None
+        logger.info("Background synchronization completed.")
+    except Exception as e:
+        logger.error(f"Background sync error: {e}")
 
 @app.get("/health")
 def health():
