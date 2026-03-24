@@ -43,7 +43,8 @@ const Dashboard: React.FC = () => {
         setStats(statsData);
         setInitialLoad(false);
 
-        if ((statsData as any)?._isFallback) setStatus('warming');
+        if ((statsData as any)?._isOffline) setStatus('error');
+        else if ((statsData as any)?._isFallback) setStatus('warming');
         else setStatus('live');
 
         const [historyData, transData] = await Promise.all([
@@ -130,14 +131,22 @@ const Dashboard: React.FC = () => {
           <div>
             <h2 className="text-sm font-black text-white flex items-center gap-2 tracking-tight group-hover:text-accent transition-colors">
               Performance Overview
-              {(stats as any)?._isFallback && (
+              {(stats as any)?._isOffline ? (
+                <span className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-500 border border-rose-500/30 ml-2">
+                  OFFLINE
+                </span>
+              ) : (stats as any)?._isFallback ? (
                 <span className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-md bg-accent/20 text-accent border border-accent/30 animate-pulse ml-2">
                   WARMING ENGINE
                 </span>
-              )}
+              ) : null}
             </h2>
             <p className="text-[9px] text-muted/40 font-bold uppercase tracking-widest mt-0.5 opacity-60">
-              {(stats as any)?._isFallback ? (stats as any)._message : "Real-time Analytics Stream & Strategy"}
+              {(stats as any)?._isOffline 
+                ? (stats as any)._message || "AI Service Suspended / Unreachable"
+                : (stats as any)?._isFallback 
+                  ? (stats as any)._message 
+                  : "Real-time Analytics Stream & Strategy"}
             </p>
           </div>
         </div>

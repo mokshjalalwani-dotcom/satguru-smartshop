@@ -60,7 +60,9 @@ const SAFE_FALLBACKS = {
     low_stock_count: 0, profit: 0,
     revenue_change: "+0.0%", profit_change: "+0.0%", 
     orders_change: "+0.0%", customers_change: "+0.0%",
-    _isFallback: true
+    _isFallback: true,
+    _isOffline: true,
+    _message: "AI Service Offline or Suspended."
   },
   '/history': [],
   '/transactions': [],
@@ -68,12 +70,13 @@ const SAFE_FALLBACKS = {
   '/inventory': [],
   '/demand': { demand: {}, _isFallback: true },
   '/insights': {
-    forecasting: "AI Service is warming up...",
-    demand: "Analyzing inventory data...",
-    anomalies: "Scanning for market variances...",
-    bi: "Processing business intelligence...",
-    kpi_trends: "Calculating historical trends...",
-    _isFallback: true
+    forecasting: "AI Service is offline.",
+    demand: "Unreachable.",
+    anomalies: "Unreachable.",
+    bi: "Unreachable.",
+    kpi_trends: "Unreachable.",
+    _isFallback: true,
+    _isOffline: true
   },
   '/predict': {
     predictions: [],
@@ -81,9 +84,10 @@ const SAFE_FALLBACKS = {
     predicted_total: 0,
     trend_percent_change: 0,
     metrics: { mae: 0, rmse: 0 },
-    _isFallback: true
+    _isFallback: true,
+    _isOffline: true
   },
-  '/anomalies': { anomalies: [], _isFallback: true }
+  '/anomalies': { anomalies: [], _isFallback: true, _isOffline: true }
 };
 
 const aiRequest = async (method, path, options = {}) => {
