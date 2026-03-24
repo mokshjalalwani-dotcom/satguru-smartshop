@@ -36,29 +36,42 @@ const Dashboard: React.FC = () => {
     let isMounted = true;
     setStatus('live'); 
 
-    const loadDashboardData = async () => {
-      try {
-        const statsData = await aiService.getStats(duration);
-        if (!isMounted) return;
-        setStats(statsData);
-        setInitialLoad(false);
+    const loadDashboardData = () => {
+      // 1. Stats loads fast and unblocks the main skeleton
+      aiService.getStats(duration)
+        .then(statsData => {
+          if (!isMounted) return;
+          setStats(statsData);
+          setInitialLoad(false);
 
-        if ((statsData as any)?._isOffline) setStatus('error');
-        else if ((statsData as any)?._isFallback) setStatus('warming');
-        else setStatus('live');
+          if ((statsData as any)?._isOffline) setStatus('error');
+          else if ((statsData as any)?._isFallback) setStatus('warming');
+          else setStatus('live');
+        })
+        .catch(err => {
+          if (!isMounted) return;
+          setInitialLoad(false);
+          setStatus('error');
+          setErrorMessage(`AI Gateway Error: ${err.message}`);
+        });
 
-        const [historyData, transData] = await Promise.all([
-          aiService.getHistory(duration),
-          aiService.getTransactions(10)
-        ]);
+      // 2. History & Transactions
+      Promise.all([
+        aiService.getHistory(duration),
+        aiService.getTransactions(10)
+      ]).then(([historyData, transData]) => {
         if (!isMounted) return;
         setHistory(historyData);
         setTransactions(transData.map((t, i) => ({ ...t, id: i.toString() })));
+      }).catch(console.error);
 
-        const insightsData = await aiService.getInsights();
+      // 3. Insights
+      aiService.getInsights().then(insightsData => {
         if (isMounted) setInsights(insightsData);
+      }).catch(console.error);
 
-        const predData = await aiService.getPrediction();
+      // 4. Predictions
+      aiService.getPrediction().then(predData => {
         if (isMounted) {
           setPredictionMetrics({
             total: predData.predicted_total,
@@ -66,17 +79,10 @@ const Dashboard: React.FC = () => {
             trend: predData.trend_percent_change
           });
         }
-        
-        await aiService.getAnomalies().catch(() => {});
-
-      } catch (err: any) {
-        if (isMounted) {
-          console.error("Dashboard Load Error:", err);
-          setInitialLoad(false);
-          setStatus('error');
-          setErrorMessage(`AI Gateway Error: ${err.response?.data?.details || err.message}`);
-        }
-      }
+      }).catch(console.error);
+      
+      // 5. Anomalies (background cache hit)
+      aiService.getAnomalies().catch(() => {});
     };
 
     loadDashboardData();

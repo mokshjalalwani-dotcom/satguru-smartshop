@@ -54,6 +54,14 @@ const STALE_TTL = 30 * 60 * 1000; // 30 minutes stale
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// --- CIRCUIT BREAKER ---
+let breakerTripped = false;
+let breakerResetTime = 0;
+let consecutiveFailures = 0;
+const BREAKER_RESET_MS = 60 * 1000; // 60 seconds
+const MAX_FAILURES = 3;
+
+
 const SAFE_FALLBACKS = {
   '/stats': {
     revenue: 0, orders: 0, aov: 0, active_customers: 0, 
@@ -128,6 +136,18 @@ const aiRequest = async (method, path, options = {}) => {
 
 // Extracted the actual request logic for SWR background refresh
 const performActualRequest = async (method, cleanPath, options, cacheKey) => {
+  // Check Circuit Breaker
+  if (breakerTripped) {
+    if (Date.now() > breakerResetTime) {
+      // Half-open state: allow 1 request to check if it's back
+      console.log(`[AI-BREAKER] Testing if service is back online...`);
+      breakerTripped = false;
+    } else {
+      console.warn(`[AI-BREAKER] Circuit open. Instantly serving static fallback for ${cleanPath}`);
+      return { data: SAFE_FALLBACKS[cleanPath] || SAFE_FALLBACKS['/stats'], _fallback: 'circuit-breaker' };
+    }
+  }
+
   let response = null;
   
   const targets = [
@@ -153,7 +173,13 @@ const performActualRequest = async (method, cleanPath, options, cacheKey) => {
         const status = err.response?.status;
         const isNetworkError = !err.response || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
         
-        if ((status === 429 || status === 502 || status === 503 || status === 504 || isNetworkError) && i < retries - 1) {
+        // Fast-fail on known suspension codes from Render (403, 502, 503 HTTP)
+        if (status === 402 || status === 403 || status === 503) {
+            console.warn(`[AI-PROXY] ${target.name} confirmed SUSPENDED or UNAVAILABLE (Status ${status}). Fast Failing.`);
+            break;
+        }
+
+        if ((status === 429 || status === 502 || status === 504 || isNetworkError) && i < retries - 1) {
           await sleep(delay);
           delay *= 2; // Aggressive backoff for Render cold starts
           continue;
@@ -165,6 +191,13 @@ const performActualRequest = async (method, cleanPath, options, cacheKey) => {
   }
 
   if (!response) {
+    consecutiveFailures++;
+    if (consecutiveFailures >= MAX_FAILURES) {
+      console.error(`[AI-BREAKER] Massive failure count reached. Tripping breaker for ${BREAKER_RESET_MS/1000}s`);
+      breakerTripped = true;
+      breakerResetTime = Date.now() + BREAKER_RESET_MS;
+    }
+
     // Last ditch: check if we have ANY expired data to show before using static fallback
     const entry = cache.get(cacheKey);
     if (entry) {
@@ -176,6 +209,10 @@ const performActualRequest = async (method, cleanPath, options, cacheKey) => {
     console.warn(`[AI-RECOVERY] Serving STATIC fallback for ${cleanPath}`);
     return { data: fallback, _fallback: 'static' };
   }
+
+  // Success resets the circuit breaker
+  consecutiveFailures = 0;
+  breakerTripped = false;
 
   const resultData = response.data;
   if (method.toUpperCase() === 'GET') {
