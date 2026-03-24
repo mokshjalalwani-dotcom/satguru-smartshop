@@ -195,9 +195,15 @@ const InventoryIntelligence: React.FC = () => {
                   </td>
                   <td className="p-3 pr-6 text-right">
                     {item.status !== 'Healthy' ? (
-                      <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:brightness-110 text-black text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-accent/10">
-                        {item.reorderSuggestion} <ArrowRight size={14} />
-                      </button>
+                      item.reorderSuggestion.toUpperCase() === 'NOT NEEDED' ? (
+                        <span className="inline-flex items-center justify-center px-4 py-2 bg-black/40 border border-white/10 text-white/50 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">
+                          Monitor Stock
+                        </span>
+                      ) : (
+                        <button className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:brightness-110 text-black text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-accent/10">
+                          {item.reorderSuggestion} <ArrowRight size={14} />
+                        </button>
+                      )
                     ) : (
                       <span className="text-[9px] font-black text-muted/20 px-4 uppercase tracking-widest">Protocol Clear</span>
                     )}
