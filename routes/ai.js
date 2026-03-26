@@ -69,8 +69,7 @@ const SAFE_FALLBACKS = {
     revenue_change: "+0.0%", profit_change: "+0.0%", 
     orders_change: "+0.0%", customers_change: "+0.0%",
     _isFallback: true,
-    _isOffline: true,
-    _message: "AI Service Offline or Suspended."
+    _message: "AI Engine Warming (Takes ~60s). Please check back."
   },
   '/history': [],
   '/transactions': [],
@@ -82,9 +81,8 @@ const SAFE_FALLBACKS = {
     demand: "Unreachable.",
     anomalies: "Unreachable.",
     bi: "Unreachable.",
-    kpi_trends: "Unreachable.",
-    _isFallback: true,
-    _isOffline: true
+    kpi_trends: "Engine warming...",
+    _isFallback: true
   },
   '/predict': {
     predictions: [],
@@ -92,10 +90,9 @@ const SAFE_FALLBACKS = {
     predicted_total: 0,
     trend_percent_change: 0,
     metrics: { mae: 0, rmse: 0 },
-    _isFallback: true,
-    _isOffline: true
+    _isFallback: true
   },
-  '/anomalies': { anomalies: [], _isFallback: true, _isOffline: true }
+  '/anomalies': { anomalies: [], _isFallback: true }
 };
 
 const aiRequest = async (method, path, options = {}) => {
@@ -174,12 +171,12 @@ const performActualRequest = async (method, cleanPath, options, cacheKey) => {
         const isNetworkError = !err.response || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
         
         // Fast-fail on known suspension codes from Render (403, 502, 503 HTTP)
-        if (status === 402 || status === 403 || status === 503) {
+        if (status === 402 || status === 403) {
             console.warn(`[AI-PROXY] ${target.name} confirmed SUSPENDED or UNAVAILABLE (Status ${status}). Fast Failing.`);
             break;
         }
 
-        if ((status === 429 || status === 502 || status === 504 || isNetworkError) && i < retries - 1) {
+        if ((status === 429 || status === 502 || status === 503 || status === 504 || isNetworkError) && i < retries - 1) {
           await sleep(delay);
           delay *= 2; // Aggressive backoff for Render cold starts
           continue;

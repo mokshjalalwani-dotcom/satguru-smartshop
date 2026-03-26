@@ -29,4 +29,22 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+
+  // --- RENDER FREE TIER KEEP-ALIVE ---
+  // Sends an external HTTP ping to both services every 13 minutes 
+  // to trick the load balancer into thinking there's active web traffic.
+  setInterval(() => {
+    try {
+      const axios = require('axios');
+      const aiUrl = (process.env.AI_SERVICE_URL || 'https://satguru-ai-service.onrender.com').replace(/\/+$/, '') + '/health';
+      const selfUrl = (process.env.PUBLIC_URL || 'https://satguru-shop-portal.onrender.com').replace(/\/+$/, '') + '/api/products';
+      
+      axios.get(aiUrl).catch(() => {});
+      axios.get(selfUrl).catch(() => {});
+      
+      console.log(`[KEEP-ALIVE] Pinged ${aiUrl} and ${selfUrl} to prevent spin-down.`);
+    } catch (e) {}
+  }, 13 * 60 * 1000); // 13 minutes
+});
