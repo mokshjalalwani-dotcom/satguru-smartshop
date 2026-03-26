@@ -44,9 +44,14 @@ const Dashboard: React.FC = () => {
           setStats(statsData);
           setInitialLoad(false);
 
-          if ((statsData as any)?._isOffline) setStatus('error');
-          else if ((statsData as any)?._isFallback) setStatus('warming');
-          else setStatus('live');
+          if ((statsData as any)?._isOffline) {
+            setStatus('error');
+          } else if ((statsData as any)?._isFallback) {
+            setStatus('warming');
+            setTimeout(() => { if (isMounted) loadDashboardData(); }, 8000);
+          } else {
+            setStatus('live');
+          }
         })
         .catch(err => {
           if (!isMounted) return;
