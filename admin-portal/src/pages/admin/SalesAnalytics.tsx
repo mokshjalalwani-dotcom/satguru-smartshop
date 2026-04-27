@@ -37,28 +37,28 @@ const SalesAnalytics: React.FC = () => {
   const kpis = [
     { 
       title: "Total Revenue", 
-      value: stats ? formatINR(stats.revenue) : "—", 
+      value: stats ? formatINR(stats.revenue) : "₹0", 
       icon: <IndianRupee size={20} />, 
       change: stats?.revenue_change || "+0.0%", 
       up: !stats?.revenue_change?.startsWith('-') 
     },
     { 
       title: "Net Profit", 
-      value: stats ? formatINR(stats.profit) : "—", 
+      value: stats ? formatINR(stats.profit) : "₹0", 
       icon: <TrendingUp size={20} />, 
       change: stats?.profit_change || "+0.0%", 
       up: !stats?.profit_change?.startsWith('-') 
     },
     { 
       title: "Avg Order Value", 
-      value: stats ? formatINR(stats.aov) : "—", 
+      value: stats ? formatINR(stats.aov) : "₹0", 
       icon: <Package size={20} />, 
       change: stats?.orders_change || "+0.0%", 
       up: !stats?.orders_change?.startsWith('-') 
     },
     { 
       title: "Active Customers", 
-      value: stats ? (stats.active_customers ?? 0).toLocaleString() : "—", 
+      value: stats ? (stats.active_customers ?? 0).toLocaleString() : "0", 
       icon: <Users size={20} />, 
       change: stats?.customers_change || "+0.0%", 
       up: !stats?.customers_change?.startsWith('-') 
@@ -73,14 +73,14 @@ const SalesAnalytics: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight text-white mb-2">
             Sales <span className="text-accent">Analytics</span>
           </h1>
-          <p className="text-muted/60 text-sm">Deep dive into revenue metrics and strategic growth patterns.</p>
+          <p className="text-muted/60 text-sm">Track your overall sales performance.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
               if (!productStats.length) return;
-              const header = "Product,Sales,Revenue,Profit,Trend\n";
-              const rows = productStats.map(p => `"${p.name}",${p.sales},${p.revenue},${p.profit},"${p.trend}"`).join("\n");
+              const header = "Product,Units Sold,Revenue,Profit,Trend\n";
+              const rows = productStats.map(p => `"${p.name ?? ''}",${p.sales ?? 0},${p.revenue ?? 0},${p.profit ?? 0},"${p.trend ?? ''}"`).join("\n");
               const blob = new Blob([header + rows], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a"); a.href = url; a.download = `sales_analytics_${period}.csv`; a.click();
@@ -137,18 +137,18 @@ const SalesAnalytics: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Revenue Growth</h2>
-                <p className="text-[10px] text-muted/40 uppercase tracking-widest font-bold mt-1">Strategic Performance Visual</p>
+                <p className="text-[10px] text-muted/40 uppercase tracking-widest font-bold mt-1">Sales Trend</p>
               </div>
             </div>
             <div className="text-[10px] font-black text-accent bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20 uppercase tracking-widest">
-              Live Flow
+              Live Data
             </div>
           </div>
           
           <div className="h-[320px] w-full">
             {loading ? (
               <div className="h-full flex items-center justify-center text-muted/30 uppercase text-[10px] font-bold tracking-[0.3em] animate-pulse">
-                Synchronizing Ledger...
+                Loading Data...
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -181,22 +181,22 @@ const SalesAnalytics: React.FC = () => {
           <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {productStats.length > 0 ? productStats.map((p, i) => (
               <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-accent/30 transition-all group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-surface border border-white/10 flex items-center justify-center font-black text-white text-xs group-hover:border-accent/40 group-hover:bg-accent/5 transition-all">
+                <div className="flex items-center gap-4 flex-1 min-w-0 mr-2">
+                  <div className="w-10 h-10 flex-none rounded-xl bg-surface border border-white/10 flex items-center justify-center font-black text-white text-xs group-hover:border-accent/40 group-hover:bg-accent/5 transition-all">
                     {i+1}
                   </div>
-                  <div className="max-w-[120px]">
-                    <h4 className="font-bold text-sm text-white truncate leading-tight">{p.name}</h4>
-                    <p className="text-[10px] text-muted/40 font-bold uppercase tracking-wider mt-1">{p.sales} Units Flowed</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm text-white truncate leading-tight w-full">{p.name ?? p.product ?? '—'}</h4>
+                    <p className="text-[10px] text-muted/40 font-bold uppercase tracking-wider mt-1">{p.sales ?? p.orders ?? 0} Units Sold</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-accent text-sm leading-tight">{formatINR(p.revenue)}</div>
-                  <div className="text-[10px] text-muted/30 font-bold uppercase mt-1">Margin Flow</div>
+                <div className="text-right flex-none pl-2">
+                  <div className="font-bold text-accent text-sm leading-tight whitespace-nowrap">{formatINR(p.revenue)}</div>
+                  <div className={`text-[10px] font-bold uppercase mt-1 ${(p.trend ?? '').startsWith('-') ? 'text-rose-400' : 'text-accent/60'}`}>{p.trend ?? `+${p.growth ?? 0}%`}</div>
                 </div>
               </div>
             )) : (
-              <div className="text-center py-10 text-muted/20 uppercase text-[10px] font-bold tracking-widest">No Flow Detected</div>
+              <div className="text-center py-10 text-muted/20 uppercase text-[10px] font-bold tracking-widest">No Sales Found</div>
             )}
           </div>
         </div>

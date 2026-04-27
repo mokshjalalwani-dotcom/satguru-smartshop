@@ -19,6 +19,7 @@ import CalendarIntegration from "./pages/admin/CalendarIntegration";
 import FestivalAlerts from "./pages/admin/FestivalAlerts";
 import TeamManagement from "./pages/admin/TeamManagement";
 import TargetManagement from "./pages/admin/TargetManagement";
+import StoreSettings from "./pages/admin/StoreSettings";
 
 // Executive Operational Modules
 import SalesProcessing from "./pages/executive/SalesProcessing";
@@ -47,6 +48,7 @@ const AppRoutes: React.FC = () => {
             <Route path="festivals" element={<FestivalAlerts />} />
             <Route path="team" element={<TeamManagement />} />
             <Route path="targets" element={<TargetManagement />} />
+            <Route path="settings" element={<StoreSettings />} />
             <Route path="users" element={<Users />} />
           </Route>
         )}

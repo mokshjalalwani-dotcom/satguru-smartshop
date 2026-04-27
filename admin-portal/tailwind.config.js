@@ -6,40 +6,42 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+      },
       colors: {
-        // ═══════════════════════════════════════
-        // STRICT 5-COLOR DESIGN SYSTEM
-        // ═══════════════════════════════════════
-        // 1. #000000 — Background
-        // 2. #14213d — Surface (cards, panels)
-        // 3. #fca311 — Accent (primary action)
-        // 4. #ffffff — Text primary
-        // 5. #e5e5e5 — Text secondary
-        // ═══════════════════════════════════════
-
-        // Semantic Tokens
-        bg:       '#03050a',
-        surface:  '#0a0f1e',
-        accent:   '#fca311',
-        primary:  '#ffffff',
-        muted:    '#e5e5e5',
+        bg:      '#0b0f1a',
+        surface: '#111827',
+        accent:  '#fca311',
+        primary: '#f8fafc',
+        muted:   '#94a3b8',
 
         // Backward compat aliases
-        xblack:   '#000000',
+        xblack:  '#000000',
+        xcard:   '#111827',
+        xbrand:  '#fca311',
         xdark: {
-          DEFAULT: '#000000',
-          lighter: '#0a0f1e',
-          hover:   '#14213d',
-          border:  '#1b2a4a',
-          elevated:'#14213d',
+          DEFAULT:  '#0b0f1a',
+          lighter:  '#111827',
+          hover:    '#1e2a3a',
+          border:   '#1e293b',
+          elevated: '#1e293b',
         },
-        xbrand:   '#fca311',
-        xcard:    '#14213d',
         xtext: {
-          DEFAULT:   '#ffffff',
-          secondary: '#e5e5e5',
-          tertiary:  '#e5e5e5',
+          DEFAULT:   '#f8fafc',
+          secondary: '#94a3b8',
+          tertiary:  '#64748b',
         },
+      },
+      borderRadius: {
+        '2xl': '16px',
+        '3xl': '20px',
+        '4xl': '28px',
+      },
+      boxShadow: {
+        'card':  '0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
+        'panel': '0 4px 24px rgba(0,0,0,0.4)',
+        'glow':  '0 0 24px rgba(252,163,17,0.12)',
       },
     },
   },

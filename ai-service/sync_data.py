@@ -45,41 +45,55 @@ def sync():
             # Create inventory.csv
             inventory_data = []
             for p in products:
+                price = float(p.get('price', 0))
+                stock = int(p.get('stock', 0))
+                # Smart threshold: 15% of max viable stock based on price tier
+                if price > 50000:   threshold = 3   # High-value: reorder when <=3
+                elif price > 20000: threshold = 5   # Mid-value: reorder when <=5
+                elif price > 5000:  threshold = 8   # Mid-range: reorder when <=8
+                else:               threshold = 15  # Fast-moving budget items
+                
                 inventory_data.append({
                     "product": str(p.get('name', 'Unknown')),
-                    "stock": int(p.get('stock', 0)),
-                    "threshold": 30,
+                    "stock": stock,
+                    "threshold": threshold,
                     "lead_time_days": 5,
-                    "price": float(p.get('price', 0))
+                    "price": price
                 })
             
             # Create sales.csv
             sales_data = []
             for s in sales_items:
-                pid = s.get('product_id')
-                p_info = product_map.get(pid, {})
-                
-                total_price = float(s.get('total_price', 0))
-                qty = int(s.get('quantity', 1))
-                unit_price = total_price / qty if qty > 0 else 0.0
+                items = s.get('items', [])
+                if not items:
+                    # Fallback for old data or root-level
+                    items = [s]
                 
                 dt = s.get('timestamp', datetime.now())
                 dt_str = dt.isoformat() if isinstance(dt, datetime) else str(dt)
+
+                for item in items:
+                    pid = item.get('product_id') or s.get('product_id')
+                    p_info = product_map.get(pid, {})
                     
-                price_dec = Decimal(str(round(unit_price, 2)))
-                cost_dec = price_dec * Decimal('0.8')
-                
-                sales_data.append({
-                    "order_id": str(s.get('sale_id', 'Unknown')),
-                    "date": dt_str,
-                    "customer_id": f"CUST-LIVE-{random.randint(1000, 1500)}",
-                    "product": str(p_info.get('name', 'Unknown')),
-                    "category": str(p_info.get('category', 'General')),
-                    "sales": int(qty),
-                    "price": float(price_dec),
-                    "cost": float(round(cost_dec, 2)),
-                    "payment_status": "Completed"
-                })
+                    qty = int(item.get('quantity', s.get('quantity', 1)))
+                    unit_price = float(item.get('unit_price', 0))
+                    line_total = float(item.get('line_total', unit_price * qty))
+                        
+                    price_dec = Decimal(str(round(line_total, 2)))
+                    cost_dec = price_dec * Decimal('0.78')  # ~22% margin
+                    
+                    sales_data.append({
+                        "order_id": str(s.get('sale_id', 'Unknown')),
+                        "date": dt_str,
+                        "customer_id": f"CUST-{s.get('customer', 'WalkIn').replace(' ', '')[:8]}-{random.randint(100, 999)}",
+                        "product": str(item.get('product_name') or p_info.get('name', 'Unknown')),
+                        "category": str(p_info.get('category', 'General')),
+                        "sales": int(qty),
+                        "price": float(price_dec),
+                        "cost": float(round(cost_dec, 2)),
+                        "payment_status": "Completed"
+                    })
 
             os.makedirs("data", exist_ok=True)
             

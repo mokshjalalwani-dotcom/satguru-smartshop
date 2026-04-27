@@ -30,7 +30,7 @@ const Login: React.FC = () => {
                   <Zap size={10} className="text-black" />
                 </div>
               </div>
-              <h1 className="text-3xl font-black text-white tracking-tight mb-1">Satguru SmartShop</h1>
+              <h1 className="text-3xl font-black text-white tracking-tight mb-1">SmartShop</h1>
               <p className="text-muted/60 text-xs uppercase tracking-[0.3em] font-bold">AI-Powered Retail Command Center</p>
             </div>
 

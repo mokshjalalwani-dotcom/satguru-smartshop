@@ -13,23 +13,24 @@ import {
   Sparkles,
   ListTodo,
   ArrowRightLeft,
-  Target
+  Target,
+  Settings
 } from "lucide-react";
-
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   
   const links = [
-    { icon: <BarChart3 size={20} />, label: "Smart Dashboard", path: "/admin" },
-    { icon: <Package size={20} />, label: "Inventory Intelligence", path: "/admin/inventory" },
-    { icon: <ShoppingBag size={20} />, label: "Sales Analytics", path: "/admin/analytics" },
-    { icon: <ListTodo size={20} />, label: "Task Scheduler", path: "/admin/tasks" },
+    { icon: <BarChart3 size={20} />, label: "Dashboard", path: "/admin" },
+    { icon: <Package size={20} />, label: "Stock & Inventory", path: "/admin/inventory" },
+    { icon: <ShoppingBag size={20} />, label: "Sales Reports", path: "/admin/analytics" },
+    { icon: <Settings size={20} />, label: "Shop Settings", path: "/admin/settings" },
+    { icon: <Target size={20} />, label: "Sales Targets", path: "/admin/targets" },
+    { icon: <Sparkles size={20} />, label: "Festival & Events", path: "/admin/festivals" },
+    { icon: <ListTodo size={20} />, label: "Tasks", path: "/admin/tasks" },
     { icon: <CalendarDays size={20} />, label: "Calendar", path: "/admin/calendar" },
-    { icon: <Sparkles size={20} />, label: "Event Intelligence", path: "/admin/festivals" },
-    { icon: <Users size={20} />, label: "Team Management", path: "/admin/team" },
-    { icon: <Target size={20} />, label: "Targets", path: "/admin/targets" },
+    { icon: <Users size={20} />, label: "Staff", path: "/admin/team" },
   ];
 
   return (
@@ -42,8 +43,8 @@ const Sidebar: React.FC = () => {
           </div>
           {!collapsed && (
             <span className="font-bold text-lg tracking-tight whitespace-nowrap text-white">
-              Satguru<br/>
-              <span className="text-[10px] text-muted/60 -mt-2 block uppercase tracking-widest font-bold">SmartShop</span>
+              SmartShop<br/>
+              <span className="text-[10px] text-muted/60 -mt-2 block uppercase tracking-widest font-bold">Admin Portal</span>
             </span>
           )}
         </div>
@@ -82,10 +83,10 @@ const Sidebar: React.FC = () => {
           <Link 
             to="/executive/sales"
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-accent hover:bg-accent/10 transition-all group border border-accent/20 ${collapsed ? "justify-center px-2" : ""}`}
-            title={collapsed ? "Switch to Staff Portal" : ""}
+            title={collapsed ? "Go to Billing Screen" : ""}
           >
             <ArrowRightLeft size={18} />
-            {!collapsed && <span className="text-sm font-bold">Staff Portal</span>}
+            {!collapsed && <span className="text-sm font-bold">Billing Screen</span>}
           </Link>
 
           <button 

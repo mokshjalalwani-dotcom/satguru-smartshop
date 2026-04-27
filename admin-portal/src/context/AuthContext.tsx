@@ -15,15 +15,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<{ name: string; role: Role } | null>(null);
 
   useEffect(() => {
-    // Session persistence intentionally disabled 
-    // to strictly enforce routing to the Login page on the very first load
-    // as requested by the user.
-    /*
+    // Restore session from localStorage so users stay logged in after refresh
     const savedUser = localStorage.getItem('ss_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem('ss_user');
+      }
     }
-    */
   }, []);
 
   const login = (name: string, role: Role) => {

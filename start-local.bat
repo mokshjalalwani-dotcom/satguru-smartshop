@@ -1,0 +1,16 @@
+@echo off
+echo Starting Satguru SmartShop Development Servers...
+
+echo [1/4] Starting Node Backend...
+start cmd /k "npm install && npm start"
+
+echo [2/4] Starting AI Service...
+start cmd /k "cd ai-service && pip install -r requirements.txt && call venv\Scripts\activate && python app.py"
+
+echo [3/4] Starting POS Portal...
+start cmd /k "cd pos-portal && npm install && npm run dev"
+
+echo [4/4] Starting Admin Portal...
+start cmd /k "cd admin-portal && npm install && npm run dev"
+
+echo All services are starting up in separate windows!

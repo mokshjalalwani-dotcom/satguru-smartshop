@@ -20,10 +20,10 @@ const ExecutiveSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   
   const links = [
-    { icon: <ShoppingCart size={20} />, label: "Sales Processing", path: "/executive/sales" },
-    { icon: <PackageCheck size={20} />, label: "Inventory Updates", path: "/executive/inventory" },
-    { icon: <CheckSquare size={20} />, label: "Task Execution", path: "/executive/tasks" },
-    { icon: <BellRing size={20} />, label: "Alert Notifications", path: "/executive/alerts" },
+    { icon: <ShoppingCart size={20} />, label: "Billing", path: "/executive/sales" },
+    { icon: <PackageCheck size={20} />, label: "Stock Update", path: "/executive/inventory" },
+    { icon: <CheckSquare size={20} />, label: "My Tasks", path: "/executive/tasks" },
+    { icon: <BellRing size={20} />, label: "Notifications", path: "/executive/alerts" },
     { icon: <Target size={20} />, label: "My Targets", path: "/executive/targets" },
   ];
 
@@ -37,7 +37,7 @@ const ExecutiveSidebar: React.FC = () => {
           </div>
           {!collapsed && (
             <span className="font-bold text-lg tracking-tight whitespace-nowrap text-white">
-              Satguru<br/>
+              SmartShop<br/>
               <span className="text-[10px] text-accent -mt-2 block uppercase tracking-widest font-bold">Staff Portal</span>
             </span>
           )}

@@ -1,177 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================= */
-/* 🔥 GLOBAL BASE THEME */
-/* ============================= */
-
-html,
-body,
-#root {
+/* ─── BASE ──────────────────────────────────────────────────────────────────── */
+html, body, #root {
   height: 100%;
-  background-color: #03050a;
-  color: #e5e5e5;
+  background-color: #0b0f1a;
+  color: #e2e8f0;
   overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Smooth rendering */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
 
-/* ============================= */
-/* ✨ NEON & HOVER UTILITIES */
-/* ============================= */
-
-.neon-glow {
-  box-shadow: 0 0 10px rgba(252, 163, 17, 0.15),
-    0 0 3px rgba(252, 163, 17, 0.08);
+/* Only transition interactive elements, not all elements */
+button, a, input, select, textarea, [role="button"] {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-.hover-neon-amber:hover {
-  box-shadow: 0 0 15px rgba(252, 163, 17, 0.2),
-    0 0 30px rgba(252, 163, 17, 0.1);
-  border-color: rgba(252, 163, 17, 0.5);
+/* ─── TYPOGRAPHY ────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.01em;
 }
 
-.hover-neon-blue:hover {
-  box-shadow: 0 0 15px rgba(20, 33, 61, 0.4),
-    0 0 30px rgba(20, 33, 61, 0.2);
-  border-color: rgba(20, 33, 61, 0.8);
-}
-
-/* Interactive minimalist cards */
-.interactive-card {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease-out, border-color 0.2s;
-}
-
-.interactive-card:hover {
-  transform: translateY(-2px) scale(1.005);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
-    0 0 12px rgba(252, 163, 17, 0.05);
-  border-color: rgba(252, 163, 17, 0.2);
-}
-
-/* Minimalist Focus Ring */
-.input-neon-focus:focus {
-  outline: none;
-  border-color: #fca311;
-  box-shadow: 0 0 0 1px #fca311, 0 0 12px rgba(252, 163, 17, 0.15);
-  transition: all 0.2s ease-in-out;
-}
-
+/* ─── GLASS CARD ────────────────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(20, 33, 61, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-header {
-  background: rgba(10, 15, 30, 0.7);
+  background: rgba(11, 15, 26, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-/* Decorative Background Blobs */
-.mesh-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
-  z-index: 0;
-  pointer-events: none;
+/* ─── CARD HOVER ────────────────────────────────────────────────────────────── */
+.interactive-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.interactive-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
-.blob-accent { background: #fca311; }
-.blob-blue { background: #14213d; }
-.blob-white { background: #ffffff; }
-
-@keyframes neonPulse {
-  0%,
-  100% {
-    opacity: 0.5;
-    filter: blur(12px);
-  }
-  50% {
-    opacity: 0.8;
-    filter: blur(16px);
-  }
-}
-
-.animate-neon-pulse {
-  animation: neonPulse 3s ease-in-out infinite;
-}
-
-/* Text selection */
-::selection {
-  background: rgba(252, 163, 17, 0.4);
-  color: white;
-}
-
-/* ============================= */
-/* ✨ PAGE TRANSITIONS */
-/* ============================= */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ─── PAGE TRANSITIONS ──────────────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeSlideUp 0.25s ease-out both;
 }
 
-/* ============================= */
-/* 🧊 SKELETON SHIMMER */
-/* ============================= */
+/* ─── PROGRESS BAR ──────────────────────────────────────────────────────────── */
+@keyframes progressFill {
+  from { width: 0%; }
+}
+.animate-progress {
+  animation: progressFill 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
 
+/* ─── SKELETON SHIMMER ──────────────────────────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
-
 .animate-shimmer {
-  background: linear-gradient(90deg,
-      #000000 25%,
-      #14213d 50%,
-      #000000 75%);
+  background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
-/* ============================= */
-/* 🖱 PREMIUM SCROLLBAR */
-/* ============================= */
-
-::-webkit-scrollbar {
-  width: 6px;
+/* ─── STATUS DOTS ───────────────────────────────────────────────────────────── */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.status-dot {
+  animation: statusPulse 2s ease-in-out infinite;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ─── SCROLLBAR ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.08); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+/* ─── SELECTION ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(252, 163, 17, 0.3);
+  color: white;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+/* ─── FOCUS RING ────────────────────────────────────────────────────────────── */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(252, 163, 17, 0.4);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(252, 163, 17, 0.4);
+/* ─── UTILITY ───────────────────────────────────────────────────────────────── */
+.neon-glow {
+  box-shadow: 0 0 12px rgba(252, 163, 17, 0.12);
 }
+
+/* Keep blobs for subtle depth, but more restrained */
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none;
+}
+.blob-accent { background: #fca311; }

@@ -141,8 +141,10 @@ const TeamManagement: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {staff.map(employee => (
-          <div key={employee.id} className="bg-surface border border-white/5 rounded-[32px] p-8 hover:border-accent/30 transition-all duration-500 hover:-translate-y-2 relative group overflow-hidden shadow-xl hover:shadow-accent/5">
-            <div className="absolute -right-8 -top-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div key={employee.id} className="bg-surface border border-white/5 rounded-[32px] p-8 hover:border-accent/30 transition-all duration-500 hover:-translate-y-2 relative group shadow-xl hover:shadow-accent/5">
+            <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
+              <div className="absolute -right-8 -top-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
             
             <div className="flex justify-between items-start mb-8 relative z-10">
               <div className="flex items-center gap-5">

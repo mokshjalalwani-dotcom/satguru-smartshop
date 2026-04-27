@@ -26,7 +26,6 @@ const Navbar: React.FC = () => {
     <header className="h-[60px] bg-[#0b0f19]/70 backdrop-blur-xl border-b border-white/5 flex items-center px-6 gap-4 sticky top-0 z-30">
       {/* App Title */}
       <h1 className="text-gray-100 font-semibold text-[15px] tracking-tight mr-auto">
-        Satguru{" "}
         <span className="bg-gradient-to-r from-indigo-400 to-cyan-300 bg-clip-text text-transparent">
           SmartShop
         </span>

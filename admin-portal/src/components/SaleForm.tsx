@@ -27,15 +27,18 @@ const SaleForm: React.FC<Props> = ({ selectedProduct }) => {
     if (!customerName.trim()) return;
 
     const saleData: NewSale = {
-      customer: customerName.trim(),
+      customer:     customerName.trim(),
+      product_id:   selectedProduct.product_id,
+      product_name: selectedProduct.name,
+      quantity,
+      price:  selectedProduct.price,
       amount: selectedProduct.price * quantity,
-      products: [selectedProduct.product_id],
     };
 
     try {
       setLoading(true);
       const result = await api.createSale(saleData);
-      setInvoiceUrl(result.invoiceUrl);
+      setInvoiceUrl(result.invoiceUrl || `SUCCESS:${result.sale_id ?? Date.now()}`);
     } catch (err) {
       console.error("Sale error:", err);
     } finally {
@@ -140,19 +143,32 @@ const SaleForm: React.FC<Props> = ({ selectedProduct }) => {
               <Receipt size={32} className="text-accent" />
             </div>
             <p className="text-lg font-black text-white uppercase tracking-tight mb-2">Protocol Successful</p>
-            <p className="text-[10px] font-black text-muted/40 uppercase tracking-[0.3em] mb-8">Registry ID Generated</p>
-            
-            <a
-              href={invoiceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-accent text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-accent/20"
-            >
-              <ExternalLink size={16} /> VIEW MASTER INVOICE
-            </a>
+            <p className="text-[10px] font-black text-muted/40 uppercase tracking-[0.3em] mb-8">
+              {invoiceUrl.startsWith('SUCCESS:')
+                ? `Registry ID: ${invoiceUrl.replace('SUCCESS:', '')}`
+                : 'Registry ID Generated'}
+            </p>
+            {!invoiceUrl.startsWith('SUCCESS:') ? (
+              <a
+                href={invoiceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-accent text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-accent/20"
+              >
+                <ExternalLink size={16} /> VIEW MASTER INVOICE
+              </a>
+            ) : (
+              <button
+                onClick={() => { setInvoiceUrl(''); setCustomerName(''); setQuantity(1); }}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 text-white/60 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+              >
+                New Transaction
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

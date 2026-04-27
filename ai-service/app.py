@@ -60,7 +60,8 @@ def get_ml_resources():
 def load_data():
     """Optimized data loader with memory caching."""
     now = datetime.now()
-    if _CACHE["df"] is not None and _CACHE["last_load"] and (now - _CACHE["last_load"]).seconds < 300:
+    # 60-second cache so new syncs are picked up quickly
+    if _CACHE["df"] is not None and _CACHE["last_load"] and (now - _CACHE["last_load"]).seconds < 60:
         return _CACHE["df"], _CACHE["inventory"]
 
     if not os.path.exists(SALES_PATH):
@@ -68,7 +69,7 @@ def load_data():
     
     try:
         df = pd.read_csv(SALES_PATH)
-        df['date'] = pd.to_datetime(df['date'])
+        df['date'] = pd.to_datetime(df['date'], format='ISO8601')
         
         inv = pd.read_csv(INV_PATH) if os.path.exists(INV_PATH) else pd.DataFrame()
         
@@ -230,7 +231,10 @@ def get_product_stats(days: int = 7):
             p_curr = curr_df[curr_df['product'] == product]
             p_prev = prev_df[prev_df['product'] == product]
             
+            # price column holds total revenue per transaction row
             rev = float(p_curr['price'].sum()) if 'price' in p_curr.columns else 0.0
+            # sales column holds units sold per transaction row
+            units_sold = int(p_curr['sales'].sum()) if 'sales' in p_curr.columns else len(p_curr)
             p_margin = 0.22
             
             if not p_curr.empty and 'price' in p_curr.columns and 'cost' in p_curr.columns:
@@ -243,13 +247,18 @@ def get_product_stats(days: int = 7):
             change = 0.0
             if prev_rev > 0:
                 change = ((rev - prev_rev) / prev_rev) * 100
+            
+            trend_str = f"{'+' if change >= 0 else ''}{round(change, 1)}%"
                 
             stats.append({
                 "product": str(product),
+                "name":    str(product),
                 "revenue": round(rev, 2),
-                "profit": round(profit, 2),
-                "orders": len(p_curr),
-                "growth": round(change, 1)
+                "profit":  round(profit, 2),
+                "orders":  len(p_curr),
+                "sales":   units_sold,
+                "growth":  round(change, 1),
+                "trend":   trend_str
             })
         
         return sorted(stats, key=lambda x: x['revenue'], reverse=True)
@@ -364,21 +373,43 @@ def get_inventory():
         # Use the ML engine
         risk_results = calculate_stockout_risk(inv, recent)
         
+        # Pre-calculate sales totals for last 30 days
+        sales_30d = {}
+        if not recent.empty:
+            sales_30d = recent.groupby('product')['sales'].sum().to_dict()
+        
         items = []
         for row in risk_results:
+            stock = int(row.get("current_stock", 0))
+            threshold = int(row.get("threshold", 10))
+            velocity = float(row.get("sales_velocity_per_day", 0.1))
+            days_left = int(row.get("days_to_stockout", 99))
+            
+            # Cleaner status determination on the API side
+            if stock <= threshold or days_left <= 7:
+                status = "Critical"
+            elif stock <= threshold * 2 or days_left <= 14:
+                status = "Low Stock"
+            else:
+                status = "Healthy"
+                
+            predicted_7d = max(0, round(velocity * 7))
+            
             items.append({
                 "id": str(row.get("product_id", "P-UNK")),
                 "product": str(row.get("product_name", "Unknown")),
-                "stock": int(row.get("current_stock", 0)),
-                "threshold": int(row.get("threshold", 10)),
-                "predictedDemand": int(row.get("sales_velocity_per_day", 0.1) * 7),
-                "status": str(row.get("status", "Healthy")),
+                "stock": stock,
+                "threshold": threshold,
+                "predictedDemand": int(predicted_7d),
+                "status": status,
                 "reorderSuggestion": str(row.get("reorderSuggestion", "Not Needed")),
                 "trend": str(row.get("trend", "0%")),
                 "price": float(row.get("price", 0)),
                 "lead_time": int(row.get("lead_time_days", 7)),
-                "days_to_stockout": int(row.get("days_to_stockout", 30)),
-                "urgent_flag": bool(row.get("urgent_flag", False))
+                "days_to_stockout": days_left,
+                "urgent_flag": stock <= threshold or days_left <= 7,
+                "daily_velocity": float(velocity),
+                "sold_last_30d": int(sales_30d.get(row.get("product_name"), 0))
             })
         return items
     except Exception as e:

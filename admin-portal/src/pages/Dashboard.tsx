@@ -104,9 +104,9 @@ const Dashboard: React.FC = () => {
   const kpis = [
     { title: "Total Revenue", value: stats ? formatINR(stats.revenue) : "₹0", icon: <IndianRupee />, delta: stats?.revenue_change },
     { title: "Net Profit", value: stats ? formatINR(stats.profit) : "₹0", icon: <TrendingUp />, delta: stats?.profit_change },
-    { title: "Total Orders", value: stats?.orders.toLocaleString('en-IN') || "0", icon: <ShoppingBag />, delta: stats?.orders_change },
+    { title: "Total Orders", value: (stats?.orders ?? 0).toLocaleString('en-IN'), icon: <ShoppingBag />, delta: stats?.orders_change },
     { title: "Avg Order Value", value: stats ? formatINR(Math.round(stats.aov)) : "₹0", icon: <Star /> },
-    { title: "Active Customers", value: stats?.active_customers.toLocaleString('en-IN') || "0", icon: <Users />, delta: stats?.customers_change },
+    { title: "Active Customers", value: (stats?.active_customers ?? 0).toLocaleString('en-IN'), icon: <Users />, delta: stats?.customers_change },
   ];
 
   const transactionColumns: Column<TransactionRow>[] = [
@@ -257,9 +257,9 @@ const Dashboard: React.FC = () => {
                           <div className="text-2xl font-black text-white mb-2 tracking-tight tabular-nums leading-none">
                             {formatINR(predictionMetrics.total)}
                           </div>
-                          <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-black border ${predictionMetrics.trend >= 0 ? 'bg-accent/10 text-accent border-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'} uppercase tracking-widest`}>
-                            {predictionMetrics.trend >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                            {predictionMetrics.trend >= 0 ? '+' : ''}{predictionMetrics.trend}% Velocity
+                          <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-black border ${(predictionMetrics.trend ?? 0) >= 0 ? 'bg-accent/10 text-accent border-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'} uppercase tracking-widest`}>
+                            {(predictionMetrics.trend ?? 0) >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                            {(predictionMetrics.trend ?? 0) >= 0 ? '+' : ''}{predictionMetrics.trend ?? 0}% Velocity
                           </div>
                         </div>
                       </div>

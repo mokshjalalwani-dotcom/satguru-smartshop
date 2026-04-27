@@ -11,10 +11,9 @@ const ExecutiveLayout: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen bg-[#0b0f19] text-white relative overflow-hidden">
-      {/* Background Blobs (Operational Colors) */}
-      <div className="absolute -top-40 -right-40 w-[520px] h-[520px] bg-emerald-600/20 rounded-full filter blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -left-28 w-[420px] h-[420px] bg-cyan-400/10 rounded-full filter blur-[100px] pointer-events-none" />
+    <div className="flex h-screen bg-bg text-white relative overflow-hidden">
+      {/* Subtle ambient glow */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-400/5 rounded-full filter blur-[120px] pointer-events-none" />
 
       <ExecutiveSidebar />
 

@@ -16,31 +16,33 @@ export interface CalEvent {
 }
 
 const defaultEvents: Record<string, CalEvent[]> = {
-  "2026-03-10": [
-    { id: 1, title: "Samsung Rep Meeting", time: "10:00 AM - 11:30 AM", type: "Vendor", location: "Main Office" },
-    { id: 2, title: "Stock Audit: LED TVs", time: "02:00 PM", type: "Internal", location: "Warehouse A" },
+  "2026-04-14": [
+    { id: 1, title: "Samsung Q2 Stock Delivery", time: "10:00 AM - 12:00 PM", type: "Delivery", location: "Warehouse A" },
   ],
-  "2026-03-14": [
-    { id: 3, title: "Holi Sale Preparation", time: "09:00 AM - 12:00 PM", type: "Promo", location: "Retail Floor" },
+  "2026-04-17": [
+    { id: 2, title: "LG Rep Quarterly Review", time: "03:00 PM - 04:30 PM", type: "Vendor", location: "Conference Room" },
   ],
-  "2026-03-15": [
-    { id: 4, title: "Sony Delivery Arrival", time: "11:00 AM", type: "Delivery", location: "Warehouse B" },
-    { id: 5, title: "Staff Training Session", time: "03:00 PM - 05:00 PM", type: "Internal", location: "Conference Room" },
+  "2026-04-21": [
+    { id: 3, title: "Akshaya Tritiya Mega Sale", time: "All Day", type: "Promo", location: "All Floors" },
+    { id: 4, title: "Stock Audit — Smartphones", time: "07:00 PM - 09:00 PM", type: "Internal", location: "Warehouse A" },
   ],
-  "2026-03-22": [
-    { id: 6, title: "Quarterly FY Review", time: "10:00 AM - 12:00 PM", type: "Internal", location: "Board Room" },
+  "2026-04-25": [
+    { id: 5, title: "AC Summer Campaign Launch", time: "11:00 AM", type: "Promo", location: "Retail Floor" },
   ],
-  "2026-03-25": [
-    { id: 7, title: "Ugadi Sale Kick-off", time: "All Day", type: "Promo", location: "All Stores" },
+  "2026-04-30": [
+    { id: 6, title: "April Month-End Inventory Count", time: "06:00 PM - 10:00 PM", type: "Internal", location: "Both Warehouses" },
   ],
-  "2026-03-31": [
-    { id: 8, title: "FY 2025-26 Closing", time: "All Day", type: "Internal", location: "Accounts" },
-    { id: 9, title: "Year-End Inventory Count", time: "06:00 PM - 10:00 PM", type: "Internal", location: "Warehouse A" },
+  "2026-05-01": [
+    { id: 7, title: "Labour Day — Reduced Staff", time: "All Day", type: "Internal", location: "All Stores" },
+  ],
+  "2026-05-12": [
+    { id: 8, title: "Mother's Day Weekend Sale", time: "All Day", type: "Promo", location: "All Floors" },
   ],
 };
 
 const CalendarIntegration: React.FC = () => {
-  const today = new Date(2026, 2, 10);
+  const today = new Date(); // Always use real today
+  today.setHours(0, 0, 0, 0);
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string>(

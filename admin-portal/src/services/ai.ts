@@ -65,11 +65,15 @@ export interface AIStats {
 }
 
 export interface ProductStat {
-  name: string;
-  sales: number;
+  // Python returns `product` and `orders` and `growth` — we normalise on the way in
+  product?: string;
+  name?: string;       // alias for product
+  orders?: number;
+  sales?: number;      // alias for orders
   revenue: number;
   profit: number;
-  trend: string;
+  growth?: number;
+  trend?: string;      // alias for growth (formatted)
 }
 
 export interface AIInsights {
@@ -138,7 +142,18 @@ export const aiService = {
   
   getProductStats: async (days: number = 7): Promise<ProductStat[]> => {
     const response = await instance.get("/product-stats", { params: { days } });
-    return response.data;
+    // Normalise Python response fields → canonical frontend fields
+    return (response.data as any[]).map((p: any) => ({
+      name:    p.name    ?? p.product ?? 'Unknown',
+      sales:   p.sales   ?? p.orders  ?? 0,
+      revenue: p.revenue ?? 0,
+      profit:  p.profit  ?? 0,
+      trend:   p.trend   ?? (p.growth !== undefined ? `${p.growth >= 0 ? '+' : ''}${p.growth}%` : '0%'),
+      // keep originals too
+      product: p.product,
+      orders:  p.orders,
+      growth:  p.growth,
+    }));
   },
 
   getInventory: async (): Promise<InventoryItem[]> => {

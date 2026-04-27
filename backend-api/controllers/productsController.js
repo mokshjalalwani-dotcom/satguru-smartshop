@@ -1,4 +1,5 @@
 const { getAllProducts, addProduct } = require('../db/productsDB');
+const Product = require('../db/models/Product');
 
 const listProducts = async (req, res) => {
     try {
@@ -21,4 +22,23 @@ const createProduct = async (req, res) => {
     }
 };
 
-module.exports = { listProducts, createProduct };
+const restockProduct = async (req, res) => {
+    const { product_id } = req.params;
+    const { amount } = req.body;
+    
+    if (!product_id || !amount) return res.status(400).json({ error: 'Missing fields' });
+
+    try {
+        const product = await Product.findOneAndUpdate(
+            { product_id },
+            { $inc: { stock: amount } },
+            { new: true }
+        );
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json(product);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { listProducts, createProduct, restockProduct };

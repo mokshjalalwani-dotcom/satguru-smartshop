@@ -1,9 +1,8 @@
 import React from "react";
-import { Target, IndianRupee, Award, Flame, Clock, Trophy, Zap, ShieldCheck, Box, Target as TargetIcon } from "lucide-react";
+import { Target, IndianRupee, Award, Flame, Clock, Trophy, TrendingUp, Package, CheckCircle2, ArrowRight } from "lucide-react";
 
 const formatINR = (n: number) => "₹" + n.toLocaleString('en-IN');
 
-// This would come from API based on logged-in user.
 const myTarget = {
   name: "John Doe",
   id: "EMP-002",
@@ -25,174 +24,185 @@ const myTarget = {
   ],
 };
 
-const MyTargets: React.FC = () => {
-  const revPct = Math.round((myTarget.achievedRevenue / myTarget.monthlyRevenue) * 100);
-  const unitPct = Math.round((myTarget.achievedUnits / myTarget.monthlyUnits) * 100);
-  const dailyPct = Math.round((myTarget.todayRevenue / myTarget.dailyTarget) * 100);
+function ProgressBar({ pct, color = "accent" }: { pct: number; color?: string }) {
+  const clamp = Math.min(100, Math.max(0, pct));
+  const bg =
+    pct >= 100 ? "bg-emerald-500" :
+    pct >= 70  ? "bg-amber-400"   :
+    pct >= 40  ? "bg-amber-400/60" :
+                 "bg-rose-500";
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
+    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+      <div
+        className={`h-full rounded-full ${bg} transition-all duration-700`}
+        style={{ width: `${clamp}%` }}
+      />
+    </div>
+  );
+}
+
+const MyTargets: React.FC = () => {
+  const revPct   = Math.round((myTarget.achievedRevenue / myTarget.monthlyRevenue) * 100);
+  const unitPct  = Math.round((myTarget.achievedUnits / myTarget.monthlyUnits) * 100);
+  const dailyPct = Math.round((myTarget.todayRevenue / myTarget.dailyTarget) * 100);
+
+  const stats = [
+    { label: "Day streak",    value: `${myTarget.streak} days`, icon: <Flame size={18} />,    good: myTarget.streak >= 3  },
+    { label: "Team rank",     value: `#${myTarget.rank} of ${myTarget.totalStaff}`, icon: <Trophy size={18} />,   good: myTarget.rank === 1 },
+    { label: "Revenue hit",   value: `${revPct}%`,  icon: <TrendingUp size={18} />, good: revPct >= 70   },
+    { label: "Units sold",    value: `${unitPct}%`, icon: <Package size={18} />,    good: unitPct >= 70  },
+  ];
+
+  return (
+    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
-            Performance <span className="text-accent">Metrics</span>
-          </h1>
-          <p className="text-muted/60 text-sm font-medium">Strategic yield tracking and individual operational objectives.</p>
+          <h1 className="text-2xl font-bold text-white mb-1">My Sales Targets</h1>
+          <p className="text-sm text-white/40 font-medium">Track your progress for {myTarget.month}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-surface border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-3 shadow-xl">
-            <TargetIcon size={16} className="text-accent" /> {myTarget.month}
-          </div>
-          <div className="bg-surface border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-3 shadow-xl">
-            <Clock size={16} /> {myTarget.daysLeft} DAYS LEFT
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold bg-white/5 border border-white/10 text-white/60 px-4 py-2 rounded-xl flex items-center gap-2">
+            <Target size={14} className="text-amber-400" /> {myTarget.month}
+          </span>
+          <span className="text-xs font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-2 rounded-xl flex items-center gap-2">
+            <Clock size={14} /> {myTarget.daysLeft} days left
+          </span>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {[
-          { label: "Cycle Streak", val: myTarget.streak, icon: <Flame size={20} />, color: "accent" },
-          { label: "Fleet Rank", val: `#${myTarget.rank}`, icon: <Trophy size={20} />, color: "white" },
-          { label: "Yield Hit", val: `${revPct}%`, icon: <Target size={20} />, color: "accent/10" },
-          { label: "Output Hit", val: `${unitPct}%`, icon: <Zap size={20} />, color: "white" },
-        ].map((stat, i) => (
-          <div key={i} className="bg-surface border border-white/5 rounded-[28px] p-6 text-center group transition-all hover:border-accent/30 shadow-xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-accent/5 rounded-bl-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 ${stat.color === 'accent' ? 'bg-accent/10 text-accent border border-accent/20' : 'bg-black/40 text-muted/30 border border-white/5'}`}>
-              {stat.icon}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
+          <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 flex flex-col gap-3 hover:bg-white/[0.05] transition-colors">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${s.good ? "bg-amber-400/10 text-amber-400" : "bg-white/5 text-white/30"}`}>
+              {s.icon}
             </div>
-            <p className="text-3xl font-black text-white mb-1 tabular-nums transition-colors group-hover:text-accent">{stat.val}</p>
-            <p className="text-[10px] text-muted/40 font-black uppercase tracking-[0.2em]">{stat.label}</p>
+            <div>
+              <p className="text-xl font-bold text-white tabular-nums">{s.value}</p>
+              <p className="text-xs text-white/40 font-medium mt-0.5">{s.label}</p>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Main Target Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Revenue Target */}
-        <div className="bg-surface border border-white/5 rounded-[40px] p-10 relative overflow-hidden group shadow-2xl transition-all hover:border-accent/40">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center justify-between mb-10 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center text-accent">
-                  <IndianRupee size={22} />
-                </div>
-                <h2 className="font-black text-xl text-white uppercase tracking-tight">Revenue Yield</h2>
-              </div>
-              <div className="text-[10px] font-black text-accent bg-accent/10 border border-accent/20 px-4 py-2 rounded-xl">PROTOCOL ALPHA</div>
-            </div>
-            
-            <div className="text-center mb-10 relative z-10">
-              <p className="text-5xl font-black text-white tabular-nums mb-3 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">{formatINR(myTarget.achievedRevenue)}</p>
-              <p className="text-[10px] font-black text-muted/40 uppercase tracking-[0.3em]">Operational Goal: {formatINR(myTarget.monthlyRevenue)}</p>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-            <div className="relative z-10">
-              <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden border border-white/5 mb-6">
-                <div 
-                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(252,163,17,0.4)] ${revPct >= 100 ? 'bg-accent' : revPct >= 70 ? 'bg-accent/70' : revPct >= 40 ? 'bg-accent/40' : 'bg-rose-500'}`} 
-                  style={{width: `${Math.min(100, revPct)}%`}} 
-                />
+        {/* Revenue */}
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-7 hover:bg-white/[0.05] transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-400">
+                <IndianRupee size={18} />
               </div>
-              <div className="flex justify-between items-center px-1">
-                <p className="text-[10px] font-black text-accent uppercase tracking-widest">{revPct}% UTILIZED</p>
-                <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">{formatINR(Math.max(0, myTarget.monthlyRevenue - myTarget.achievedRevenue))} REMAINING</p>
+              <div>
+                <h2 className="font-semibold text-white text-sm">Monthly Revenue</h2>
+                <p className="text-xs text-white/40">Target: {formatINR(myTarget.monthlyRevenue)}</p>
               </div>
             </div>
+            <span className={`text-xs font-bold px-3 py-1 rounded-lg ${revPct >= 70 ? "bg-amber-400/10 text-amber-400" : "bg-rose-500/10 text-rose-400"}`}>
+              {revPct}%
+            </span>
+          </div>
+
+          <p className="text-3xl font-bold text-white tabular-nums mb-6">
+            {formatINR(myTarget.achievedRevenue)}
+          </p>
+
+          <ProgressBar pct={revPct} />
+
+          <div className="flex justify-between mt-3 text-xs font-medium text-white/30">
+            <span>{revPct}% of target reached</span>
+            <span>{formatINR(Math.max(0, myTarget.monthlyRevenue - myTarget.achievedRevenue))} to go</span>
+          </div>
         </div>
 
-        {/* Units Target */}
-        <div className="bg-surface border border-white/5 rounded-[40px] p-10 relative overflow-hidden group shadow-2xl transition-all hover:border-accent/40">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center justify-between mb-10 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center text-white/40">
-                  <Box size={22} />
-                </div>
-                <h2 className="font-black text-xl text-white uppercase tracking-tight">Output Quota</h2>
+        {/* Units */}
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-7 hover:bg-white/[0.05] transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-white/50">
+                <Package size={18} />
               </div>
-              <div className="text-[10px] font-black text-muted/40 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">UNIT TRACKING</div>
+              <div>
+                <h2 className="font-semibold text-white text-sm">Units Sold</h2>
+                <p className="text-xs text-white/40">Target: {myTarget.monthlyUnits} units</p>
+              </div>
             </div>
-            
-            <div className="text-center mb-10 relative z-10">
-              <p className="text-5xl font-black text-accent tabular-nums mb-3 drop-shadow-[0_0_20px_rgba(252,163,17,0.2)]">{myTarget.achievedUnits}</p>
-              <p className="text-[10px] font-black text-muted/40 uppercase tracking-[0.3em]">Operational Goal: {myTarget.monthlyUnits} UNITS</p>
-            </div>
+            <span className={`text-xs font-bold px-3 py-1 rounded-lg ${unitPct >= 70 ? "bg-amber-400/10 text-amber-400" : "bg-rose-500/10 text-rose-400"}`}>
+              {unitPct}%
+            </span>
+          </div>
 
-            <div className="relative z-10">
-              <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden border border-white/5 mb-6">
-                <div 
-                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(252,163,17,0.4)] ${unitPct >= 100 ? 'bg-accent' : unitPct >= 70 ? 'bg-accent/70' : unitPct >= 40 ? 'bg-accent/40' : 'bg-rose-500'}`} 
-                  style={{width: `${Math.min(100, unitPct)}%`}} 
-                />
-              </div>
-              <div className="flex justify-between items-center px-1">
-                <p className="text-[10px] font-black text-accent uppercase tracking-widest">{unitPct}% UTILIZED</p>
-                <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">{Math.max(0, myTarget.monthlyUnits - myTarget.achievedUnits)} UNITS REMAINING</p>
-              </div>
-            </div>
+          <p className="text-3xl font-bold text-amber-400 tabular-nums mb-6">
+            {myTarget.achievedUnits} <span className="text-lg text-white/30 font-medium">/ {myTarget.monthlyUnits}</span>
+          </p>
+
+          <ProgressBar pct={unitPct} />
+
+          <div className="flex justify-between mt-3 text-xs font-medium text-white/30">
+            <span>{unitPct}% of target reached</span>
+            <span>{Math.max(0, myTarget.monthlyUnits - myTarget.achievedUnits)} units to go</span>
+          </div>
         </div>
       </div>
 
-      {/* Today's Progress + Top Products */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Today's Daily Target */}
-        <div className="bg-surface border border-white/5 rounded-[32px] p-8 relative overflow-hidden group shadow-xl">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[40px] pointer-events-none" />
-          <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
-            <Clock size={16} className="text-accent" /> Cycle Status
-          </h3>
-          <div className="text-center mb-10">
-            <p className="text-4xl font-black text-white tabular-nums mb-2">{formatINR(myTarget.todayRevenue)}</p>
-            <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Target Window: {formatINR(myTarget.dailyTarget)}</p>
+      {/* Today + Top Products */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        {/* Today's Progress */}
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Clock size={14} className="text-amber-400" />
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Today's Sales</h3>
           </div>
-          <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5 mb-4">
-            <div className={`h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(252,163,17,0.3)] ${dailyPct >= 100 ? 'bg-accent' : 'bg-accent/40'}`} style={{width: `${Math.min(100, dailyPct)}%`}} />
-          </div>
-          <p className="text-center text-[10px] font-black text-accent uppercase tracking-widest">{dailyPct}% OF WINDOW REACHED</p>
+          <p className="text-2xl font-bold text-white tabular-nums mb-1">{formatINR(myTarget.todayRevenue)}</p>
+          <p className="text-xs text-white/30 mb-5">Daily target: {formatINR(myTarget.dailyTarget)}</p>
+          <ProgressBar pct={dailyPct} />
+          <p className="text-xs text-white/30 mt-3">
+            {dailyPct >= 100
+              ? <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={12} /> Target reached!</span>
+              : `${dailyPct}% of daily target`}
+          </p>
         </div>
 
-        {/* Top Contributing Products */}
-        <div className="md:col-span-2 bg-surface border border-white/5 rounded-[32px] p-8 shadow-xl">
-          <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
-            <Award size={16} className="text-accent" /> Strategic Yield Contributors
-          </h3>
-          <div className="grid grid-cols-1 gap-4">
+        {/* Top Products */}
+        <div className="md:col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Award size={14} className="text-amber-400" />
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Your Best-Selling Products</h3>
+          </div>
+          <div className="space-y-3">
             {myTarget.topProducts.map((p, i) => (
-              <div key={i} className="flex items-center justify-between p-5 bg-black/20 border border-white/5 rounded-[22px] hover:border-accent/40 transition-all group cursor-pointer shadow-lg">
-                <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 rounded-2xl bg-black/40 border border-white/8 flex items-center justify-center font-black text-lg text-white group-hover:text-accent group-hover:border-accent/30 transition-all shadow-xl">
+              <div key={i} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0 group">
+                <div className="flex items-center gap-4">
+                  <span className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
                     {i + 1}
-                  </div>
+                  </span>
                   <div>
-                    <h4 className="font-black text-xs text-white uppercase tracking-widest group-hover:text-accent transition-colors mb-1.5">{p.name}</h4>
-                    <p className="text-[9px] font-black text-muted/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                      <Box size={10} className="text-accent/40" /> {p.units} UNITS DEPLOYED
-                    </p>
+                    <p className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors">{p.name}</p>
+                    <p className="text-xs text-white/30">{p.units} units sold</p>
                   </div>
                 </div>
-                <div className="text-right">
-                   <p className="text-sm font-black text-white tabular-nums tracking-wide">{formatINR(p.revenue)}</p>
-                   <p className="text-[9px] font-black text-accent uppercase tracking-[0.2em] mt-1.5 leading-none">Net Contribution</p>
-                </div>
+                <p className="text-sm font-semibold text-white tabular-nums">{formatINR(p.revenue)}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
-      
-      <div className="bg-black/40 border border-white/5 rounded-[32px] p-8 flex items-center justify-between shadow-inner">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-center text-accent"><ShieldCheck size={24} /></div>
-            <div>
-              <p className="text-[10px] font-black text-muted/40 uppercase tracking-widest">Performance Dashboard Sync: <span className="text-accent">Active Ledger</span></p>
-              <p className="text-[9px] font-black text-muted/20 uppercase tracking-[0.2em] mt-1">Authorized entity: {myTarget.id}</p>
-            </div>
-         </div>
-         <div className="text-[9px] font-black text-muted/10 uppercase tracking-[0.5em]">Strategic Output Console</div>
+
+      {/* Footer bar */}
+      <div className="flex items-center justify-between py-4 px-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 status-dot" />
+          <span className="text-xs font-medium text-white/40">Live data · Employee ID: {myTarget.id}</span>
+        </div>
+        <span className="text-xs text-white/20">Resets at end of month</span>
       </div>
+
     </div>
   );
 };

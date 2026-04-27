@@ -13,18 +13,14 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-bg text-white relative overflow-hidden font-sans">
-      {/* Background Depth Layers (Global - Neutralized) */}
-      <div className="mesh-blob blob-blue w-[700px] h-[700px] -top-64 -left-64 opacity-[0.03]" />
-      <div className="mesh-blob blob-blue w-[800px] h-[800px] top-1/2 -right-64 opacity-10" />
-      <div className="mesh-blob blob-white w-[500px] h-[500px] -bottom-32 left-1/4 opacity-[0.02]" />
 
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         <header className="h-14 glass-header flex items-center justify-between px-8 relative z-20">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-black tracking-tight text-white leading-tight">
-              Welcome back, <span className="text-accent">{user?.name || 'Admin'}</span>
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-semibold text-white/90">
+              Good day, <span className="text-amber-400">{user?.name || 'Admin'}</span>
             </h1>
           </div>
           
